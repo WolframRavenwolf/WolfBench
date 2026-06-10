@@ -1,0 +1,167 @@
+{
+    "id": "6d9d03d3-10a8-4234-9b6c-97e0ed15b6a1",
+    "started_at": "2026-04-22T14:28:49.240804",
+    "finished_at": "2026-04-22T20:52:30.745228",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 43,
+        "evals": {
+            "hermes__zai-org-GLM-5.1__terminal-bench": {
+                "n_trials": 83,
+                "n_errors": 43,
+                "metrics": [
+                    {
+                        "mean": 0.42696629213483145
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "gpt2-codegolf__q6jghEA",
+                            "break-filter-js-from-html__FGzSuUM",
+                            "reshard-c4-data__G3C5xAL",
+                            "write-compressor__ttBvWL5",
+                            "pytorch-model-cli__yozo4Rf",
+                            "largest-eigenval__cwAbdWc",
+                            "regex-chess__N6B4YpS",
+                            "torch-tensor-parallelism__TSfbHgH",
+                            "path-tracing__kVxpt9P",
+                            "feal-linear-cryptanalysis__oXcueFY",
+                            "caffe-cifar-10__vj6UMAC",
+                            "distribution-search__BkMztU5",
+                            "mteb-retrieve__PDjo7GU",
+                            "adaptive-rejection-sampler__ZnsPd8s",
+                            "configure-git-webserver__PS5RLTd",
+                            "overfull-hbox__G6BRzXP",
+                            "polyglot-rust-c__PgePCKu",
+                            "db-wal-recovery__nWKF47H",
+                            "schemelike-metacircular-eval__KiRqiWt",
+                            "qemu-startup__EsLnkDT",
+                            "train-fasttext__SDMy7Gg",
+                            "video-processing__jwgG78p",
+                            "qemu-alpine-ssh__jm84dET",
+                            "install-windows-3.11__wVdJBHB",
+                            "make-doom-for-mips__h8bH7uw",
+                            "torch-pipeline-parallelism__XKnq2Vu",
+                            "extract-moves-from-video__pXphwGb",
+                            "gcode-to-text__9sJBzUB",
+                            "make-mips-interpreter__inZHVgD",
+                            "circuit-fibsqrt__q4CS9Ls",
+                            "mteb-leaderboard__4zJcDv2",
+                            "raman-fitting__WycUBRv",
+                            "query-optimize__w4L7iHC",
+                            "protein-assembly__6b3s8pj",
+                            "regex-log__6rQUiWt",
+                            "filter-js-from-html__qsPpWzq",
+                            "feal-differential-cryptanalysis__YgoZ9sr",
+                            "polyglot-c-py__jhJQnvv",
+                            "cancel-async-tasks__KYtuFLQ",
+                            "sam-cell-seg__qHwghzr",
+                            "model-extraction-relu-logits__wZASoQd",
+                            "large-scale-text-editing__DKyZHe3",
+                            "openssl-selfsigned-cert__yygwg5T",
+                            "dna-insert__TPrURax",
+                            "dna-assembly__Sx4bwqZ"
+                        ],
+                        "1.0": [
+                            "merge-diff-arc-agi-task__jguAqBv",
+                            "winning-avg-corewars__8YLBWGr",
+                            "log-summary-date-ranges__R9kogzm",
+                            "password-recovery__poPLfjj",
+                            "portfolio-optimization__cPhMXZW",
+                            "path-tracing-reverse__KghXZkw",
+                            "modernize-scientific-stack__DXoBMcw",
+                            "prove-plus-comm__zzvKVKL",
+                            "pypi-server__gKVQfYL",
+                            "custom-memory-heap-crash__GvH3sHr",
+                            "multi-source-data-merger__hE9ALMV",
+                            "crack-7z-hash__AaQcapC",
+                            "chess-best-move__gxM5oBV",
+                            "cobol-modernization__wKvG4Jw",
+                            "compile-compcert__5FCaysv",
+                            "headless-terminal__hnqBHYZ",
+                            "fix-git__GJnyQxL",
+                            "git-multibranch__JZpgL7R",
+                            "kv-store-grpc__zSDj2q2",
+                            "count-dataset-tokens__dHtK7nZ",
+                            "mailman__tDPhwAv",
+                            "extract-elf__5KdwjXb",
+                            "code-from-image__eA6uEy7",
+                            "fix-code-vulnerability__iWcWcJF",
+                            "financial-document-processor__xVJNsxo",
+                            "mcmc-sampling-stan__brvbrwZ",
+                            "fix-ocaml-gc__dokrsF7",
+                            "git-leak-recovery__aUsoJkv",
+                            "build-cython-ext__uCUKpsB",
+                            "pytorch-model-recovery__9uzTWjH",
+                            "nginx-request-logging__oKKkBGR",
+                            "sparql-university__TjARarM",
+                            "sqlite-db-truncate__smqmkW6",
+                            "sanitize-git-repo__DniGwRv",
+                            "build-pmars__icgbqCV",
+                            "sqlite-with-gcov__YJ6iovj",
+                            "constraints-scheduling__uv48PSr",
+                            "vulnerable-secret__5DM9BE9"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "NonZeroAgentExitCodeError": [
+                        "gpt2-codegolf__q6jghEA",
+                        "password-recovery__poPLfjj",
+                        "path-tracing-reverse__KghXZkw",
+                        "pypi-server__gKVQfYL",
+                        "multi-source-data-merger__hE9ALMV",
+                        "configure-git-webserver__PS5RLTd",
+                        "crack-7z-hash__AaQcapC",
+                        "chess-best-move__gxM5oBV",
+                        "db-wal-recovery__nWKF47H",
+                        "headless-terminal__hnqBHYZ",
+                        "schemelike-metacircular-eval__KiRqiWt",
+                        "qemu-startup__EsLnkDT",
+                        "git-multibranch__JZpgL7R",
+                        "qemu-alpine-ssh__jm84dET",
+                        "kv-store-grpc__zSDj2q2",
+                        "install-windows-3.11__wVdJBHB",
+                        "extract-moves-from-video__pXphwGb",
+                        "count-dataset-tokens__dHtK7nZ",
+                        "mteb-leaderboard__4zJcDv2",
+                        "mailman__tDPhwAv",
+                        "extract-elf__5KdwjXb",
+                        "protein-assembly__6b3s8pj",
+                        "code-from-image__eA6uEy7",
+                        "financial-document-processor__xVJNsxo",
+                        "build-cython-ext__uCUKpsB",
+                        "pytorch-model-recovery__9uzTWjH",
+                        "sam-cell-seg__qHwghzr",
+                        "nginx-request-logging__oKKkBGR",
+                        "sparql-university__TjARarM",
+                        "build-pmars__icgbqCV",
+                        "rstan-to-pystan__zdvw6GE",
+                        "sqlite-with-gcov__YJ6iovj",
+                        "vulnerable-secret__5DM9BE9",
+                        "dna-assembly__Sx4bwqZ"
+                    ],
+                    "AddTestsDirError": [
+                        "llm-inference-batching-scheduler__rezigtD"
+                    ],
+                    "AgentTimeoutError": [
+                        "path-tracing__kVxpt9P",
+                        "train-fasttext__SDMy7Gg",
+                        "make-mips-interpreter__inZHVgD",
+                        "raman-fitting__WycUBRv"
+                    ],
+                    "AgentSetupTimeoutError": [
+                        "hf-model-inference__tj4AFAV",
+                        "build-pov-ray__5Cb3N3E",
+                        "bn-fit-modify__4Acds97"
+                    ],
+                    "SandboxExecutionError": [
+                        "tune-mjcf__z4FRMKk"
+                    ]
+                }
+            }
+        }
+    }
+}

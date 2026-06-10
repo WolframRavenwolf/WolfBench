@@ -1,0 +1,114 @@
+{
+    "id": "fe792634-bf61-4aad-986a-fcada2e436fd",
+    "task_name": "pytorch-model-recovery",
+    "trial_name": "pytorch-model-recovery__Pt5ARhc",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__13-31-06/pytorch-model-recovery__Pt5ARhc",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "pytorch-model-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "9def2a29a9f98ee4ae428cc23e473a889f9f4fd87a62ea685a04192a6aefe20f",
+    "config": {
+        "task": {
+            "path": "pytorch-model-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "pytorch-model-recovery__Pt5ARhc",
+        "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__13-31-06",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "2553f224-a3a3-4480-8357-5287204a968a"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 213552,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 6495,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T14:02:13.719649Z",
+    "finished_at": "2026-06-05T14:08:01.774628Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T14:02:13.728746Z",
+        "finished_at": "2026-06-05T14:02:17.029333Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T14:02:17.029349Z",
+        "finished_at": "2026-06-05T14:03:36.576306Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T14:03:36.576397Z",
+        "finished_at": "2026-06-05T14:07:27.378731Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T14:07:28.069938Z",
+        "finished_at": "2026-06-05T14:07:57.364815Z"
+    }
+}

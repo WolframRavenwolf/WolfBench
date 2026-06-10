@@ -1,0 +1,173 @@
+{
+    "id": "4ecd8e74-4721-408c-88a5-aadf4db3cdfa",
+    "task_name": "schemelike-metacircular-eval",
+    "trial_name": "schemelike-metacircular-eval__2SrUGAy",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-pro/2026-05-14__12-49-11/schemelike-metacircular-eval__2SrUGAy",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "schemelike-metacircular-eval"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "1a22feed1eb95a28db822ff01af36ae16aa219e54ac6a4884fa55a045138607a",
+    "config": {
+        "task": {
+            "path": "schemelike-metacircular-eval",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "schemelike-metacircular-eval__2SrUGAy",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-pro/2026-05-14__12-49-11",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.01,
+                    "output_cost_per_token": 0.01
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "30ffa89f-ff42-4fe0-8d0f-2b8aa30777eb"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2541711,
+        "n_cache_tokens": 1577728,
+        "n_output_tokens": 54752,
+        "cost_usd": 10187.350000000002,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 54,
+            "api_request_times_msec": [
+                11188.930749893188,
+                3043.322801589966,
+                14984.285354614258,
+                5852.543354034424,
+                44352.69236564636,
+                33768.47052574158,
+                139807.19804763794,
+                10312.238693237305,
+                6360.960245132446,
+                13496.78635597229,
+                9676.859617233276,
+                3378.113031387329,
+                10850.20136833191,
+                32673.596382141113,
+                16332.306385040283,
+                125852.03409194946,
+                444704.8056125641,
+                6841.1078453063965,
+                288120.9659576416,
+                8276.493310928345,
+                12529.658079147339,
+                14398.314952850342,
+                31494.804859161377,
+                20964.921236038208,
+                6606.287479400635,
+                264444.79966163635,
+                16576.183319091797,
+                221662.11462020874,
+                312334.08188819885,
+                204736.70744895935,
+                265386.43050193787,
+                259172.63054847717,
+                314140.18416404724,
+                7068.017244338989,
+                20155.394554138184,
+                20632.04312324524,
+                56131.0932636261,
+                17257.671356201172,
+                41457.66854286194,
+                10894.067525863647,
+                8639.249324798584,
+                26569.363355636597,
+                9160.550832748413,
+                6603.503465652466,
+                3944.926977157593,
+                4317.456483840942,
+                4414.957523345947,
+                7361.414432525635,
+                4612.591981887817,
+                19972.077131271362,
+                6336.474895477295,
+                4960.41464805603,
+                6346.6596603393555,
+                44928.319215774536
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": null,
+    "exception_info": {
+        "exception_type": "AgentTimeoutError",
+        "exception_message": "Agent execution timed out after 3600.0 seconds",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1597, in run\n    await self._run_agent_loop(\n    ...<4 lines>...\n    )\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1412, in _run_agent_loop\n    timeout_occurred, terminal_output = await self._execute_commands(\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1241, in _execute_commands\n    return False, self._limit_output_length(await session.get_incremental_output())\n                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 683, in get_incremental_output\n    current_buffer = await self.capture_pane(capture_entire=True)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 652, in capture_pane\n    result = await self.environment.exec(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n        self._tmux_capture_pane(capture_entire=capture_entire)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 251, in exec\n    result = await self._exec_process_result(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 239, in _exec_process_result\n    return await sandbox.exec(\n           ^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/cwsandbox/_types.py\", line 725, in _await_and_record\n    result = await asyncio.wrap_future(self._future)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nasyncio.exceptions.CancelledError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n    ...<6 lines>...\n    )\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 506, in wait_for\n    async with timeouts.timeout(timeout):\n               ~~~~~~~~~~~~~~~~^^^^^^^^^\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/timeouts.py\", line 116, in __aexit__\n    raise TimeoutError from exc_val\nTimeoutError\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 277, in _execute_agent\n    raise AgentTimeoutError(\n        f\"Agent execution timed out after {self._agent_timeout_sec} seconds\"\n    ) from e\nharbor.trial.trial.AgentTimeoutError: Agent execution timed out after 3600.0 seconds\n",
+        "occurred_at": "2026-05-14T13:52:11.559296"
+    },
+    "started_at": "2026-05-14T12:51:55.472256Z",
+    "finished_at": "2026-05-14T13:52:41.553810Z",
+    "environment_setup": {
+        "started_at": "2026-05-14T12:51:55.478302Z",
+        "finished_at": "2026-05-14T12:51:58.559408Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-14T12:51:58.559424Z",
+        "finished_at": "2026-05-14T12:52:11.548816Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-14T12:52:11.548891Z",
+        "finished_at": "2026-05-14T13:52:11.555714Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-14T13:52:14.117560Z",
+        "finished_at": "2026-05-14T13:52:34.305823Z"
+    }
+}

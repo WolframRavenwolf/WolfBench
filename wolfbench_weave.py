@@ -21,6 +21,10 @@ import warnings
 from datetime import datetime
 from pathlib import Path
 
+# Work around stale generated OpenTelemetry protobuf stubs that some fresh
+# weave/uv resolutions can pull in. This must be set before importing weave.
+os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
 # Suppress noisy dependency warnings (requests vs urllib3/chardet version mismatch)
 warnings.filterwarnings("ignore", message="urllib3.*doesn't match a supported version")
 

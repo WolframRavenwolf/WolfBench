@@ -1,0 +1,113 @@
+{
+    "id": "d80f48ea-484e-4272-a8d9-7283d20cde31",
+    "task_name": "headless-terminal",
+    "trial_name": "headless-terminal__y2Fe8ts",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__10-25-41/headless-terminal__y2Fe8ts",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "headless-terminal"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "0f08b1ccc560ac08b8420b4a493a3b4c5354e2ace9f0cbe63a44e861e46c780d",
+    "config": {
+        "task": {
+            "path": "headless-terminal",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "headless-terminal__y2Fe8ts",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__10-25-41",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "7bec43f4-1647-4d42-8306-abdb1989fd35"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 164913,
+        "n_cache_tokens": 1143156,
+        "n_output_tokens": 13305,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-26T10:57:50.163855Z",
+    "finished_at": "2026-05-26T11:03:11.651868Z",
+    "environment_setup": {
+        "started_at": "2026-05-26T10:57:50.164930Z",
+        "finished_at": "2026-05-26T10:57:54.564567Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-26T10:57:54.564579Z",
+        "finished_at": "2026-05-26T10:58:19.906703Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-26T10:58:19.906803Z",
+        "finished_at": "2026-05-26T11:02:47.032835Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-26T11:02:48.462828Z",
+        "finished_at": "2026-05-26T11:03:11.345859Z"
+    }
+}

@@ -1,0 +1,128 @@
+{
+    "id": "9abe21af-65b9-4b91-b818-a9e17e91eb69",
+    "task_name": "vulnerable-secret",
+    "trial_name": "vulnerable-secret__ivhKMhj",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-gemini-3.5-flash-low/2026-05-27__12-05-43/vulnerable-secret__ivhKMhj",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "vulnerable-secret"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "568760a9b221bd2efc27dc592833c1d2d99949b20995ba1321a3aa1567e6ba20",
+    "config": {
+        "task": {
+            "path": "vulnerable-secret",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "vulnerable-secret__ivhKMhj",
+        "trials_dir": "jobs/cw-t2-gemini-3.5-flash-low/2026-05-27__12-05-43",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "gemini/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "reasoning_effort": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "64d5b307-1a63-41c6-abb1-efe94068136c"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "gemini"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 43228,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 2198,
+        "cost_usd": 0.084624,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 9,
+            "api_request_times_msec": [
+                6484.370470046997,
+                8717.127323150635,
+                4729.03299331665,
+                5181.466579437256,
+                4453.125476837158,
+                7370.59760093689,
+                4090.7719135284424,
+                4372.390031814575,
+                3566.1351680755615
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-27T12:05:49.232461Z",
+    "finished_at": "2026-05-27T12:07:17.251476Z",
+    "environment_setup": {
+        "started_at": "2026-05-27T12:05:49.232727Z",
+        "finished_at": "2026-05-27T12:05:59.109722Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-27T12:05:59.109791Z",
+        "finished_at": "2026-05-27T12:06:07.626662Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-27T12:06:07.626775Z",
+        "finished_at": "2026-05-27T12:07:05.926172Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-27T12:07:06.619544Z",
+        "finished_at": "2026-05-27T12:07:12.794608Z"
+    }
+}

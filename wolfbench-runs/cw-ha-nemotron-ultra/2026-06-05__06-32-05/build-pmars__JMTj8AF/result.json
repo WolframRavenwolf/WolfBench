@@ -1,0 +1,114 @@
+{
+    "id": "6759f60e-0d52-446b-876f-a7a3b38a4fb3",
+    "task_name": "build-pmars",
+    "trial_name": "build-pmars__JMTj8AF",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__06-32-05/build-pmars__JMTj8AF",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "build-pmars"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "55f554b8d07c2ec69aa88e385675925e684eb09c256610e0abca10375efc3876",
+    "config": {
+        "task": {
+            "path": "build-pmars",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "build-pmars__JMTj8AF",
+        "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__06-32-05",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "0afaf9e6-e8ae-4275-a1bd-b530601eb39f"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 3898612,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 11479,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T07:17:23.520595Z",
+    "finished_at": "2026-06-05T07:27:38.542050Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T07:17:23.521562Z",
+        "finished_at": "2026-06-05T07:17:26.806144Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T07:17:26.806159Z",
+        "finished_at": "2026-06-05T07:18:51.445788Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T07:18:51.445855Z",
+        "finished_at": "2026-06-05T07:27:29.718149Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T07:27:30.444340Z",
+        "finished_at": "2026-06-05T07:27:35.347658Z"
+    }
+}

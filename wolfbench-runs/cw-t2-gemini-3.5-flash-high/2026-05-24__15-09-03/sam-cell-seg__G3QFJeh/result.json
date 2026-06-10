@@ -1,0 +1,172 @@
+{
+    "id": "50d34984-5595-46af-841f-289b2bcbe515",
+    "task_name": "sam-cell-seg",
+    "trial_name": "sam-cell-seg__G3QFJeh",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-gemini-3.5-flash-high/2026-05-24__15-09-03/sam-cell-seg__G3QFJeh",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "sam-cell-seg"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "1bc7f69e2e775b9ceac4b65975556b8c838b2d77cc0f50b01162adfea1630eb5",
+    "config": {
+        "task": {
+            "path": "sam-cell-seg",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "sam-cell-seg__G3QFJeh",
+        "trials_dir": "jobs/cw-t2-gemini-3.5-flash-high/2026-05-24__15-09-03",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "gemini/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "reasoning_effort": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "6a2dde35-fa60-404f-8943-f6d885f3303c"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "gemini"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 1527876,
+        "n_cache_tokens": 1287972,
+        "n_output_tokens": 29146,
+        "cost_usd": 0.8153657999999999,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 53,
+            "api_request_times_msec": [
+                2826.1213302612305,
+                3464.3714427948,
+                3016.9999599456787,
+                3113.9578819274902,
+                3101.4647483825684,
+                3138.7317180633545,
+                2212.2185230255127,
+                1903.182029724121,
+                1366.9655323028564,
+                1876.7950534820557,
+                1832.502841949463,
+                1830.582857131958,
+                2240.5121326446533,
+                1361.6845607757568,
+                2180.872917175293,
+                8630.38420677185,
+                2105.4725646972656,
+                5904.753923416138,
+                3195.9521770477295,
+                3942.0993328094482,
+                17924.774646759033,
+                3218.745231628418,
+                3902.7488231658936,
+                1944.6148872375488,
+                2010.4315280914307,
+                1661.1897945404053,
+                1910.8026027679443,
+                6238.120317459106,
+                2667.6268577575684,
+                31491.108655929565,
+                7863.953590393066,
+                2023.000717163086,
+                3078.5062313079834,
+                2852.170705795288,
+                7647.396087646484,
+                2989.450693130493,
+                12450.353622436523,
+                9132.204055786133,
+                2907.4368476867676,
+                1891.0698890686035,
+                2397.1028327941895,
+                2223.7768173217773,
+                11964.838981628418,
+                10196.430206298828,
+                2099.400758743286,
+                2841.9642448425293,
+                2983.13570022583,
+                3210.710287094116,
+                3856.0094833374023,
+                3087.470531463623,
+                3775.238037109375,
+                3382.2574615478516,
+                2034.0650081634521
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-24T15:09:09.822045Z",
+    "finished_at": "2026-05-24T15:17:16.792281Z",
+    "environment_setup": {
+        "started_at": "2026-05-24T15:09:09.826479Z",
+        "finished_at": "2026-05-24T15:09:20.281329Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-24T15:09:20.281344Z",
+        "finished_at": "2026-05-24T15:09:22.490010Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-24T15:09:22.490095Z",
+        "finished_at": "2026-05-24T15:16:36.830329Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-24T15:16:37.575663Z",
+        "finished_at": "2026-05-24T15:17:14.018317Z"
+    }
+}

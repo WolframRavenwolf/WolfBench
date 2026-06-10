@@ -1,0 +1,133 @@
+{
+    "id": "71715340-88f1-44d0-8b20-23e34d8c16f7",
+    "task_name": "rstan-to-pystan",
+    "trial_name": "rstan-to-pystan__NNhhWUJ",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__20-17-59/rstan-to-pystan__NNhhWUJ",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "rstan-to-pystan"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "1404a5a663c5ad348382a3374bf1ac11e28c2d10de5af6630ddd5ab69ff8f2e3",
+    "config": {
+        "task": {
+            "path": "rstan-to-pystan",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "rstan-to-pystan__NNhhWUJ",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__20-17-59",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.01,
+                    "output_cost_per_token": 0.01
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f2e409cb-050f-4caf-8dab-23a5b713d8d6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 212177,
+        "n_cache_tokens": 195328,
+        "n_output_tokens": 5696,
+        "cost_usd": 225.45,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 17,
+            "api_request_times_msec": [
+                8736.364841461182,
+                15958.05311203003,
+                6612.479686737061,
+                3947.6349353790283,
+                2894.2646980285645,
+                3366.0130500793457,
+                63286.35358810425,
+                8060.243129730225,
+                2488.8033866882324,
+                4573.119878768921,
+                4213.489532470703,
+                2695.5466270446777,
+                2886.000156402588,
+                3193.0203437805176,
+                11260.542869567871,
+                9879.374504089355,
+                2939.866781234741
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": null,
+    "exception_info": {
+        "exception_type": "AioRpcError",
+        "exception_message": "<AioRpcError of RPC that terminated with:\n\tstatus = StatusCode.UNAVAILABLE\n\tdetails = \"\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:166.19.70.19:443 {grpc_message:\"\", grpc_status:14}\"\n>",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n    ...<6 lines>...\n    )\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1597, in run\n    await self._run_agent_loop(\n    ...<4 lines>...\n    )\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1412, in _run_agent_loop\n    timeout_occurred, terminal_output = await self._execute_commands(\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1227, in _execute_commands\n    await session.send_keys(\n    ...<3 lines>...\n    )\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 646, in send_keys\n    await self._send_non_blocking_keys(\n    ...<2 lines>...\n    )\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 597, in _send_non_blocking_keys\n    result = await self.environment.exec(command=command)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 251, in exec\n    result = await self._exec_process_result(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    ...<4 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 239, in _exec_process_result\n    return await sandbox.exec(\n           ^^^^^^^^^^^^^^^^^^^\n    ...<2 lines>...\n    )\n    ^\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/cwsandbox/_types.py\", line 725, in _await_and_record\n    result = await asyncio.wrap_future(self._future)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/cwsandbox/_types.py\", line 705, in _on_future_done\n    result = future.result()\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py\", line 449, in result\n    return self.__get_result()\n           ~~~~~~~~~~~~~~~~~^^\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/concurrent/futures/_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/cwsandbox/_sandbox.py\", line 3473, in _exec_streaming_async\n    raise item\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/cwsandbox/_sandbox.py\", line 3442, in collect_responses\n    async for response in call:\n    ...<2 lines>...\n            return\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/grpc/aio/_call.py\", line 366, in _fetch_stream_responses\n    await self._raise_for_status()\n  File \"/home/exedev/harbor/.venv/lib/python3.13/site-packages/grpc/aio/_call.py\", line 274, in _raise_for_status\n    raise _create_rpc_error(\n    ...<2 lines>...\n    )\ngrpc.aio._call.AioRpcError: <AioRpcError of RPC that terminated with:\n\tstatus = StatusCode.UNAVAILABLE\n\tdetails = \"\"\n\tdebug_error_string = \"UNKNOWN:Error received from peer ipv4:166.19.70.19:443 {grpc_message:\"\", grpc_status:14}\"\n>\n",
+        "occurred_at": "2026-05-13T22:20:20.515172"
+    },
+    "started_at": "2026-05-13T22:14:26.851131Z",
+    "finished_at": "2026-05-13T22:20:21.644608Z",
+    "environment_setup": {
+        "started_at": "2026-05-13T22:14:26.852150Z",
+        "finished_at": "2026-05-13T22:14:30.185966Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-13T22:14:30.185981Z",
+        "finished_at": "2026-05-13T22:14:41.321283Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-13T22:14:41.321397Z",
+        "finished_at": "2026-05-13T22:20:20.124445Z"
+    },
+    "verifier": null
+}

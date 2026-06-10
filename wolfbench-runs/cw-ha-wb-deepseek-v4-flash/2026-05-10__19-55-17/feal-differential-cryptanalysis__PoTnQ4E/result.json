@@ -1,0 +1,108 @@
+{
+    "id": "57b60c71-ff65-4a2b-9a5a-5d632d0bd816",
+    "task_name": "feal-differential-cryptanalysis",
+    "trial_name": "feal-differential-cryptanalysis__PoTnQ4E",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-wb-deepseek-v4-flash/2026-05-10__19-55-17/feal-differential-cryptanalysis__PoTnQ4E",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "feal-differential-cryptanalysis"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "798945c624cad262a52c46271a557698875990a600a6a5cb35c2dfd9b00bf80d",
+    "config": {
+        "task": {
+            "path": "feal-differential-cryptanalysis",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "feal-differential-cryptanalysis__PoTnQ4E",
+        "trials_dir": "jobs/cw-ha-wb-deepseek-v4-flash/2026-05-10__19-55-17",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 2.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "ae11e231-c5c8-485b-a7b7-ff33103e0298"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Flash",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 805119,
+        "n_cache_tokens": 343552,
+        "n_output_tokens": 56555,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-10T21:01:23.007041Z",
+    "finished_at": "2026-05-10T21:42:18.168423Z",
+    "environment_setup": {
+        "started_at": "2026-05-10T21:01:23.007999Z",
+        "finished_at": "2026-05-10T21:01:28.001893Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-10T21:01:28.001909Z",
+        "finished_at": "2026-05-10T21:02:37.426651Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-10T21:02:37.426762Z",
+        "finished_at": "2026-05-10T21:41:45.894853Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-10T21:41:48.200423Z",
+        "finished_at": "2026-05-10T21:42:09.658260Z"
+    }
+}

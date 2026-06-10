@@ -1,0 +1,113 @@
+{
+    "id": "825a8437-e6ac-45e4-aa55-4895e509c663",
+    "task_name": "break-filter-js-from-html",
+    "trial_name": "break-filter-js-from-html__U3vq46h",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-daytona/2026-05-23__19-46-18/break-filter-js-from-html__U3vq46h",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "break-filter-js-from-html"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "b33421492e86b07de2a01bc2205f7e7d2fdc36446a84787265d99e5e138fdaaa",
+    "config": {
+        "task": {
+            "path": "break-filter-js-from-html",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "break-filter-js-from-html__U3vq46h",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-daytona/2026-05-23__19-46-18",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "medium",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "cb2bad5e-c353-4bd8-ab9e-f3753fff0572"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": null,
+        "n_cache_tokens": null,
+        "n_output_tokens": null,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-23T19:46:22.408320Z",
+    "finished_at": "2026-05-23T19:56:47.049131Z",
+    "environment_setup": {
+        "started_at": "2026-05-23T19:46:22.408647Z",
+        "finished_at": "2026-05-23T19:46:23.981105Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-23T19:46:23.981119Z",
+        "finished_at": "2026-05-23T19:46:48.125004Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-23T19:46:48.125088Z",
+        "finished_at": "2026-05-23T19:56:39.342969Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-23T19:56:40.738545Z",
+        "finished_at": "2026-05-23T19:56:46.744810Z"
+    }
+}

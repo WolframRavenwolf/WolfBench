@@ -13,6 +13,7 @@ Usage:
 import argparse
 import base64
 import json
+import re
 from collections import Counter, defaultdict
 from datetime import date
 from html import escape as _html_escape
@@ -126,6 +127,36 @@ AGENT_CONFIG = {
     },
 }
 
+
+_HEX_RE = re.compile(r"#[0-9a-fA-F]{6}")
+
+
+def _blend_hex(a: str, b: str, amount: float) -> str:
+    """Blend two #rrggbb colors."""
+    a = a.lstrip("#")
+    b = b.lstrip("#")
+    ar, ag, ab = (int(a[i:i + 2], 16) for i in (0, 2, 4))
+    br, bg, bb = (int(b[i:i + 2], 16) for i in (0, 2, 4))
+    mix = lambda x, y: round(x * (1 - amount) + y * amount)
+    return f"#{mix(ar, br):02x}{mix(ag, bg):02x}{mix(ab, bb):02x}"
+
+
+def _worst_gradient(grads: dict[str, tuple[str, str]]) -> tuple[str, str]:
+    """Create a visible Worst-of segment style between Solid and Average."""
+    solid_grad, _ = grads["solid"]
+    avg_grad, avg_shadow = grads["average"]
+    solid_colors = _HEX_RE.findall(solid_grad)
+    avg_colors = _HEX_RE.findall(avg_grad)
+    if not solid_colors or len(solid_colors) != len(avg_colors):
+        return avg_grad, avg_shadow
+    stops = [0, 40, 70, 100]
+    blended = [
+        f"{_blend_hex(s, a, 0.55)} {stops[i] if i < len(stops) else round(i / max(1, len(solid_colors) - 1) * 100)}%"
+        for i, (s, a) in enumerate(zip(solid_colors, avg_colors))
+    ]
+    return "linear-gradient(135deg, " + ", ".join(blended) + ")", avg_shadow
+
+
 MODEL_DISPLAY = {
     "claude-opus-4-6":   "Claude Opus 4.6",
     "claude-sonnet-4-6": "Claude Sonnet 4.6",
@@ -221,6 +252,12 @@ def compute_metrics(runs: list[dict]) -> dict | None:
     timeouts = [r.get("timeout_sec") for r in runs if r.get("timeout_sec") is not None]
     timeout_sec = max(set(timeouts), key=timeouts.count) if timeouts else None
 
+    token_input_total = 0
+    token_output_total = 0
+    for r in runs:
+        token_input_total += (r.get("tokens_in") or 0) + (r.get("tokens_cache") or 0)
+        token_output_total += r.get("tokens_out") or 0
+
     avg_score = sum(scores) / len(scores)
     return {
         "n_runs": n_runs,
@@ -242,6 +279,10 @@ def compute_metrics(runs: list[dict]) -> dict | None:
         "best_raw": max(scores) * TOTAL_TASKS,
         "ceiling_raw": float(ceiling),
         "timeout_sec": timeout_sec,
+        "tokens_in_total": token_input_total,
+        "tokens_out_total": token_output_total,
+        "tokens_total": token_input_total + token_output_total,
+        "tokens_runs": n_runs,
     }
 
 
@@ -265,7 +306,8 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
 
     seg = [
         ("solid",   metrics["solid"],                       metrics["solid_abs"]),
-        ("average", metrics["average"] - metrics["solid"],  metrics["avg_abs"] - metrics["solid_abs"]),
+        ("worst",   metrics["min"] - metrics["solid"],      metrics["min_abs"] - metrics["solid_abs"]),
+        ("average", metrics["average"] - metrics["min"],    metrics["avg_abs"] - metrics["min_abs"]),
         ("best",    metrics["best"] - metrics["average"],   metrics["best_abs"] - metrics["avg_abs"]),
         ("ceiling", metrics["ceiling"] - metrics["best"],   metrics["ceiling_abs"] - metrics["best_abs"]),
     ]
@@ -275,7 +317,7 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
     for key, height_pct, height_abs in seg:
         if height_pct <= 0 and height_abs <= 0:
             continue
-        gradient, shadow = grads[key]
+        gradient, shadow = _worst_gradient(grads) if key == "worst" else grads[key]
         px_h = max(height_pct * PX_PER_PCT, 2)
         px_h_abs = max(_abs_px(height_abs), 2)
         parts.append(f'''
@@ -369,27 +411,7 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
     segments_html = "\n".join(parts)
     labels_html = "\n".join(label_parts)
 
-    # Worst-of spacer (hidden by default; shown when worst metric filter is active)
     worst_px = metrics["min"] * PX_PER_PCT
-    worst_abs_px = _abs_px(metrics["min_abs"])
-    spacer_html = (
-        f'<div class="worst-spacer" data-h-pct="{worst_px:.1f}" data-h-abs="{worst_abs_px:.1f}"'
-        f' style="height: {worst_px}px;"></div>'
-        if metrics["n_runs"] > 1 else ""
-    )
-
-    # Range markers: dashed lines at worst-of and best-of heights (multi-run only)
-    range_html = ""
-    if metrics["n_runs"] > 1 and metrics["min"] < metrics["best"]:
-        best_px = metrics["best"] * PX_PER_PCT
-        best_abs_px = _abs_px(metrics["best_abs"])
-        range_html = f'''
-            <div class="range-line range-low"
-                 data-bottom-pct="{worst_px:.1f}" data-bottom-abs="{worst_abs_px:.1f}"
-                 style="bottom: {worst_px}px;"></div>
-            <div class="range-line range-high"
-                 data-bottom-pct="{best_px:.1f}" data-bottom-abs="{best_abs_px:.1f}"
-                 style="bottom: {best_px}px;"></div>'''
 
     return f'''
         <div class="bar-inner" style="height: {total_h}px;"
@@ -399,9 +421,8 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
              data-h-average="{metrics['average'] * PX_PER_PCT:.1f}"
              data-h-best="{metrics['best'] * PX_PER_PCT:.1f}"
              data-h-ceiling="{total_h:.1f}">
-            <div class="bar-segments">{spacer_html}{segments_html}</div>
+            <div class="bar-segments">{segments_html}</div>
             <div class="bar-labels">{labels_html}</div>
-            {range_html}
         </div>'''
 
 
@@ -413,6 +434,8 @@ def _build_runs_table_html(runs: list[dict]) -> str:
     def _fmt_tok(n):
         if not n:
             return "-"
+        if n >= 1_000_000_000:
+            return f"{n / 1_000_000_000:.2f}".rstrip("0").rstrip(".") + "B"
         if n >= 1_000_000:
             return f"{n / 1_000_000:.1f}M"
         if n >= 1_000:
@@ -468,7 +491,13 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         if tok_in_raw is not None or tok_cache_raw is not None:
             tok_total_in = (tok_in_raw or 0) + (tok_cache_raw or 0)
         tok_in = _fmt_tok(tok_total_in)
-        tok_out = _fmt_tok(r.get("tokens_out"))
+        tok_out_raw = r.get("tokens_out")
+        tok_out = _fmt_tok(tok_out_raw)
+        tok_total_raw = (
+            (tok_total_in or 0) + (tok_out_raw or 0)
+            if tok_total_in is not None or tok_out_raw is not None else None
+        )
+        tok_total = _fmt_tok(tok_total_raw)
 
         # Cost (commented out for now — uncomment when more models have cost)
         # cost = r.get("cost_usd")
@@ -492,6 +521,7 @@ def _build_runs_table_html(runs: list[dict]) -> str:
             f"<td>{dur}</td>"
             f"<td>{tok_in}</td>"
             f"<td>{tok_out}</td>"
+            f"<td>{tok_total}</td>"
             # f"<td class='n'>{cost_str}</td>"
             f"</tr>"
         )
@@ -525,7 +555,7 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         f'<th>Score</th><th>Pass</th><th>Fail</th>'
         f'<th>Timeout</th><th>Timeouts</th><th>Err</th>'
         f'<th>Duration</th>'
-        f'<th>In</th><th>Out</th>'
+        f'<th>In</th><th>Out</th><th>Total</th>'
         # f'<th>Cost</th>'
         f'</tr></thead>\n'
         f'<tbody>\n{"".join(rows)}\n</tbody>\n'
@@ -547,6 +577,7 @@ def generate_html(
     # Embed logo as base64
     _logo_path = Path(__file__).parent / "Endorsed_secondary_goldwhite.png"
     logo_b64 = base64.b64encode(_logo_path.read_bytes()).decode("ascii")
+    three_bars_js = (Path(__file__).parent / "wolfbench-threejs-bars.js").read_text()
 
     # Filter
     groups = {k: v for k, v in groups.items() if v["n_runs"] >= min_runs}
@@ -666,8 +697,13 @@ def generate_html(
             _bar_scores["ceiling_raw"] = round(m["ceiling_raw"], 4)
             _bar_scores["worst_raw"] = round(m["min_raw"], 4)
             _bar_scores_json = json.dumps(_bar_scores, separators=(",", ":"))
+            _tok_in = int(round(m.get("tokens_in_total") or 0))
+            _tok_out = int(round(m.get("tokens_out_total") or 0))
+            _tok_total = int(round(m.get("tokens_total") or (_tok_in + _tok_out)))
+            _tok_runs = int(m.get("tokens_runs") or n_runs)
             bars_html.append(f'''
-                <div class="bar-wrapper" data-agent="{agent}" data-runs="{n_runs}" data-bar-scores='{_bar_scores_json}' draggable="true">
+                <div class="bar-wrapper" data-agent="{agent}" data-runs="{n_runs}" data-bar-scores='{_bar_scores_json}'
+                     data-token-input="{_tok_in}" data-token-output="{_tok_out}" data-token-total="{_tok_total}" data-token-runs="{_tok_runs}" draggable="true">
                     <div class="bar-top-label"><span class="agent-label">{cfg["label"]}</span>{ver_line}{thinking_line}</div>
                     {_wopen}<div class="bar" data-agent="{agent}" style="width: {bar_w}px;">
                         {segments}
@@ -771,6 +807,10 @@ def generate_html(
         # Border-radius on the new topmost visible segment
         if _fkey == "solid":
             _mf_parts.append(
+                ".chart-area.metric-filter-solid .segment-worst"
+                " { display: none !important; }"
+            )
+            _mf_parts.append(
                 f".chart-area.metric-filter-solid .segment-solid"
                 f" {{ border-radius: 8px !important; }}"
             )
@@ -792,8 +832,8 @@ def generate_html(
                 f" inset 0 1px 0 rgba(255,255,255,0.15),"
                 f" inset 0 -1px 0 rgba(0,0,0,0.2); }}"
             )
-    # Worst-of filter: no segment exists — hide all segments, show spacer, use solid gradient
-    for _seg in _METRIC_ORDER:
+    # Worst-of filter: show the solid base plus the worst segment, use solid gradient.
+    for _seg in ("average", "best", "ceiling"):
         _mf_parts.append(
             f".chart-area.metric-filter-worst .segment-{_seg}"
             f" {{ display: none !important; }}"
@@ -801,10 +841,6 @@ def generate_html(
     _mf_parts.append(
         '.chart-area.metric-filter-worst .seg-label:not([data-metric="worst"])'
         " { display: none !important; }"
-    )
-    _mf_parts.append(
-        ".chart-area.metric-filter-worst .worst-spacer"
-        " { display: block !important; border-radius: 8px; }"
     )
     for _agent, _cfg in AGENT_CONFIG.items():
         _grad, _shad = _cfg["gradient"]["solid"]
@@ -896,6 +932,169 @@ def generate_html(
 .runs-table th[data-sort='desc']::after { content: '\\25BC'; color: #FFCC33; }
 """
 
+    token_depth_css = """
+/* 2D/3D token-depth bar rendering */
+.chart-area.svg-iso .models-row {
+    z-index: 2;
+}
+.chart-area.svg-iso.token-depth-spaced .models-row {
+    gap: 72px;
+}
+.chart-area.svg-iso .bars-row {
+    gap: 8px;
+    align-items: flex-end;
+}
+.chart-area.svg-iso.three-bars.token-depth-spaced .bars-row {
+    gap: 6px;
+}
+.chart-area.svg-iso .bar-wrapper {
+    margin-right: 0;
+}
+.chart-area.svg-iso.token-depth-spaced .bar-wrapper {
+    margin-right: var(--iso-depth, 0px);
+}
+.chart-area.svg-iso.three-bars.token-depth-spaced .bar-wrapper {
+    margin-right: var(--iso-spacing, 0px);
+}
+.chart-area.svg-iso .bar-link {
+    overflow: visible;
+}
+.chart-area.svg-iso .bar {
+    --iso-depth: 16px;
+    margin-right: 0;
+    filter: drop-shadow(0 7px 15px rgba(0,0,0,0.30));
+}
+.chart-area.svg-iso .bar-inner {
+    position: relative;
+    z-index: 3;
+}
+.chart-area.svg-iso .bar-segments {
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset -4px 0 8px rgba(0,0,0,0.12),
+        inset 5px 0 8px rgba(255,255,255,0.05);
+}
+.chart-area.svg-iso .bar-wrapper.token-missing .bar {
+    opacity: 0.92;
+}
+.svg-iso-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: #c9d1d9;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    user-select: none;
+    transition: opacity 0.25s ease, transform 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+}
+.svg-iso-legend:hover {
+    transform: translateY(-1px);
+    border-color: #FFCC33;
+}
+.svg-iso-legend.active {
+    border-color: #FFCC33;
+    background: rgba(255,204,51,0.10);
+    color: #FFE680;
+}
+.svg-iso-legend.dimmed {
+    opacity: 0.45;
+}
+.svg-iso-swatch {
+    position: relative;
+    width: 24px;
+    height: 14px;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #FFCC33, #58d68d);
+    box-shadow: 0 5px 10px rgba(0,0,0,0.28);
+}
+.svg-iso-swatch::before {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: -5px;
+    width: 12px;
+    height: 14px;
+    transform: skewY(-24deg);
+    transform-origin: left bottom;
+    border-radius: 0 4px 3px 0;
+    background: rgba(255,204,51,0.38);
+}
+.svg-iso-swatch::after {
+    content: '';
+    position: absolute;
+    left: 6px;
+    bottom: 100%;
+    width: 24px;
+    height: 6px;
+    transform: skewX(-49deg);
+    transform-origin: left bottom;
+    border-radius: 3px 3px 0 0;
+    background: rgba(255,255,255,0.28);
+}
+.svg-iso-split {
+    position: absolute;
+    left: 78%;
+    top: -4px;
+    width: 2px;
+    height: 20px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.86);
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.30), 0 0 7px rgba(255,255,255,0.24);
+    z-index: 2;
+}
+.chart-area.svg-iso.token-depth-flat .models-row,
+.chart-area.svg-iso.token-depth-off .models-row {
+    gap: 64px;
+}
+.chart-area.svg-iso.token-depth-flat .bar,
+.chart-area.svg-iso.token-depth-off .bar {
+    filter: none;
+}
+.chart-area.svg-iso.token-depth-flat .bar-wrapper,
+.chart-area.svg-iso.token-depth-off .bar-wrapper {
+    margin-right: 0;
+}
+.chart-area.svg-iso.token-depth-flat .bar-link:hover .bar,
+.chart-area.svg-iso.token-depth-off .bar-link:hover .bar {
+    filter: brightness(1.15);
+}
+.chart-area.svg-iso.token-depth-flat .bar-segments,
+.chart-area.svg-iso.token-depth-off .bar-segments {
+    box-shadow: none;
+}
+.chart-area.three-bars .three-bars-canvas {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 2;
+}
+.chart-area.three-bars.token-depth-spaced .bar {
+    filter: none;
+}
+.chart-area.three-bars.token-depth-spaced:not(.three-bars-ready) .three-bars-canvas {
+    visibility: hidden;
+}
+.chart-area.three-bars.three-bars-ready.token-depth-spaced .bar-segments {
+    opacity: 0;
+    box-shadow: none !important;
+}
+.chart-area.three-bars.token-depth-spaced .bar-top-label,
+.chart-area.three-bars.token-depth-spaced .bar-bottom-label {
+    z-index: 4;
+}
+.chart-area.three-bars.token-depth-spaced .bar-labels {
+    z-index: 4;
+}
+"""
+
     # Build runs table HTML
     runs_table_html = _build_runs_table_html(runs or [])
 
@@ -912,6 +1111,161 @@ def generate_html(
         + ",\n".join(_agent_ver_js_entries)
         + "\n    };"
     )
+
+    url_state_js = """(function() {
+    var MANAGED_PARAMS = ['agents', 'agentOrder', 'models', 'modelOrder', 'metric', 'unit', 'barSort', 'runSort', 'tokenDepth'];
+    var params = new URLSearchParams(window.location.search);
+
+    function listParam(name) {
+        if (!params.has(name)) return null;
+        var raw = params.get(name) || '';
+        if (!raw) return [];
+        return raw.split(',').map(function(v) { return v.trim(); }).filter(Boolean);
+    }
+
+    function listFrom(selector, attr) {
+        return Array.prototype.slice.call(document.querySelectorAll(selector)).map(function(el) {
+            return el.getAttribute(attr);
+        }).filter(Boolean);
+    }
+
+    function sameList(a, b) {
+        if (!a || !b || a.length !== b.length) return false;
+        for (var i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false;
+        }
+        return true;
+    }
+
+    function parseBarSort() {
+        var raw = params.get('barSort');
+        var mode = raw == null ? 0 : parseInt(raw, 10);
+        return (mode >= 0 && mode <= 2) ? mode : 0;
+    }
+
+    function parseRunSort() {
+        var raw = params.get('runSort') || '';
+        var m = raw.match(/^(\\d+):(asc|desc)$/);
+        if (!m) return null;
+        return {col: parseInt(m[1], 10), dir: m[2]};
+    }
+
+    function parseTokenDepth() {
+        var raw = (params.get('tokenDepth') || '').toLowerCase();
+        if (raw === 'overlap' || raw === 'spaced' || raw === 'on' || raw === '3d') return 'spaced';
+        return 'flat';
+    }
+
+    var api = window.WolfBenchUrlState = {
+        booting: true,
+        defaults: {
+            agentOrder: listFrom('.legend-agent', 'data-agent'),
+            modelOrder: listFrom('.model-btn', 'data-model')
+        },
+        state: {
+            agents: listParam('agents'),
+            agentOrder: listParam('agentOrder'),
+            models: listParam('models'),
+            modelOrder: listParam('modelOrder'),
+            metric: params.get('metric') || null,
+            unit: params.get('unit') || 'pct',
+            barSort: parseBarSort(),
+            runSort: parseRunSort(),
+            tokenDepth: parseTokenDepth()
+        },
+        notifyChange: notifyChange,
+        finishBoot: finishBoot,
+        sameList: sameList
+    };
+
+    function captureParams() {
+        var out = new URLSearchParams(window.location.search);
+        MANAGED_PARAMS.forEach(function(k) { out.delete(k); });
+
+        var allAgents = listFrom('.legend-agent', 'data-agent');
+        var availableAgents = listFrom('.legend-agent:not(.unavailable)', 'data-agent');
+        var agentBaseline = availableAgents.length ? availableAgents : allAgents;
+        var activeAgents = listFrom('.legend-agent:not(.dimmed):not(.unavailable)', 'data-agent');
+        if (agentBaseline.length && activeAgents.length > 0 && activeAgents.length < agentBaseline.length) {
+            out.set('agents', activeAgents.join(','));
+        }
+
+        var agentOrder = window._getAgentOrderForUrl
+            ? window._getAgentOrderForUrl()
+            : listFrom('.legend-agent', 'data-agent');
+        if (agentOrder && !sameList(agentOrder, api.defaults.agentOrder)) {
+            out.set('agentOrder', agentOrder.join(','));
+        }
+
+        var allModels = listFrom('.model-btn', 'data-model');
+        var activeModels = listFrom('.model-btn:not(.dimmed)', 'data-model');
+        if (allModels.length && activeModels.length < allModels.length) {
+            out.set('models', activeModels.join(','));
+        }
+
+        var modelOrder = window._getModelOrderForUrl ? window._getModelOrderForUrl() : null;
+        if (modelOrder && !sameList(modelOrder, api.defaults.modelOrder)) {
+            out.set('modelOrder', modelOrder.join(','));
+        }
+
+        var metric = window._filterMetric || '';
+        if (metric) out.set('metric', metric);
+
+        var tokenDepthMode = (typeof window._tokenDepthMode === 'string')
+            ? window._tokenDepthMode
+            : api.state.tokenDepth;
+        if (tokenDepthMode === 'spaced') {
+            out.set('tokenDepth', 'spaced');
+        }
+
+        var unitToggle = document.getElementById('unitToggle');
+        var unit = unitToggle ? unitToggle.getAttribute('data-mode') : 'pct';
+        if (unit === 'abs') out.set('unit', 'abs');
+
+        var barSortToggle = document.getElementById('barSortToggle');
+        var barSort = barSortToggle ? barSortToggle.getAttribute('data-sort-mode') : '0';
+        if (barSort && barSort !== '0') out.set('barSort', barSort);
+
+        var table = document.querySelector('.runs-table');
+        if (table && table.tHead && table.tHead.rows[0]) {
+            var headers = table.tHead.rows[0].cells;
+            for (var i = 0; i < headers.length; i++) {
+                var dir = headers[i].getAttribute('data-sort');
+                if (dir) {
+                    if (!(i === 0 && dir === 'desc')) out.set('runSort', i + ':' + dir);
+                    break;
+                }
+            }
+        }
+
+        return out;
+    }
+
+    var notifyTimer = null;
+    function replaceUrlNow() {
+        var out = captureParams();
+        var query = out.toString();
+        var next = window.location.pathname + (query ? '?' + query : '') + window.location.hash;
+        var current = window.location.pathname + window.location.search + window.location.hash;
+        if (next !== current) {
+            window.history.replaceState(null, '', next);
+        }
+    }
+
+    function notifyChange() {
+        if (api.booting) return;
+        clearTimeout(notifyTimer);
+        notifyTimer = setTimeout(replaceUrlNow, 0);
+    }
+
+    function finishBoot() {
+        api.booting = false;
+        if (window.updateChartWidth) window.updateChartWidth();
+        if (window.filterRunsTable) window.filterRunsTable();
+        if (window.adjustLabelPadding) window.adjustLabelPadding();
+        replaceUrlNow();
+    }
+})();"""
 
     longpress_js = """(function() {
     // Long-press detection for touch AND mouse (acts as Shift/Ctrl+Click)
@@ -944,6 +1298,10 @@ AGENT_VERSIONS_PLACEHOLDER
     var modelBar = document.querySelector('.model-bar');
     var versionLine = document.getElementById('agentVersionLine');
     var versionLineDefault = versionLine ? versionLine.innerHTML : '';
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
 
     // Shared filter state (agents initialized after allAgentIds is built)
     window._filterAgents = {};
@@ -976,7 +1334,7 @@ AGENT_VERSIONS_PLACEHOLDER
         if (!modelsRow) return;
         var agentBarEl = document.querySelector('.agent-bar');
         var agentOrder = agentBarEl
-            ? Array.from(agentBarEl.querySelectorAll('.legend-agent:not(.dimmed)')).map(function(b) { return b.getAttribute('data-agent'); })
+            ? Array.from(agentBarEl.querySelectorAll('.legend-agent:not(.dimmed):not(.unavailable)')).map(function(b) { return b.getAttribute('data-agent'); })
             : [];
         var primary = window._filterMetric || 'average';
         var legendOrder = ['ceiling', 'best', 'average', 'worst', 'solid'];
@@ -1018,13 +1376,107 @@ AGENT_VERSIONS_PLACEHOLDER
     // Collect all agent IDs and init filter with all active
     var allAgentIds = [];
     agentLegends.forEach(function(l) { var a = l.getAttribute('data-agent'); if (a) allAgentIds.push(a); });
-    allAgentIds.forEach(function(a) { window._filterAgents[a] = true; });
+    var agentFilterMode = 'all';
+    function setAllAgentsActive() {
+        window._filterAgents = {};
+        allAgentIds.forEach(function(a) { window._filterAgents[a] = true; });
+        agentFilterMode = 'all';
+    }
+    setAllAgentsActive();
+    if (urlState.agents) {
+        var initialAgents = {};
+        urlState.agents.forEach(function(a) {
+            if (allAgentIds.indexOf(a) !== -1) initialAgents[a] = true;
+        });
+        if (Object.keys(initialAgents).length > 0) {
+            window._filterAgents = initialAgents;
+            agentFilterMode = Object.keys(initialAgents).length === allAgentIds.length ? 'all' : 'subset';
+        }
+    }
+
+    function groupHasUsableAgentBar(group, agent) {
+        var bar = group.querySelector('.bar-wrapper[data-agent="' + agent + '"]');
+        if (!bar || bar.classList.contains('bar-dismissed')) return false;
+        if (window._filterMetric && bar.getAttribute('data-runs') === '1') return false;
+        return true;
+    }
+
+    function availableAgentIds(available) {
+        var ids = allAgentIds.filter(function(a) { return available[a] !== false; });
+        return ids;
+    }
+
+    window.syncAgentAvailability = function() {
+        var available = {};
+        allAgentIds.forEach(function(a) { available[a] = false; });
+        modelGroups.forEach(function(g) {
+            if (g.classList.contains('model-hidden-user') || g.classList.contains('metric-hidden')) return;
+            allAgentIds.forEach(function(a) {
+                if (!available[a] && groupHasUsableAgentBar(g, a)) available[a] = true;
+            });
+        });
+        agentLegends.forEach(function(l) {
+            var a = l.getAttribute('data-agent');
+            var isAvailable = available[a] !== false;
+            l.classList.toggle('unavailable', !isAvailable);
+            l.hidden = !isAvailable;
+            l.setAttribute('aria-hidden', isAvailable ? 'false' : 'true');
+            l.setAttribute('draggable', (isAvailable && window._barSortMode !== 2) ? 'true' : 'false');
+            if (!isAvailable) {
+                l.classList.remove('dragging');
+                l.classList.remove('drag-over');
+            }
+        });
+        return available;
+    };
+
+    function effectiveAgentSelection(available) {
+        var ids = availableAgentIds(available);
+        var selected = {};
+        if (agentFilterMode === 'all') {
+            ids.forEach(function(a) { selected[a] = true; });
+        } else {
+            ids.forEach(function(a) {
+                if (window._filterAgents[a]) selected[a] = true;
+            });
+            if (Object.keys(selected).length === 0) {
+                setAllAgentsActive();
+                ids.forEach(function(a) { selected[a] = true; });
+            }
+        }
+        return {selected: selected, availableIds: ids};
+    }
+
+    function syncModelButtonAvailability() {
+        if (!modelBar) return;
+        var groupMap = {};
+        modelGroups.forEach(function(g) {
+            groupMap[g.getAttribute('data-model')] = g;
+        });
+        Array.prototype.slice.call(modelBar.querySelectorAll('.model-btn')).forEach(function(btn) {
+            var g = groupMap[btn.getAttribute('data-model')];
+            var isAvailable = !g || (
+                !g.classList.contains('model-hidden') &&
+                !g.classList.contains('metric-hidden')
+            );
+            btn.classList.toggle('unavailable', !isAvailable);
+            btn.hidden = !isAvailable;
+            btn.setAttribute('aria-hidden', isAvailable ? 'false' : 'true');
+            btn.setAttribute('draggable', isAvailable ? 'true' : 'false');
+            if (!isAvailable) {
+                btn.classList.remove('dragging');
+                btn.classList.remove('drag-over');
+            }
+        });
+    }
 
     // Apply current agent filter state to DOM
     function applyAgentFilter() {
-        var sel = window._filterAgents;
+        var available = window.syncAgentAvailability();
+        var effective = effectiveAgentSelection(available);
+        var sel = effective.selected;
         var nSel = Object.keys(sel).length;
-        var allActive = nSel === allAgentIds.length;
+        var allActive = nSel === effective.availableIds.length;
 
         // Reset
         agentLegends.forEach(function(l) { l.classList.remove('dimmed'); });
@@ -1036,7 +1488,7 @@ AGENT_VERSIONS_PLACEHOLDER
             // Subset selected: show only those
             agentLegends.forEach(function(l) {
                 var a = l.getAttribute('data-agent');
-                l.classList.toggle('dimmed', !sel[a]);
+                l.classList.toggle('dimmed', available[a] !== false && !sel[a]);
             });
             barWrappers.forEach(function(b) {
                 b.classList.toggle('agent-hidden', !sel[b.getAttribute('data-agent')]);
@@ -1044,7 +1496,7 @@ AGENT_VERSIONS_PLACEHOLDER
             modelGroups.forEach(function(g) {
                 var hasAgent = false;
                 for (var a in sel) {
-                    if (g.querySelector('.bar-wrapper[data-agent="' + a + '"]')) {
+                    if (groupHasUsableAgentBar(g, a)) {
                         hasAgent = true; break;
                     }
                 }
@@ -1061,10 +1513,16 @@ AGENT_VERSIONS_PLACEHOLDER
             // All active — no filter
             if (versionLine) versionLine.innerHTML = versionLineDefault;
         }
+        syncModelButtonAvailability();
         // Count visible agents — hide top labels when only one is shown
         var visibleAgents = {};
-        barWrappers.forEach(function(b) {
-            if (!b.classList.contains('agent-hidden')) visibleAgents[b.getAttribute('data-agent')] = true;
+        modelGroups.forEach(function(g) {
+            if (g.classList.contains('model-hidden') || g.classList.contains('model-hidden-user') || g.classList.contains('metric-hidden')) return;
+            g.querySelectorAll('.bar-wrapper:not(.agent-hidden)').forEach(function(b) {
+                if (b.classList.contains('bar-dismissed')) return;
+                if (window._filterMetric && b.getAttribute('data-runs') === '1') return;
+                visibleAgents[b.getAttribute('data-agent')] = true;
+            });
         });
         var chartArea = document.querySelector('.chart-area');
         if (chartArea) chartArea.classList.toggle('single-agent', Object.keys(visibleAgents).length <= 1);
@@ -1073,15 +1531,36 @@ AGENT_VERSIONS_PLACEHOLDER
         if (window.updateChartWidth) window.updateChartWidth();
         if (window.filterRunsTable) window.filterRunsTable();
     }
+    window.applyAgentFilter = applyAgentFilter;
 
     // Drag to reorder agents (reorders bar-wrappers inside each model group)
     var agentBar = document.querySelector('.agent-bar');
     var agentDragSrc = null;
 
-    function reorderBarsToMatchAgentButtons() {
-        var order = Array.prototype.slice.call(agentBar.querySelectorAll('.legend-agent')).map(function(b) {
+    function currentAgentOrder() {
+        return Array.prototype.slice.call(agentBar.querySelectorAll('.legend-agent')).map(function(b) {
             return b.getAttribute('data-agent');
         });
+    }
+
+    function applyAgentOrder(order) {
+        if (!agentBar || !order || !order.length) return;
+        var btnMap = {};
+        Array.prototype.slice.call(agentBar.querySelectorAll('.legend-agent')).forEach(function(b) {
+            btnMap[b.getAttribute('data-agent')] = b;
+        });
+        order.forEach(function(a) {
+            if (btnMap[a]) agentBar.appendChild(btnMap[a]);
+        });
+        allAgentIds.forEach(function(a) {
+            if (order.indexOf(a) === -1 && btnMap[a]) agentBar.appendChild(btnMap[a]);
+        });
+    }
+
+    applyAgentOrder(urlState.agentOrder);
+
+    function reorderBarsToMatchAgentButtons() {
+        var order = currentAgentOrder();
         // Within-agent tiebreaker: score cascade using raw values
         var primary = window._filterMetric || 'average';
         var legendOrder = ['ceiling', 'best', 'average', 'worst', 'solid'];
@@ -1113,6 +1592,10 @@ AGENT_VERSIONS_PLACEHOLDER
 
     agentLegends.forEach(function(btn) {
         btn.addEventListener('dragstart', function(e) {
+            if (btn.classList.contains('unavailable') || btn.getAttribute('draggable') === 'false') {
+                e.preventDefault();
+                return;
+            }
             agentDragSrc = btn;
             btn.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
@@ -1126,6 +1609,7 @@ AGENT_VERSIONS_PLACEHOLDER
             agentDragSrc = null;
         });
         btn.addEventListener('dragover', function(e) {
+            if (!agentDragSrc || btn.classList.contains('unavailable')) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             if (btn !== agentDragSrc) btn.classList.add('drag-over');
@@ -1134,7 +1618,7 @@ AGENT_VERSIONS_PLACEHOLDER
         btn.addEventListener('drop', function(e) {
             e.preventDefault();
             btn.classList.remove('drag-over');
-            if (!agentDragSrc || agentDragSrc === btn) return;
+            if (!agentDragSrc || agentDragSrc === btn || btn.classList.contains('unavailable')) return;
             var allBtns = Array.prototype.slice.call(agentBar.querySelectorAll('.legend-agent'));
             var srcIdx = allBtns.indexOf(agentDragSrc);
             var tgtIdx = allBtns.indexOf(btn);
@@ -1145,21 +1629,30 @@ AGENT_VERSIONS_PLACEHOLDER
             }
             reorderBarsToMatchAgentButtons();
             window.reorderModels();
+            notifyUrlChange();
         });
     });
 
     agentLegends.forEach(function(el) {
         el.addEventListener('click', function(e) {
             e.stopPropagation();
+            var _lp = window._longPressed; window._longPressed = false;
             if (el.getAttribute('data-just-dragged') === 'true') {
                 el.removeAttribute('data-just-dragged');
                 return;
             }
+            if (el.classList.contains('unavailable')) return;
             var agent = el.getAttribute('data-agent');
             if (!agent) return;
+            var available = window.syncAgentAvailability();
+            var ids = availableAgentIds(available);
 
-            var _lp = window._longPressed; window._longPressed = false;
             if (e.ctrlKey || e.metaKey || e.shiftKey || _lp) {
+                if (agentFilterMode === 'all') {
+                    window._filterAgents = {};
+                    ids.forEach(function(a) { window._filterAgents[a] = true; });
+                }
+                agentFilterMode = 'subset';
                 // Toggle this agent
                 if (window._filterAgents[agent]) {
                     delete window._filterAgents[agent];
@@ -1167,20 +1660,22 @@ AGENT_VERSIONS_PLACEHOLDER
                     window._filterAgents[agent] = true;
                 }
                 // None active → all active
-                if (Object.keys(window._filterAgents).length === 0) {
-                    allAgentIds.forEach(function(a) { window._filterAgents[a] = true; });
+                if (!ids.some(function(a) { return window._filterAgents[a]; })) {
+                    setAllAgentsActive();
                 }
             } else {
                 // Exclusive select (or deselect if only active)
-                if (Object.keys(window._filterAgents).length === 1 && window._filterAgents[agent]) {
-                    window._filterAgents = {};
-                    allAgentIds.forEach(function(a) { window._filterAgents[a] = true; });
+                var selectedAvailable = ids.filter(function(a) { return window._filterAgents[a]; });
+                if (agentFilterMode === 'subset' && selectedAvailable.length === 1 && selectedAvailable[0] === agent) {
+                    setAllAgentsActive();
                 } else {
+                    agentFilterMode = 'subset';
                     window._filterAgents = {};
                     window._filterAgents[agent] = true;
                 }
             }
             applyAgentFilter();
+            notifyUrlChange();
         });
     });
 
@@ -1217,7 +1712,7 @@ AGENT_VERSIONS_PLACEHOLDER
                       worst: 'worst_raw', solid: 'solid_raw'};
         var agentBarEl = document.querySelector('.agent-bar');
         var visibleAgents = agentBarEl
-            ? Array.from(agentBarEl.querySelectorAll('.legend-agent:not(.dimmed)')).map(function(b) { return b.getAttribute('data-agent'); })
+            ? Array.from(agentBarEl.querySelectorAll('.legend-agent:not(.dimmed):not(.unavailable)')).map(function(b) { return b.getAttribute('data-agent'); })
             : [];
         function maxFor(scores, metricKey) {
             var best = -1;
@@ -1256,7 +1751,8 @@ AGENT_VERSIONS_PLACEHOLDER
         highlightSortMetric(window._filterMetric);
     }
 
-    // Reorder agent buttons by their max score across all models (current metric cascade).
+    // Reorder agent buttons by their max score across the current model/metric view.
+    // This is the Mode 2 stand-in for manual agent ordering while drag is disabled.
     function reorderAgentsByMaxScore() {
         var agentBarEl = document.querySelector('.agent-bar');
         if (!agentBarEl) return;
@@ -1267,6 +1763,7 @@ AGENT_VERSIONS_PLACEHOLDER
                       worst: 'worst_raw', solid: 'solid_raw'};
         var agentScores = {};
         document.querySelectorAll('.model-group').forEach(function(g) {
+            if (g.classList.contains('model-hidden-user') || g.classList.contains('metric-hidden')) return;
             try {
                 var scores = JSON.parse(g.getAttribute('data-scores') || '{}');
                 for (var ag in scores) {
@@ -1301,8 +1798,7 @@ AGENT_VERSIONS_PLACEHOLDER
     function snapshotAgentOrder() {
         var agentBarEl = document.querySelector('.agent-bar');
         if (!agentBarEl) return;
-        savedAgentOrder = Array.prototype.slice.call(agentBarEl.querySelectorAll('.legend-agent'))
-            .map(function(b) { return b.getAttribute('data-agent'); });
+        savedAgentOrder = currentAgentOrder();
     }
     function restoreAgentOrder() {
         if (!savedAgentOrder) return;
@@ -1318,12 +1814,15 @@ AGENT_VERSIONS_PLACEHOLDER
         }
         savedAgentOrder = null;
     }
+    window._getAgentOrderForUrl = function() {
+        return savedAgentOrder ? savedAgentOrder.slice() : currentAgentOrder();
+    };
 
     // Mode 2: agent button drag is meaningless (bars/models don't use agent order).
     // Disable native drag + apply a CSS hook to swap the cursor.
     function setAgentDragEnabled(enabled) {
         document.querySelectorAll('.legend-agent').forEach(function(b) {
-            if (enabled) {
+            if (enabled && !b.classList.contains('unavailable')) {
                 b.setAttribute('draggable', 'true');
             } else {
                 b.setAttribute('draggable', 'false');
@@ -1332,22 +1831,27 @@ AGENT_VERSIONS_PLACEHOLDER
     }
 
     window._barSortMode = 0;
-    if (barSortToggle) {
-        barSortToggle.addEventListener('click', function() {
-            var prev = barSortMode;
-            barSortMode = (barSortMode + 1) % 3;
-            window._barSortMode = barSortMode;
+    function setBarSortMode(mode) {
+        var prev = barSortMode;
+        barSortMode = mode;
+        window._barSortMode = barSortMode;
+        if (barSortToggle) {
             barSortToggle.setAttribute('data-sort-mode', String(barSortMode));
             barSortToggle.classList.toggle('active', barSortMode > 0);
-            if (barSortMode === 2 && prev !== 2) {
-                snapshotAgentOrder();
-                reorderAgentsByMaxScore();
-                setAgentDragEnabled(false);
-            } else if (prev === 2 && barSortMode !== 2) {
-                restoreAgentOrder();
-                setAgentDragEnabled(true);
-            }
-            window.reorderModels();
+        }
+        if (barSortMode === 2 && prev !== 2) {
+            snapshotAgentOrder();
+            setAgentDragEnabled(false);
+        } else if (prev === 2 && barSortMode !== 2) {
+            restoreAgentOrder();
+            setAgentDragEnabled(true);
+        }
+        window.reorderModels();
+    }
+    if (barSortToggle) {
+        barSortToggle.addEventListener('click', function() {
+            setBarSortMode((barSortMode + 1) % 3);
+            notifyUrlChange();
         });
     }
 
@@ -1358,6 +1862,7 @@ AGENT_VERSIONS_PLACEHOLDER
     var origReorderModels = window.reorderModels;
     window.reorderModels = function() {
         if (window._barSortMode === 2) {
+            reorderAgentsByMaxScore();
             reorderModelsByMaxScore();
         } else {
             origReorderModels();
@@ -1368,6 +1873,10 @@ AGENT_VERSIONS_PLACEHOLDER
             reorderBarsToMatchAgentButtons();
         }
     };
+    applyAgentFilter();
+    if (barSortToggle && urlState.barSort) {
+        setBarSortMode(urlState.barSort);
+    }
 })();""".replace("AGENT_VERSIONS_PLACEHOLDER", _agent_versions_js)
 
     metric_filter_js = """(function() {
@@ -1375,6 +1884,10 @@ AGENT_VERSIONS_PLACEHOLDER
     var chartArea = document.querySelector('.chart-area');
     var metricLegends = document.querySelectorAll('.legend-metric');
     var allLabels = document.querySelectorAll('.seg-label');
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
 
     // Save the collision-avoided positions on first load
     allLabels.forEach(function(lbl) {
@@ -1422,90 +1935,103 @@ AGENT_VERSIONS_PLACEHOLDER
         });
     }
 
+    function setMetricFilter(metric) {
+        if (!chartArea) return;
+        activeMetric = metric || null;
+        chartArea.className = chartArea.className.replace(/metric-filter-\\w+/g, '').trim();
+        if (!activeMetric) {
+            metricLegends.forEach(function(l) {
+                l.classList.remove('active');
+                l.classList.remove('dimmed');
+            });
+            adjustLabelPositions(null);
+            adjustTopLabels(null);
+            hideEmptyGroups(false);
+            window._filterMetric = null;
+        } else {
+            chartArea.classList.add('metric-filter-' + activeMetric);
+            metricLegends.forEach(function(l) {
+                var isActive = l.getAttribute('data-metric') === activeMetric;
+                l.classList.toggle('active', isActive);
+                l.classList.toggle('dimmed', !isActive);
+            });
+            adjustLabelPositions(activeMetric);
+            adjustTopLabels(activeMetric);
+            hideEmptyGroups(true);
+            window._filterMetric = activeMetric;
+        }
+        if (window.applyAgentFilter) {
+            window.applyAgentFilter();
+        } else {
+            window.reorderModels();
+            if (window.updateChartWidth) window.updateChartWidth();
+            if (window.filterRunsTable) window.filterRunsTable();
+        }
+        notifyUrlChange();
+    }
+
     metricLegends.forEach(function(el) {
         el.addEventListener('click', function(e) {
             e.stopPropagation();
             var metric = el.getAttribute('data-metric');
             if (!metric) return;
-
-            if (activeMetric === metric) {
-                activeMetric = null;
-                chartArea.className = chartArea.className.replace(/metric-filter-\\w+/g, '').trim();
-                metricLegends.forEach(function(l) {
-                    l.classList.remove('active');
-                    l.classList.remove('dimmed');
-                });
-                adjustLabelPositions(null);
-                adjustTopLabels(null);
-                hideEmptyGroups(false);
-                window._filterMetric = null;
-                window.reorderModels();
-                if (window.updateChartWidth) window.updateChartWidth();
-                if (window.filterRunsTable) window.filterRunsTable();
-            } else {
-                activeMetric = metric;
-                chartArea.className = chartArea.className.replace(/metric-filter-\\w+/g, '').trim();
-                chartArea.classList.add('metric-filter-' + metric);
-                metricLegends.forEach(function(l) {
-                    var isActive = l.getAttribute('data-metric') === metric;
-                    l.classList.toggle('active', isActive);
-                    l.classList.toggle('dimmed', !isActive);
-                });
-                adjustLabelPositions(metric);
-                adjustTopLabels(metric);
-                hideEmptyGroups(true);
-                window._filterMetric = metric;
-                window.reorderModels();
-                if (window.updateChartWidth) window.updateChartWidth();
-                if (window.filterRunsTable) window.filterRunsTable();
-            }
+            setMetricFilter(activeMetric === metric ? null : metric);
         });
     });
+    if (urlState.metric) {
+        metricLegends.forEach(function(el) {
+            if (el.getAttribute('data-metric') === urlState.metric) setMetricFilter(urlState.metric);
+        });
+    }
 })();"""
 
     unit_toggle_js = """(function() {
     var toggle = document.getElementById('unitToggle');
     if (!toggle) return;
-    toggle.addEventListener('click', function() {
-        var mode = toggle.getAttribute('data-mode');
-        var newMode = (mode === 'pct') ? 'abs' : 'pct';
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
+    function setUnitMode(newMode, options) {
+        if (newMode !== 'pct' && newMode !== 'abs') return;
         toggle.setAttribute('data-mode', newMode);
         toggle.textContent = (newMode === 'pct') ? '%' : '#';
         var attr = 'data-h-' + newMode;
         // Swap bar-inner total heights
         document.querySelectorAll('.bar-inner').forEach(function(el) {
             var h = el.getAttribute(attr);
-            if (h) el.style.height = h + 'px';
+            if (h && el.style.height !== h + 'px') el.style.height = h + 'px';
         });
         // Swap segment heights
         document.querySelectorAll('.segment').forEach(function(el) {
             var h = el.getAttribute(attr);
-            if (h) el.style.height = h + 'px';
+            if (h && el.style.height !== h + 'px') el.style.height = h + 'px';
         });
         // Swap label text
         document.querySelectorAll('.seg-pct').forEach(function(el) {
-            el.textContent = el.getAttribute('data-' + newMode);
+            var text = el.getAttribute('data-' + newMode);
+            if (text != null && el.textContent !== text) el.textContent = text;
         });
         // Swap label positions
         document.querySelectorAll('.seg-label').forEach(function(el) {
             var b = el.getAttribute('data-bottom-' + newMode);
-            if (b) el.style.bottom = b + 'px';
-        });
-        // Swap range line positions
-        document.querySelectorAll('.range-line').forEach(function(el) {
-            var b = el.getAttribute('data-bottom-' + newMode);
-            if (b) el.style.bottom = b + 'px';
-        });
-        // Swap worst-spacer heights
-        document.querySelectorAll('.worst-spacer').forEach(function(el) {
-            var h = el.getAttribute(attr);
-            if (h) el.style.height = h + 'px';
+            if (b && el.style.bottom !== b + 'px') el.style.bottom = b + 'px';
         });
         // Swap y-axis ticks
         document.querySelectorAll('.y-tick').forEach(function(el) {
-            el.textContent = el.getAttribute('data-' + newMode);
+            var text = el.getAttribute('data-' + newMode);
+            if (text != null && el.textContent !== text) el.textContent = text;
         });
+        if (!options || !options.silent) notifyUrlChange();
+    }
+    window.WolfBenchApplyCurrentUnit = function() {
+        setUnitMode(toggle.getAttribute('data-mode') || 'pct', {silent: true});
+    };
+    toggle.addEventListener('click', function() {
+        var mode = toggle.getAttribute('data-mode');
+        setUnitMode((mode === 'pct') ? 'abs' : 'pct');
     });
+    if (urlState.unit === 'abs') setUnitMode('abs');
 })();"""
 
     table_sort_js = """(function() {
@@ -1518,13 +2044,18 @@ AGENT_VERSIONS_PLACEHOLDER
     // Initial state: Date column (0) descending — matches Python sort order
     var sortCol = 0;
     var sortAsc = false;
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
 
     function parseVal(text) {
         var s = text.replace(/^\\$/, '').replace(/[%s]$/, '').trim();
-        var m = s.match(/^([\\d.]+)([MK])$/i);
+        var m = s.match(/^([\\d.]+)([KMB])$/i);
         if (m) {
             var n = parseFloat(m[1]);
-            return m[2].toUpperCase() === 'M' ? n * 1e6 : n * 1e3;
+            var suffix = m[2].toUpperCase();
+            return suffix === 'B' ? n * 1e9 : suffix === 'M' ? n * 1e6 : n * 1e3;
         }
         m = s.match(/^(\\d+)h(\\d+)m$/);
         if (m) return parseInt(m[1]) * 60 + parseInt(m[2]);
@@ -1543,6 +2074,23 @@ AGENT_VERSIONS_PLACEHOLDER
         return at.toLowerCase().localeCompare(bt.toLowerCase());
     }
 
+    function applyTableSort(col, asc) {
+        if (col < 0 || col >= headers.length) return;
+        sortCol = col;
+        sortAsc = asc;
+        for (var j = 0; j < headers.length; j++) {
+            headers[j].removeAttribute('data-sort');
+        }
+        headers[col].setAttribute('data-sort', sortAsc ? 'asc' : 'desc');
+        var rows = Array.prototype.slice.call(tbody.rows);
+        rows.sort(function(a, b) {
+            var r = cmp(a, b, col);
+            return sortAsc ? r : -r;
+        });
+        rows.forEach(function(row) { tbody.appendChild(row); });
+        notifyUrlChange();
+    }
+
     for (var i = 0; i < headers.length; i++) {
         (function(col) {
             headers[col].style.cursor = 'pointer';
@@ -1553,18 +2101,12 @@ AGENT_VERSIONS_PLACEHOLDER
                     sortCol = col;
                     sortAsc = true;
                 }
-                for (var j = 0; j < headers.length; j++) {
-                    headers[j].removeAttribute('data-sort');
-                }
-                headers[col].setAttribute('data-sort', sortAsc ? 'asc' : 'desc');
-                var rows = Array.prototype.slice.call(tbody.rows);
-                rows.sort(function(a, b) {
-                    var r = cmp(a, b, col);
-                    return sortAsc ? r : -r;
-                });
-                rows.forEach(function(row) { tbody.appendChild(row); });
+                applyTableSort(sortCol, sortAsc);
             });
         })(i);
+    }
+    if (urlState.runSort) {
+        applyTableSort(urlState.runSort.col, urlState.runSort.dir === 'asc');
     }
 })();"""
 
@@ -1576,10 +2118,54 @@ AGENT_VERSIONS_PLACEHOLDER
     var modelBar = document.querySelector('.model-bar');
     var chartArea = document.querySelector('.chart-area');
     var dragSrc = null;
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    var modelOrderUserSet = false;
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
 
     // Collect all model IDs and init with all active
     var allModelIds = [];
     modelBtns.forEach(function(b) { var m = b.getAttribute('data-model'); if (m) { allModelIds.push(m); activeModels[m] = true; } });
+    if (urlState.models) {
+        var initialModels = {};
+        urlState.models.forEach(function(m) {
+            if (allModelIds.indexOf(m) !== -1) initialModels[m] = true;
+        });
+        if (urlState.models.length === 0 || Object.keys(initialModels).length > 0) {
+            activeModels = initialModels;
+        }
+    }
+
+    function currentModelOrder() {
+        return Array.prototype.slice.call(modelBar.querySelectorAll('.model-btn')).map(function(b) {
+            return b.getAttribute('data-model');
+        });
+    }
+
+    function applyModelOrder(order) {
+        if (!modelBar || !modelsRow || !order || !order.length) return;
+        var btnMap = {};
+        Array.prototype.slice.call(modelBar.querySelectorAll('.model-btn')).forEach(function(b) {
+            btnMap[b.getAttribute('data-model')] = b;
+        });
+        order.forEach(function(m) {
+            if (btnMap[m]) modelBar.appendChild(btnMap[m]);
+        });
+        allModelIds.forEach(function(m) {
+            if (order.indexOf(m) === -1 && btnMap[m]) modelBar.appendChild(btnMap[m]);
+        });
+        Array.prototype.slice.call(modelBar.querySelectorAll('.model-btn')).forEach(function(b) {
+            var group = modelsRow.querySelector('.model-group[data-model="' + b.getAttribute('data-model') + '"]');
+            if (group) modelsRow.appendChild(group);
+        });
+        modelOrderUserSet = true;
+    }
+
+    applyModelOrder(urlState.modelOrder);
+    window._getModelOrderForUrl = function() {
+        return modelOrderUserSet ? currentModelOrder() : null;
+    };
 
     // Recalculate chart min-width based on visible model groups
     window.updateChartWidth = function() {
@@ -1624,8 +2210,12 @@ AGENT_VERSIONS_PLACEHOLDER
             g.classList.toggle('model-hidden-user', !allActive && !activeModels[g.getAttribute('data-model')]);
         });
         syncVisToggle();
-        window.updateChartWidth();
-        if (window.filterRunsTable) window.filterRunsTable();
+        if (window.applyAgentFilter) {
+            window.applyAgentFilter();
+        } else {
+            window.updateChartWidth();
+            if (window.filterRunsTable) window.filterRunsTable();
+        }
     }
 
     // Toggle visibility
@@ -1640,16 +2230,8 @@ AGENT_VERSIONS_PLACEHOLDER
 
             var _lp = window._longPressed; window._longPressed = false;
             if (e.ctrlKey || e.metaKey || e.shiftKey || _lp) {
-                // Long-press / modifier: exclusive select (or deselect if only active)
-                if (Object.keys(activeModels).length === 1 && activeModels[model]) {
-                    activeModels = {};
-                    allModelIds.forEach(function(m) { activeModels[m] = true; });
-                } else {
-                    activeModels = {};
-                    activeModels[model] = true;
-                }
-            } else {
-                // Normal click: toggle this model
+                // Long-press / modifier: toggle this model, so selected models can be
+                // quickly removed from the current all-model view.
                 if (activeModels[model]) {
                     delete activeModels[model];
                 } else {
@@ -1659,14 +2241,36 @@ AGENT_VERSIONS_PLACEHOLDER
                 if (Object.keys(activeModels).length === 0) {
                     allModelIds.forEach(function(m) { activeModels[m] = true; });
                 }
+            } else {
+                // Default all-visible state: clicking a model focuses it.
+                // Once filtered, normal clicks keep acting as visibility toggles.
+                if (Object.keys(activeModels).length === allModelIds.length) {
+                    activeModels = {};
+                    activeModels[model] = true;
+                } else {
+                    if (activeModels[model]) {
+                        delete activeModels[model];
+                    } else {
+                        activeModels[model] = true;
+                    }
+                    // None active → all active
+                    if (Object.keys(activeModels).length === 0) {
+                        allModelIds.forEach(function(m) { activeModels[m] = true; });
+                    }
+                }
             }
             applyModelFilter();
+            notifyUrlChange();
         });
     });
 
     // Drag to reorder
     modelBtns.forEach(function(btn) {
         btn.addEventListener('dragstart', function(e) {
+            if (btn.classList.contains('unavailable') || btn.getAttribute('draggable') === 'false') {
+                e.preventDefault();
+                return;
+            }
             dragSrc = btn;
             btn.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
@@ -1680,6 +2284,7 @@ AGENT_VERSIONS_PLACEHOLDER
             dragSrc = null;
         });
         btn.addEventListener('dragover', function(e) {
+            if (!dragSrc || btn.classList.contains('unavailable')) return;
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
             if (btn !== dragSrc) btn.classList.add('drag-over');
@@ -1688,7 +2293,7 @@ AGENT_VERSIONS_PLACEHOLDER
         btn.addEventListener('drop', function(e) {
             e.preventDefault();
             btn.classList.remove('drag-over');
-            if (!dragSrc || dragSrc === btn) return;
+            if (!dragSrc || dragSrc === btn || btn.classList.contains('unavailable')) return;
             var allBtns = Array.prototype.slice.call(modelBar.querySelectorAll('.model-btn'));
             var srcIdx = allBtns.indexOf(dragSrc);
             var tgtIdx = allBtns.indexOf(btn);
@@ -1702,6 +2307,8 @@ AGENT_VERSIONS_PLACEHOLDER
                 var group = modelsRow.querySelector('.model-group[data-model="' + b.getAttribute('data-model') + '"]');
                 if (group) modelsRow.appendChild(group);
             });
+            modelOrderUserSet = true;
+            notifyUrlChange();
         });
     });
 
@@ -1722,8 +2329,10 @@ AGENT_VERSIONS_PLACEHOLDER
                 allModelIds.forEach(function(m) { activeModels[m] = true; });
             }
             applyModelFilter();
+            notifyUrlChange();
         });
     }
+    applyModelFilter();
 })();"""
 
     bar_drag_js = """(function() {
@@ -1758,6 +2367,7 @@ AGENT_VERSIONS_PLACEHOLDER
                     if (!anyVisible) group.classList.add('model-hidden');
                 }
                 if (window.updateChartWidth) window.updateChartWidth();
+                if (window.syncAgentAvailability) window.syncAgentAvailability();
                 if (window.filterRunsTable) window.filterRunsTable();
             }
             barDragSrc = null;
@@ -1819,6 +2429,7 @@ AGENT_VERSIONS_PLACEHOLDER
                 if (anyVisible) g.classList.remove('model-hidden');
             });
             if (window.updateChartWidth) window.updateChartWidth();
+            if (window.syncAgentAvailability) window.syncAgentAvailability();
             if (window.filterRunsTable) window.filterRunsTable();
         });
     }
@@ -1910,10 +2521,171 @@ AGENT_VERSIONS_PLACEHOLDER
     document.fonts.ready.then(function() { window.adjustLabelPadding(); });
 })();"""
 
-    all_js = (longpress_js + "\n" + agent_toggle_js + "\n" + metric_filter_js + "\n"
+    token_depth_js = """(function() {
+    var chartArea = document.querySelector('.chart-area');
+    if (!chartArea) return;
+    var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
+    var tokenDepthModes = ['flat', 'spaced'];
+    var tokenDepthMode = normalizeTokenDepthMode(urlState && urlState.tokenDepth);
+    window._tokenDepthMode = tokenDepthMode;
+    window._tokenDepthEnabled = tokenDepthMode !== 'flat';
+
+    function notifyUrlChange() {
+        if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
+    }
+
+    function normalizeTokenDepthMode(mode) {
+        if (mode === 'overlap' || mode === 'spaced' || mode === 'on' || mode === '3d') return 'spaced';
+        return 'flat';
+    }
+
+    function nextTokenDepthMode(mode) {
+        var index = tokenDepthModes.indexOf(normalizeTokenDepthMode(mode));
+        return tokenDepthModes[(index + 1) % tokenDepthModes.length];
+    }
+
+    function stripZeros(text) {
+        return text.replace(/\\.0+$/, '').replace(/(\\.\\d*[1-9])0+$/, '$1');
+    }
+
+    function compactTokenValue(value) {
+        if (!value) return '0';
+        if (value >= 1e9) return stripZeros((value / 1e9).toFixed(value >= 10e9 ? 1 : 2)) + 'B';
+        if (value >= 1e6) return stripZeros((value / 1e6).toFixed(1)) + 'M';
+        if (value >= 1e3) return stripZeros((value / 1e3).toFixed(value >= 100e3 ? 0 : 1)) + 'K';
+        return String(Math.round(value));
+    }
+
+    function toNumber(value) {
+        var n = Number.parseFloat(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    var tokensPerDepthPixel = 1e7;
+    var missingDepth = 0;
+    var maxDepth = 400;
+    var items = [];
+
+    document.querySelectorAll('.bar-wrapper').forEach(function(wrapper, index) {
+        var bar = wrapper.querySelector('.bar');
+        if (!bar) return;
+        var input = toNumber(wrapper.getAttribute('data-token-input'));
+        var output = toNumber(wrapper.getAttribute('data-token-output'));
+        var total = toNumber(wrapper.getAttribute('data-token-total')) || input + output;
+        var runs = toNumber(wrapper.getAttribute('data-token-runs')) || toNumber(wrapper.getAttribute('data-runs'));
+        var missing = total <= 0;
+        var data = {input: input, output: output, total: total, runs: runs};
+        wrapper.setAttribute('data-token-index', String(index));
+        wrapper.classList.toggle('token-missing', missing);
+        items.push({wrapper: wrapper, bar: bar, data: data, missing: missing});
+    });
+    if (!items.length) return;
+
+    var totals = items.map(function(item) { return item.data.total; }).filter(function(value) { return value > 0; });
+    var min = totals.length ? Math.min.apply(Math, totals) : 0;
+    var max = totals.length ? Math.max.apply(Math, totals) : 0;
+
+    chartArea.classList.add('svg-iso', 'three-bars');
+    var tokenDepthToggle = addLegend(min, max);
+    setTokenDepthMode(tokenDepthMode, true);
+
+    items.forEach(function(item) {
+        var depth = item.missing ? missingDepth : depthFor(item.data.total);
+        item.wrapper.setAttribute('data-token-depth', depth.toFixed(1));
+        item.wrapper.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
+        item.bar.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
+        appendTokenTitle(item);
+    });
+
+    function depthFor(total) {
+        if (!total || total <= 0) return 0;
+        return Math.min(maxDepth, total / tokensPerDepthPixel);
+    }
+
+    function appendTokenTitle(item) {
+        var link = item.wrapper.querySelector('.bar-link');
+        if (!link) return;
+        var base = link.getAttribute('data-base-title') || link.getAttribute('title') || '';
+        link.setAttribute('data-base-title', base);
+        if (item.missing) {
+            link.setAttribute('title', base + '\\nTokens: unavailable (' + item.data.runs + ' runs)');
+            return;
+        }
+        var inputShare = item.data.total ? Math.round(item.data.input / item.data.total * 1000) / 10 : 0;
+        var outputShare = item.data.total ? Math.round(item.data.output / item.data.total * 1000) / 10 : 0;
+        link.setAttribute('title', base + '\\nTokens:'
+            + '\\n  In: ' + compactTokenValue(item.data.input) + ' (' + inputShare + '%)'
+            + '\\n  Out: ' + compactTokenValue(item.data.output) + ' (' + outputShare + '%)'
+            + '\\n  Total: ' + compactTokenValue(item.data.total)
+            + '\\nRuns: ' + item.data.runs);
+    }
+
+    function addLegend(minValue, maxValue) {
+        var legend = document.querySelector('.legend');
+        var existing = document.getElementById('svgIsoLegend');
+        if (!legend || existing) return existing;
+        var el = document.createElement('span');
+        el.className = 'svg-iso-legend active';
+        el.id = 'svgIsoLegend';
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('aria-pressed', 'true');
+        el.title = 'Bars are in 2D. Click for 3D token depth.';
+        el.innerHTML = '<span class="svg-iso-swatch"><span class="svg-iso-split"></span></span><span class="svg-iso-label">Bars: 2D</span>';
+        el.setAttribute('data-token-range', compactTokenValue(minValue) + '-' + compactTokenValue(maxValue));
+        el.setAttribute('data-token-scale', 'linear;10M=1px;1B=100px;max=400px');
+        el.addEventListener('click', function(event) {
+            event.stopPropagation();
+            setTokenDepthMode(nextTokenDepthMode(tokenDepthMode), false);
+        });
+        el.addEventListener('keydown', function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            event.preventDefault();
+            setTokenDepthMode(nextTokenDepthMode(tokenDepthMode), false);
+        });
+        legend.appendChild(el);
+        return el;
+    }
+
+    function setTokenDepthMode(mode, initializing) {
+        tokenDepthMode = normalizeTokenDepthMode(mode);
+        var enabled = tokenDepthMode !== 'flat';
+        window._tokenDepthMode = tokenDepthMode;
+        window._tokenDepthEnabled = enabled;
+        chartArea.classList.toggle('token-depth-flat', tokenDepthMode === 'flat');
+        chartArea.classList.toggle('token-depth-spaced', tokenDepthMode === 'spaced');
+        chartArea.classList.toggle('token-depth-off', !enabled);
+        if (tokenDepthToggle) {
+            var label = tokenDepthToggle.querySelector('.svg-iso-label');
+            tokenDepthToggle.classList.toggle('active', enabled);
+            tokenDepthToggle.classList.toggle('dimmed', !enabled);
+            tokenDepthToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+            tokenDepthToggle.setAttribute('data-token-depth', tokenDepthMode);
+            tokenDepthToggle.setAttribute('aria-label', 'Token depth mode: ' + tokenDepthMode);
+            if (tokenDepthMode === 'flat') {
+                if (label) label.textContent = 'Bars: 2D';
+                tokenDepthToggle.title = 'Bars are in 2D. Click for 3D token depth.';
+            } else {
+                if (label) label.textContent = 'Bars: 3D';
+                tokenDepthToggle.title = '3D bars use absolute linear total token volume: 1px = 10M tokens, capped at 400px. Front depth is input, rear depth is output. Click for 2D bars.';
+            }
+        }
+        if (initializing) return;
+        if (window.updateChartWidth) window.updateChartWidth();
+        if (window.adjustLabelPadding) window.adjustLabelPadding();
+        if (window.WolfBenchThreeBars) window.WolfBenchThreeBars.render();
+        document.dispatchEvent(new CustomEvent('wolfbench:token-depth-change', {detail: {mode: tokenDepthMode}}));
+        notifyUrlChange();
+    }
+})();"""
+
+    url_finish_js = """if (window.WolfBenchUrlState) window.WolfBenchUrlState.finishBoot();"""
+
+    all_js = (url_state_js + "\n" + longpress_js + "\n" + agent_toggle_js + "\n" + metric_filter_js + "\n"
               + unit_toggle_js + "\n" + model_toggle_js + "\n"
               + bar_drag_js + "\n" + runs_filter_js + "\n"
-              + label_padding_js + "\n" + table_sort_js)
+              + label_padding_js + "\n" + table_sort_js + "\n"
+              + token_depth_js + "\n" + url_finish_js)
 
     ch = CHART_HEIGHT  # alias
     ppx = PX_PER_PCT
@@ -2042,6 +2814,7 @@ h1 {{
 .legend-agent[draggable="false"] {{ cursor: pointer; }}
 .legend-agent[draggable="false"]:active {{ cursor: pointer; }}
 .legend-agent.dimmed {{ opacity: 0.3; }}
+.legend-agent.unavailable {{ display: none; }}
 .legend-agent.dragging {{ opacity: 0.5; transform: scale(0.95); }}
 .legend-agent.drag-over {{ filter: brightness(1.4); }}
 .legend-agent-terminus-2   {{ background: rgba(39,174,96,0.2);  color: #58d68d; border: 1px solid rgba(39,174,96,0.3); }}
@@ -2148,6 +2921,7 @@ h1 {{
     background: rgba(255,204,51,0.08);
 }}
 .model-btn.dimmed {{ opacity: 0.3; }}
+.model-btn.unavailable {{ display: none; }}
 .model-btn:active {{ cursor: grabbing; }}
 .model-btn.dragging {{ opacity: 0.5; transform: scale(0.95); }}
 .model-btn.drag-over {{ border-color: #FFCC33; background: rgba(255,204,51,0.15); }}
@@ -2460,23 +3234,7 @@ h1 {{
     opacity: 1;
 }}
 
-/* Worst-of spacer (visible only during worst metric filter) */
-.worst-spacer {{
-    display: none;
-}}
-
-/* Range markers: dashed lines at worst-of and best-of heights */
-.range-line {{
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 0;
-    border-top: 1.5px dashed rgba(255, 255, 255, 0.5);
-    z-index: 1;
-    pointer-events: none;
-}}
-
-/* Footer */
+	/* Footer */
 .footer {{
     text-align: center;
     margin-top: 16px;
@@ -2593,11 +3351,9 @@ h1 {{
 .chart-area[class*="metric-filter"] .segment-shine {{
     display: none !important;
 }}
-.chart-area[class*="metric-filter"] .range-line {{
-    display: none !important;
-}}
-{metric_filter_css}
+	{metric_filter_css}
 {runs_table_css}
+{token_depth_css}
 </style>
 </head>
 <body>
@@ -2707,7 +3463,7 @@ h1 {{
         <div class="metric-block">
             <h3>&#9660; Worst-of: <em>How bad can a single run get?</em></h3>
             <p>The lowest score from any individual run.</p>
-            <p>This is the opposite of best-of&nbsp;&ndash; the floor, the worst case. The gap between worst-of and best-of defines the full <em>score range</em> across all runs. A narrow range means predictable performance; a wide range means you&rsquo;re rolling dice. Dashed lines on the chart mark this range visually, connecting the worst-of floor to the best-of peak.</p>
+	            <p>This is the opposite of best-of&nbsp;&ndash; the floor, the worst case. The gap between worst-of and best-of defines the full <em>score range</em> across all runs. A narrow range means predictable performance; a wide range means you&rsquo;re rolling dice.</p>
         </div>
 
         <div class="metric-block">
@@ -2717,7 +3473,7 @@ h1 {{
         </div>
 
         <h3>Reading the Chart</h3>
-        <p>The five metrics are shown for each model/configuration: four stacked bar segments plus the worst-of marker with dashed range lines. The <em>spread</em> between them tells you as much as the numbers themselves:</p>
+	        <p>The five metrics are shown for each model/configuration as stacked bar segments from the rock-solid base up to the ceiling. Optional 3D mode adds token volume as depth: input tokens in front, output tokens behind. The <em>spread</em> between the segments tells you as much as the numbers themselves:</p>
         <ul class="spread-list">
             <li><strong>Tight spread</strong> (metrics close together) = consistent, predictable AI agent</li>
             <li><strong>Wide spread</strong> (big gap between solid and ceiling) = high variance, unreliable</li>
@@ -2734,11 +3490,14 @@ h1 {{
         <p>This benchmark offers enormous potential for discovery. For instance: Why does xhigh reasoning improve GPT 5.4&rsquo;s performance while max effort degrades Opus 4.6&rsquo;s results? How does Claude Code fare when running a GPT or Gemini model compared to running directly with Opus or Sonnet&nbsp;&ndash; or Codex with Claude or Gemini? Is a &ldquo;cheap&rdquo; model actually cost-effective if it consumes far more tokens than a more expensive alternative? How does quantization affect performance of local models in agentic tasks?</p>
         <p>So many possibilities for analysis&nbsp;&ndash; and for posting about it! <em>Stay tuned</em>&nbsp;&ndash; and if you want to be the first to know when new results come in, follow me on <a href="https://x.com/WolframRvnwlf">X</a> and <a href="https://www.linkedin.com/in/wolframravenwolf/">LinkedIn</a>.</p>
 
-        <p class="build-info">Inference sponsored by <a href="https://www.coreweave.com/">CoreWeave</a>: The Essential Cloud for AI.<br>Sandbox compute by <a href="https://www.daytona.io/">Daytona</a>&nbsp;&ndash; Secure Infrastructure for Running AI-Generated Code.<br>Built with <a href="https://harborframework.com/">Harbor</a> for orchestration, <a href="https://www.tbench.ai/">Terminal-Bench 2.0</a> for tasks, and <a href="https://wandb.ai/">W&amp;B Weave</a> for tracking.<br>Charts and dashboards generated with <a href="https://marimo.io/">marimo</a> notebooks.<br>Explore the complete data and tooling suite on our <a href="https://github.com/wandb/WolfBench">WolfBench GitHub</a>.</p>
+        <p class="build-info">Inference and sandbox compute sponsored by <a href="https://www.coreweave.com/">CoreWeave</a>: The Essential Cloud for AI.<br>Additional sandbox compute by <a href="https://www.daytona.io/">Daytona</a>&nbsp;&ndash; Secure Infrastructure for Running AI-Generated Code.<br>Built with <a href="https://harborframework.com/">Harbor</a> for orchestration, <a href="https://www.tbench.ai/">Terminal-Bench 2.0</a> for tasks, and <a href="https://wandb.ai/">W&amp;B Weave</a> for tracking.<br>Charts and dashboards generated with <a href="https://marimo.io/">marimo</a> notebooks.<br>Explore the complete data and tooling suite on our <a href="https://github.com/wandb/WolfBench">WolfBench GitHub</a>.</p>
     </div>
 </div>
 <script>
 {all_js}
+</script>
+<script type="module">
+{three_bars_js}
 </script>
 </body>
 </html>'''

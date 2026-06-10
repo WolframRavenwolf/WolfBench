@@ -1,0 +1,177 @@
+{
+    "id": "99d54413-b1f8-449a-9b78-2c79d14b1967",
+    "task_name": "make-mips-interpreter",
+    "trial_name": "make-mips-interpreter__Em6EKgW",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-nemotron-ultra/2026-06-04__23-52-25/make-mips-interpreter__Em6EKgW",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "make-mips-interpreter"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "8c83716ee4cc62408b9d9bb2fb2a59dad434305da76b32d3186e7da1c106efe3",
+    "config": {
+        "task": {
+            "path": "make-mips-interpreter",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "make-mips-interpreter__Em6EKgW",
+        "trials_dir": "jobs/cw-t2-nemotron-ultra/2026-06-04__23-52-25",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "temperature": 1.0,
+                "llm_kwargs": {
+                    "top_p": 0.95,
+                    "extra_body": {
+                        "chat_template_kwargs": {
+                            "force_nonempty_content": true
+                        }
+                    }
+                },
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "cc5cce1a-d355-41e4-a03c-1b4484ed1727"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 4827494,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 201340,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 50,
+            "api_request_times_msec": [
+                5366.45245552063,
+                7489.557981491089,
+                6228.610515594482,
+                11541.576623916626,
+                6710.635423660278,
+                13757.296085357666,
+                5647.8681564331055,
+                7933.859348297119,
+                6895.173072814941,
+                9690.447092056274,
+                22964.072942733765,
+                63397.54056930542,
+                18792.041301727295,
+                17831.416368484497,
+                75553.02166938782,
+                8823.513746261597,
+                65849.12705421448,
+                8862.733364105225,
+                17000.909566879272,
+                33497.89881706238,
+                77974.84254837036,
+                92258.84342193604,
+                83583.42814445496,
+                79384.61375236511,
+                107680.01365661621,
+                108426.97715759277,
+                9323.593139648438,
+                95086.23266220093,
+                84641.12210273743,
+                20677.141666412354,
+                94678.89022827148,
+                21590.40641784668,
+                19819.271087646484,
+                36775.42281150818,
+                9394.254922866821,
+                5642.221212387085,
+                5936.040163040161,
+                6383.321523666382,
+                11112.206220626831,
+                32615.373373031616,
+                111947.42608070374,
+                121279.5741558075,
+                9640.942335128784,
+                76253.8435459137,
+                109598.09470176697,
+                95768.80359649658,
+                53146.88563346863,
+                83537.34731674194,
+                14566.79654121399,
+                20240.405082702637
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-04T23:57:13.759458Z",
+    "finished_at": "2026-06-05T00:41:58.761198Z",
+    "environment_setup": {
+        "started_at": "2026-06-04T23:57:13.760611Z",
+        "finished_at": "2026-06-04T23:57:16.277008Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-04T23:57:16.277020Z",
+        "finished_at": "2026-06-04T23:57:22.384370Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-04T23:57:22.384460Z",
+        "finished_at": "2026-06-05T00:41:03.129592Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T00:41:11.439693Z",
+        "finished_at": "2026-06-05T00:41:55.095164Z"
+    }
+}

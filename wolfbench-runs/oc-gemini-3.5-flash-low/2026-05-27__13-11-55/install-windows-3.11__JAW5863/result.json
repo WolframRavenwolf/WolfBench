@@ -1,0 +1,113 @@
+{
+    "id": "b8839bc4-ddf1-4142-a9dd-be682add90a5",
+    "task_name": "install-windows-3.11",
+    "trial_name": "install-windows-3.11__JAW5863",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-low/2026-05-27__13-11-55/install-windows-3.11__JAW5863",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "install-windows-3.11"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "917afbb6fd42db76b132a41359c8511be11faed2a8b74f17b802b4928f52313e",
+    "config": {
+        "task": {
+            "path": "install-windows-3.11",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "install-windows-3.11__JAW5863",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-low/2026-05-27__13-11-55",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "ebaba8dd-2c84-4912-975c-0852faa887fa"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 862785,
+        "n_cache_tokens": 9189301,
+        "n_output_tokens": 41363,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-27T14:05:41.809891Z",
+    "finished_at": "2026-05-27T14:21:00.061550Z",
+    "environment_setup": {
+        "started_at": "2026-05-27T14:05:41.811228Z",
+        "finished_at": "2026-05-27T14:05:44.887097Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-27T14:05:44.887118Z",
+        "finished_at": "2026-05-27T14:06:12.839069Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-27T14:06:12.839172Z",
+        "finished_at": "2026-05-27T14:20:21.363562Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-27T14:20:24.963547Z",
+        "finished_at": "2026-05-27T14:20:59.524194Z"
+    }
+}

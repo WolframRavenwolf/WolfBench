@@ -1,0 +1,199 @@
+{
+    "id": "50916e19-4bf2-495d-8524-51c881d831ab",
+    "task_name": "extract-moves-from-video",
+    "trial_name": "extract-moves-from-video__vPC2LGU",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13/extract-moves-from-video__vPC2LGU",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "extract-moves-from-video"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "605fb166c0af666150b184a6ca50f1ca1c2221a5b93e44efd21c7ea40d746d54",
+    "config": {
+        "task": {
+            "path": "extract-moves-from-video",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "extract-moves-from-video__vPC2LGU",
+        "trials_dir": "jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.95,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "91203cce-65be-4ef1-851b-ec39178883f6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2541467,
+        "n_cache_tokens": 1310432,
+        "n_output_tokens": 43046,
+        "cost_usd": 1551336.3699999999,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 79,
+            "api_request_times_msec": [
+                1487.245798110962,
+                1528.311014175415,
+                1405.5306911468506,
+                1005.4481029510498,
+                796.0555553436279,
+                695.8494186401367,
+                2126.9147396087646,
+                3253.0274391174316,
+                1649.080753326416,
+                893.6300277709961,
+                2037.6031398773193,
+                1397.836685180664,
+                2351.5753746032715,
+                1502.2523403167725,
+                1012.7878189086914,
+                1537.9114151000977,
+                2287.553071975708,
+                2086.376190185547,
+                4654.9437046051025,
+                5701.309442520142,
+                1511.7104053497314,
+                822.0276832580566,
+                2196.073055267334,
+                4627.593040466309,
+                5431.9305419921875,
+                1808.6979389190674,
+                1436.405897140503,
+                3293.6978340148926,
+                4674.812793731689,
+                5200.854778289795,
+                2569.4963932037354,
+                1485.5241775512695,
+                2753.6869049072266,
+                3542.3641204833984,
+                4264.228105545044,
+                1868.2360649108887,
+                1526.859998703003,
+                6768.866539001465,
+                2089.0352725982666,
+                1008.8667869567871,
+                7446.3348388671875,
+                6800.024747848511,
+                3104.0585041046143,
+                2680.070161819458,
+                2225.5468368530273,
+                957.6241970062256,
+                8202.444791793823,
+                6011.856317520142,
+                2413.090229034424,
+                1833.601713180542,
+                7817.585706710815,
+                2914.2215251922607,
+                1284.9812507629395,
+                1116.3074970245361,
+                1353.546142578125,
+                2807.6295852661133,
+                3111.3383769989014,
+                1406.9583415985107,
+                2462.2671604156494,
+                1104.1967868804932,
+                12665.24362564087,
+                1640.183687210083,
+                8009.774446487427,
+                12520.869731903076,
+                3163.810968399048,
+                2428.0221462249756,
+                5216.743469238281,
+                1939.0058517456055,
+                2249.9773502349854,
+                3159.1084003448486,
+                1867.3410415649414,
+                1252.5312900543213,
+                3016.677141189575,
+                2832.369089126587,
+                4975.736856460571,
+                1736.2089157104492,
+                4572.199821472168,
+                2829.0188312530518,
+                4000.5555152893066
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-16T08:01:18.395240Z",
+    "finished_at": "2026-05-16T08:20:06.907238Z",
+    "environment_setup": {
+        "started_at": "2026-05-16T08:01:18.395493Z",
+        "finished_at": "2026-05-16T08:01:29.826292Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-16T08:01:29.826306Z",
+        "finished_at": "2026-05-16T08:01:42.990009Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-16T08:01:42.990070Z",
+        "finished_at": "2026-05-16T08:19:51.883585Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-16T08:19:52.615762Z",
+        "finished_at": "2026-05-16T08:20:01.598698Z"
+    }
+}

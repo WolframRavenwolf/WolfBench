@@ -1,0 +1,114 @@
+{
+    "id": "665220de-5a4c-4606-8ac6-74c519afe00a",
+    "task_name": "sqlite-with-gcov",
+    "trial_name": "sqlite-with-gcov__Sy6CZ9H",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__10-03-55/sqlite-with-gcov__Sy6CZ9H",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "sqlite-with-gcov"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "5901f1d2fc3b9b97ab1b215461175a59f0568e224b67caa6f4cbbc38f6f33a04",
+    "config": {
+        "task": {
+            "path": "sqlite-with-gcov",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "sqlite-with-gcov__Sy6CZ9H",
+        "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__10-03-55",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "5999c385-4d5e-423e-b538-02e8f90c7557"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 390374,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 1272,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T10:49:07.466373Z",
+    "finished_at": "2026-06-05T10:53:03.899310Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T10:49:07.480682Z",
+        "finished_at": "2026-06-05T10:49:10.780526Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T10:49:10.780541Z",
+        "finished_at": "2026-06-05T10:50:38.377625Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T10:50:38.377732Z",
+        "finished_at": "2026-06-05T10:52:51.937786Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T10:52:52.641669Z",
+        "finished_at": "2026-06-05T10:53:00.519454Z"
+    }
+}

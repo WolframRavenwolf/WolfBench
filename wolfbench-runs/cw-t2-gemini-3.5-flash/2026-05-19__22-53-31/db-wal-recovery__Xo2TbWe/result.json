@@ -1,0 +1,134 @@
+{
+    "id": "adb9b705-b9f1-40d1-abe6-87c60fabc023",
+    "task_name": "db-wal-recovery",
+    "trial_name": "db-wal-recovery__Xo2TbWe",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-gemini-3.5-flash/2026-05-19__22-53-31/db-wal-recovery__Xo2TbWe",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "db-wal-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "01f470c86f3a1f7ce4d91bdf0aaaa89fa96a4124ac48617990e2735b5291913a",
+    "config": {
+        "task": {
+            "path": "db-wal-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "db-wal-recovery__Xo2TbWe",
+        "trials_dir": "jobs/cw-t2-gemini-3.5-flash/2026-05-19__22-53-31",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "gemini/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f797e6c5-d9b4-4465-996e-cc3174cf57c6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "gemini"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 143837,
+        "n_cache_tokens": 28326,
+        "n_output_tokens": 5611,
+        "cost_usd": 0.22801439999999998,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 18,
+            "api_request_times_msec": [
+                1751.039743423462,
+                2238.7969493865967,
+                2066.6215419769287,
+                1499.5198249816895,
+                3396.7723846435547,
+                2690.3553009033203,
+                3564.206838607788,
+                4531.085968017578,
+                4280.250072479248,
+                5900.940179824829,
+                1926.1345863342285,
+                5251.52325630188,
+                3235.7373237609863,
+                2392.566204071045,
+                7036.715745925903,
+                10396.79741859436,
+                3429.453134536743,
+                8310.487031936646
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": null,
+    "exception_info": {
+        "exception_type": "SandboxExecutionError",
+        "exception_message": "Exec stream error: sandbox 57e698cd-1ad3-4010-93e3-8fcee2d5b848 not found in pod cache - cannot determine namespace",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1597, in run\n    await self._run_agent_loop(\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1412, in _run_agent_loop\n    timeout_occurred, terminal_output = await self._execute_commands(\n                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/terminus_2.py\", line 1241, in _execute_commands\n    return False, self._limit_output_length(await session.get_incremental_output())\n                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 683, in get_incremental_output\n    current_buffer = await self.capture_pane(capture_entire=True)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/terminus_2/tmux_session.py\", line 652, in capture_pane\n    result = await self.environment.exec(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 251, in exec\n    result = await self._exec_process_result(\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/environments/wandb.py\", line 239, in _exec_process_result\n    return await sandbox.exec(\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/.venv/lib/python3.12/site-packages/cwsandbox/_types.py\", line 725, in _await_and_record\n    result = await asyncio.wrap_future(self._future)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/exedev/harbor/.venv/lib/python3.12/site-packages/cwsandbox/_types.py\", line 705, in _on_future_done\n    result = future.result()\n             ^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 449, in result\n    return self.__get_result()\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/concurrent/futures/_base.py\", line 401, in __get_result\n    raise self._exception\n  File \"/home/exedev/harbor/.venv/lib/python3.12/site-packages/cwsandbox/_sandbox.py\", line 3518, in _exec_streaming_async\n    raise SandboxExecutionError(\ncwsandbox.exceptions.SandboxExecutionError: Exec stream error: sandbox 57e698cd-1ad3-4010-93e3-8fcee2d5b848 not found in pod cache - cannot determine namespace\n",
+        "occurred_at": "2026-05-19T22:55:39.051313"
+    },
+    "started_at": "2026-05-19T22:53:41.007416Z",
+    "finished_at": "2026-05-19T22:55:39.524924Z",
+    "environment_setup": {
+        "started_at": "2026-05-19T22:53:41.008493Z",
+        "finished_at": "2026-05-19T22:53:51.153291Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-19T22:53:51.153304Z",
+        "finished_at": "2026-05-19T22:53:58.363185Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-19T22:53:58.363257Z",
+        "finished_at": "2026-05-19T22:55:38.894317Z"
+    },
+    "verifier": null
+}

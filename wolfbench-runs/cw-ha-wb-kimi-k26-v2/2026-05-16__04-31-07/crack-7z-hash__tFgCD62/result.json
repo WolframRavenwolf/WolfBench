@@ -1,0 +1,113 @@
+{
+    "id": "961e66f5-41f7-4e10-b8f6-1b632be2b879",
+    "task_name": "crack-7z-hash",
+    "trial_name": "crack-7z-hash__tFgCD62",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-wb-kimi-k26-v2/2026-05-16__04-31-07/crack-7z-hash__tFgCD62",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "crack-7z-hash"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "6557afcd0ab96deef7a8292019ea507be18f91433df61618b622866a293525a8",
+    "config": {
+        "task": {
+            "path": "crack-7z-hash",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "crack-7z-hash__tFgCD62",
+        "trials_dir": "jobs/cw-ha-wb-kimi-k26-v2/2026-05-16__04-31-07",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 2.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "be578609-6c23-42b1-b178-e06073d7c750"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 86746,
+        "n_cache_tokens": 288576,
+        "n_output_tokens": 5295,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/ && ls -la secrets.7z 2>/dev/null || find / -name \"secrets.7z\" 2>/dev/null | head -20  1.4s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         cd /app && 7z x secrets.7z && cat secret_file.txt  0.2s [exit 127]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n   \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which p7zip unzrip bsdtar python3 python  0.2s [exit 1]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n     \r\n╰──────────────────────────────────────── ... [truncated]\nStderr:\nbash: line 3:  3969 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      3970 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n    ...<6 lines>...\n    )\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\n    ...<4 lines>...\n    )\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/ && ls -la secrets.7z 2>/dev/null || find / -name \"secrets.7z\" 2>/dev/null | head -20  1.4s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         cd /app && 7z x secrets.7z && cat secret_file.txt  0.2s [exit 127]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n   \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which p7zip unzrip bsdtar python3 python  0.2s [exit 1]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n     \r\n╰──────────────────────────────────────── ... [truncated]\nStderr:\nbash: line 3:  3969 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      3970 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-05-16T04:58:54.888072"
+    },
+    "started_at": "2026-05-16T04:55:10.843825Z",
+    "finished_at": "2026-05-16T04:59:09.737973Z",
+    "environment_setup": {
+        "started_at": "2026-05-16T04:55:10.844752Z",
+        "finished_at": "2026-05-16T04:55:14.518479Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-16T04:55:14.518495Z",
+        "finished_at": "2026-05-16T04:56:26.015967Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-16T04:56:26.016060Z",
+        "finished_at": "2026-05-16T04:58:54.886779Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-16T04:58:55.596456Z",
+        "finished_at": "2026-05-16T04:59:03.917692Z"
+    }
+}

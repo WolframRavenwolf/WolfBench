@@ -1,0 +1,114 @@
+{
+    "id": "78ba5777-67ed-4f5b-b839-6126c55e072c",
+    "task_name": "cobol-modernization",
+    "trial_name": "cobol-modernization__ma5APYo",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__11-50-57/cobol-modernization__ma5APYo",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "cobol-modernization"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "f8220a33bf193106989df1a28e4806985b12e5f93dcf07efb86acd8dbbc44f6a",
+    "config": {
+        "task": {
+            "path": "cobol-modernization",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "cobol-modernization__ma5APYo",
+        "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__11-50-57",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "972278bd-4310-48a2-8d45-e9718b2ffdad"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2294916,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 52275,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T11:51:02.549617Z",
+    "finished_at": "2026-06-05T12:25:21.795952Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T11:51:02.550009Z",
+        "finished_at": "2026-06-05T11:51:06.935791Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T11:51:06.935807Z",
+        "finished_at": "2026-06-05T11:52:25.720641Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T11:52:25.720724Z",
+        "finished_at": "2026-06-05T12:25:13.498210Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T12:25:14.193382Z",
+        "finished_at": "2026-06-05T12:25:19.412027Z"
+    }
+}

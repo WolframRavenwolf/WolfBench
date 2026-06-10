@@ -1,0 +1,127 @@
+{
+    "id": "305af4e8-211d-45b8-b904-5ecc0b9698c8",
+    "started_at": "2026-05-26T04:22:19.429292",
+    "finished_at": "2026-05-26T06:45:05.010415",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 5,
+        "evals": {
+            "openclaw__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 89,
+                "n_errors": 5,
+                "metrics": [
+                    {
+                        "mean": 0.7191011235955056
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "gpt2-codegolf__AWXavy2",
+                            "llm-inference-batching-scheduler__YLe5zmp",
+                            "reshard-c4-data__KeJdK8t",
+                            "merge-diff-arc-agi-task__o8xPrpg",
+                            "log-summary-date-ranges__R4mEYyR",
+                            "password-recovery__h5tAwKJ",
+                            "portfolio-optimization__7hsCQ3j",
+                            "path-tracing-reverse__YACKauN",
+                            "modernize-scientific-stack__HwCv8or",
+                            "prove-plus-comm__TAvGuMJ",
+                            "feal-linear-cryptanalysis__F5ZBH37",
+                            "caffe-cifar-10__H5FawnP",
+                            "mteb-retrieve__hLHALKz",
+                            "pypi-server__g9ByLbS",
+                            "custom-memory-heap-crash__zWPuCNu",
+                            "adaptive-rejection-sampler__driALbs",
+                            "multi-source-data-merger__FWyxeJz",
+                            "crack-7z-hash__vToB78L",
+                            "chess-best-move__jX4qGJB",
+                            "cobol-modernization__xjjJrfh",
+                            "overfull-hbox__8W64wU3",
+                            "hf-model-inference__gf7ihd4",
+                            "compile-compcert__EMJxRVW",
+                            "headless-terminal__fJK9nnh",
+                            "fix-git__ckuSuPb",
+                            "qemu-startup__n7obvXS",
+                            "build-pov-ray__EqNsccX",
+                            "git-multibranch__K6hp8n7",
+                            "qemu-alpine-ssh__M8fKhGU",
+                            "kv-store-grpc__mVxR6pv",
+                            "install-windows-3.11__LXQMSVH",
+                            "make-doom-for-mips__A97nNpL",
+                            "tune-mjcf__hyLi9E9",
+                            "extract-moves-from-video__PpaAabG",
+                            "gcode-to-text__NKhB3GN",
+                            "count-dataset-tokens__qxRxmbS",
+                            "circuit-fibsqrt__7HpSLac",
+                            "mteb-leaderboard__vyteef5",
+                            "mailman__CJbFA5v",
+                            "raman-fitting__goBZD9s",
+                            "query-optimize__vZC5M2c",
+                            "extract-elf__XqNJyek",
+                            "protein-assembly__DPyUKRK",
+                            "code-from-image__TSeuULC",
+                            "fix-code-vulnerability__mSRfkZg",
+                            "mcmc-sampling-stan__ytn2jo2",
+                            "regex-log__aREDN3C",
+                            "feal-differential-cryptanalysis__L5pPtcQ",
+                            "polyglot-c-py__3r7CR2w",
+                            "cancel-async-tasks__aovpg6V",
+                            "bn-fit-modify__wuE8tVc",
+                            "fix-ocaml-gc__d4B6JKy",
+                            "git-leak-recovery__BgHpKZo",
+                            "build-cython-ext__8HFvFHd",
+                            "pytorch-model-recovery__HcRHpQn",
+                            "nginx-request-logging__pMvV7hF",
+                            "sparql-university__THVyptv",
+                            "large-scale-text-editing__pCj9m9X",
+                            "sqlite-db-truncate__WD8MRV8",
+                            "rstan-to-pystan__da9JysU",
+                            "sqlite-with-gcov__6jPZ8aN",
+                            "openssl-selfsigned-cert__crTA87w",
+                            "constraints-scheduling__ZnCq4pX",
+                            "vulnerable-secret__jyXHfBR"
+                        ],
+                        "0.0": [
+                            "break-filter-js-from-html__ub2n8f9",
+                            "write-compressor__jWq7ED4",
+                            "winning-avg-corewars__Zd8y6Ez",
+                            "pytorch-model-cli__WGMhAhU",
+                            "largest-eigenval__ngXKZiX",
+                            "regex-chess__eFKxjGp",
+                            "torch-tensor-parallelism__M6dzUQt",
+                            "path-tracing__qYCSgpD",
+                            "distribution-search__XQi8Dn2",
+                            "configure-git-webserver__brNP6ti",
+                            "polyglot-rust-c__v995W6z",
+                            "db-wal-recovery__hG5Aii5",
+                            "schemelike-metacircular-eval__sXqRt4R",
+                            "train-fasttext__gyqkKqe",
+                            "video-processing__CELgnYw",
+                            "torch-pipeline-parallelism__nF9mTwL",
+                            "make-mips-interpreter__MGPqEWF",
+                            "financial-document-processor__t2xLB2r",
+                            "filter-js-from-html__sKeKS94",
+                            "sam-cell-seg__WF4MxMk",
+                            "model-extraction-relu-logits__QWPqETc",
+                            "sanitize-git-repo__ogABAGy",
+                            "build-pmars__t2ebvgG",
+                            "dna-insert__wK74n3w",
+                            "dna-assembly__A9oQ9f8"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentTimeoutError": [
+                        "pypi-server__g9ByLbS",
+                        "db-wal-recovery__hG5Aii5",
+                        "kv-store-grpc__mVxR6pv",
+                        "install-windows-3.11__LXQMSVH",
+                        "mailman__CJbFA5v"
+                    ]
+                }
+            }
+        }
+    }
+}

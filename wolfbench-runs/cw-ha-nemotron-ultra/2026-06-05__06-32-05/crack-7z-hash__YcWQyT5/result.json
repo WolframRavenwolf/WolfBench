@@ -1,0 +1,114 @@
+{
+    "id": "b6aae56f-b884-4c34-b7e0-2dacd56d6bd6",
+    "task_name": "crack-7z-hash",
+    "trial_name": "crack-7z-hash__YcWQyT5",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__06-32-05/crack-7z-hash__YcWQyT5",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "crack-7z-hash"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "6557afcd0ab96deef7a8292019ea507be18f91433df61618b622866a293525a8",
+    "config": {
+        "task": {
+            "path": "crack-7z-hash",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "crack-7z-hash__YcWQyT5",
+        "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__06-32-05",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "0afaf9e6-e8ae-4275-a1bd-b530601eb39f"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 492550,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 1576,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T06:32:10.880673Z",
+    "finished_at": "2026-06-05T06:36:18.759941Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T06:32:10.880985Z",
+        "finished_at": "2026-06-05T06:32:15.442754Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T06:32:15.442758Z",
+        "finished_at": "2026-06-05T06:33:40.746791Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T06:33:40.746883Z",
+        "finished_at": "2026-06-05T06:36:06.562088Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T06:36:07.249012Z",
+        "finished_at": "2026-06-05T06:36:15.569449Z"
+    }
+}

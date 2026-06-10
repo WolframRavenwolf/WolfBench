@@ -1,0 +1,108 @@
+{
+    "id": "0b20790c-7c57-44e1-a272-dc115cc3c401",
+    "task_name": "fix-ocaml-gc",
+    "trial_name": "fix-ocaml-gc__dokrsF7",
+    "trial_uri": "file:///root/harbor/jobs/wb-ha-t2-GLM-5.1/2026-04-22__14-28-44/fix-ocaml-gc__dokrsF7",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "fix-ocaml-gc"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "faa983dd79f63daa168b41c753bddb0621822820ba6f16661a9767b815e436e8",
+    "config": {
+        "task": {
+            "path": "fix-ocaml-gc",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "fix-ocaml-gc__dokrsF7",
+        "trials_dir": "jobs/wb-ha-t2-GLM-5.1/2026-04-22__14-28-44",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/zai-org/GLM-5.1",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200,
+                "request_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "6d9d03d3-10a8-4234-9b6c-97e0ed15b6a1"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "zai-org/GLM-5.1",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 249420,
+        "n_cache_tokens": 613568,
+        "n_output_tokens": 10102,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-04-22T17:32:32.042023Z",
+    "finished_at": "2026-04-22T17:49:21.504495Z",
+    "environment_setup": {
+        "started_at": "2026-04-22T17:32:32.045318Z",
+        "finished_at": "2026-04-22T17:32:34.144389Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-22T17:32:34.144411Z",
+        "finished_at": "2026-04-22T17:36:07.933051Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-22T17:36:07.933226Z",
+        "finished_at": "2026-04-22T17:44:18.194898Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-22T17:44:20.285102Z",
+        "finished_at": "2026-04-22T17:48:46.580421Z"
+    }
+}

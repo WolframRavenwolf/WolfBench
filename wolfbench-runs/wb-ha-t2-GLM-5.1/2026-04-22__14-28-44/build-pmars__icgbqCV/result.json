@@ -1,0 +1,113 @@
+{
+    "id": "22626021-3f6a-4b7b-a879-3eb9e5925536",
+    "task_name": "build-pmars",
+    "trial_name": "build-pmars__icgbqCV",
+    "trial_uri": "file:///root/harbor/jobs/wb-ha-t2-GLM-5.1/2026-04-22__14-28-44/build-pmars__icgbqCV",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "build-pmars"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "55f554b8d07c2ec69aa88e385675925e684eb09c256610e0abca10375efc3876",
+    "config": {
+        "task": {
+            "path": "build-pmars",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "build-pmars__icgbqCV",
+        "trials_dir": "jobs/wb-ha-t2-GLM-5.1/2026-04-22__14-28-44",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/zai-org/GLM-5.1",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200,
+                "request_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "6d9d03d3-10a8-4234-9b6c-97e0ed15b6a1"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "zai-org/GLM-5.1",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 61432,
+        "n_cache_tokens": 805248,
+        "n_output_tokens": 4901,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 📋 preparing todo…\r\n  ┊ 📋 plan      6 task(s)  0.0s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache search pmars 2>/dev/null || echo \"apt-cache not available, trying other methods\"  2.3s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache showsrc pmars 2>/dev/null | head -30  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache show pmars 2>/dev/null | head -30  0.4s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Get the source .dsc URL from Debian\r\napt-get source --print-uris pmars 2>/dev/null | head -10  0.4s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Enable source repositories and try apt-get source\r\ngrep -r \"deb-src\" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null | head -5  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Add deb-src lines and update\r\ncat /etc/apt/sources.list 2>/dev/null | head -20  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls /etc/apt/sources.list.d/ 2>/dev/null  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         cat /etc/apt ... [truncated]\nStderr:\nbash: line 11:  4676 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      4677 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/root/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 📋 preparing todo…\r\n  ┊ 📋 plan      6 task(s)  0.0s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache search pmars 2>/dev/null || echo \"apt-cache not available, trying other methods\"  2.3s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache showsrc pmars 2>/dev/null | head -30  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-cache show pmars 2>/dev/null | head -30  0.4s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Get the source .dsc URL from Debian\r\napt-get source --print-uris pmars 2>/dev/null | head -10  0.4s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Enable source repositories and try apt-get source\r\ngrep -r \"deb-src\" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null | head -5  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         # Add deb-src lines and update\r\ncat /etc/apt/sources.list 2>/dev/null | head -20  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls /etc/apt/sources.list.d/ 2>/dev/null  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         cat /etc/apt ... [truncated]\nStderr:\nbash: line 11:  4676 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      4677 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-04-22T18:55:05.416414"
+    },
+    "started_at": "2026-04-22T18:38:57.112218Z",
+    "finished_at": "2026-04-22T18:56:02.398684Z",
+    "environment_setup": {
+        "started_at": "2026-04-22T18:38:57.115483Z",
+        "finished_at": "2026-04-22T18:39:00.049396Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-22T18:39:00.049425Z",
+        "finished_at": "2026-04-22T18:41:41.546732Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-22T18:41:41.546892Z",
+        "finished_at": "2026-04-22T18:55:05.413802Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-22T18:55:07.636524Z",
+        "finished_at": "2026-04-22T18:55:24.860757Z"
+    }
+}

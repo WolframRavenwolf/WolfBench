@@ -1,0 +1,114 @@
+{
+    "id": "1d6d73fe-9dc1-4783-ab0a-c5fcb7b21778",
+    "task_name": "merge-diff-arc-agi-task",
+    "trial_name": "merge-diff-arc-agi-task__b6oMRTE",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__10-01-35/merge-diff-arc-agi-task__b6oMRTE",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "merge-diff-arc-agi-task"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "1e69376aa87a540b46c4dea3ba4f8507ed18aeeeef6f8786dab68eff71b0b58d",
+    "config": {
+        "task": {
+            "path": "merge-diff-arc-agi-task",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "merge-diff-arc-agi-task__b6oMRTE",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__10-01-35",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "2fba8e18-3db0-4fcf-9cdf-ccb6fec5f900"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 271868,
+        "n_cache_tokens": 949445,
+        "n_output_tokens": 2079,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-21T10:01:40.355197Z",
+    "finished_at": "2026-05-21T10:16:36.203030Z",
+    "environment_setup": {
+        "started_at": "2026-05-21T10:01:40.356121Z",
+        "finished_at": "2026-05-21T10:01:44.098588Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-21T10:01:44.098593Z",
+        "finished_at": "2026-05-21T10:03:20.067475Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-21T10:03:20.067625Z",
+        "finished_at": "2026-05-21T10:05:57.439678Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-21T10:05:58.140105Z",
+        "finished_at": "2026-05-21T10:06:06.800901Z"
+    }
+}

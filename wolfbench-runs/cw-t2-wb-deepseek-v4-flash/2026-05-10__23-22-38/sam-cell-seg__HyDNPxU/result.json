@@ -1,0 +1,171 @@
+{
+    "id": "a99fce9c-d2ea-46dc-8536-da2171ba24aa",
+    "task_name": "sam-cell-seg",
+    "trial_name": "sam-cell-seg__HyDNPxU",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4/2026-05-10__23-22-38/sam-cell-seg__HyDNPxU",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "sam-cell-seg"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "1bc7f69e2e775b9ceac4b65975556b8c838b2d77cc0f50b01162adfea1630eb5",
+    "config": {
+        "task": {
+            "path": "sam-cell-seg",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "sam-cell-seg__HyDNPxU",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4/2026-05-10__23-22-38",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.0,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "da71a514-da64-4a0b-9e09-ab97ecca1086"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Flash",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 1621285,
+        "n_cache_tokens": 731648,
+        "n_output_tokens": 25256,
+        "cost_usd": 1063242.8299999998,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 51,
+            "api_request_times_msec": [
+                13950.43921470642,
+                2717.8080081939697,
+                19222.981214523315,
+                7369.278430938721,
+                2476.31573677063,
+                3355.1697731018066,
+                2960.3376388549805,
+                11122.431516647339,
+                6346.855401992798,
+                3102.738857269287,
+                9610.663175582886,
+                2476.4368534088135,
+                19001.25765800476,
+                3233.4957122802734,
+                6034.237623214722,
+                28405.52568435669,
+                2806.445360183716,
+                7694.6470737457275,
+                5695.7855224609375,
+                7429.092168807983,
+                7826.139211654663,
+                4156.13317489624,
+                2489.3798828125,
+                62333.760261535645,
+                7962.004661560059,
+                6811.419486999512,
+                63294.933795928955,
+                5780.742883682251,
+                7087.402582168579,
+                28305.652379989624,
+                53622.03598022461,
+                2288.231611251831,
+                5479.192018508911,
+                62317.98839569092,
+                17776.7972946167,
+                46787.07957267761,
+                2160.374164581299,
+                4752.05659866333,
+                21112.935781478882,
+                73899.19638633728,
+                5002.789735794067,
+                32297.200918197632,
+                7030.5891036987305,
+                9683.016777038574,
+                11716.583490371704,
+                4706.817626953125,
+                2786.456823348999,
+                5621.027231216431,
+                7768.948078155518,
+                2719.4559574127197,
+                14709.064245223999
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-11T00:19:39.565038Z",
+    "finished_at": "2026-05-11T00:42:32.135336Z",
+    "environment_setup": {
+        "started_at": "2026-05-11T00:19:39.566687Z",
+        "finished_at": "2026-05-11T00:19:43.554779Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-11T00:19:43.554802Z",
+        "finished_at": "2026-05-11T00:19:47.975183Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-11T00:19:47.975298Z",
+        "finished_at": "2026-05-11T00:41:52.474310Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-11T00:41:54.804446Z",
+        "finished_at": "2026-05-11T00:42:25.625087Z"
+    }
+}

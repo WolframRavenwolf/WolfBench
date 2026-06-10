@@ -1,0 +1,113 @@
+{
+    "id": "bdb83424-22e9-43c3-9a84-1e7de69d10f1",
+    "task_name": "configure-git-webserver",
+    "trial_name": "configure-git-webserver__brNP6ti",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__04-22-16/configure-git-webserver__brNP6ti",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "configure-git-webserver"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "3ebefab7ff093813f99af237de90b1ed73363a4eb42ea8a17096939922a16bcf",
+    "config": {
+        "task": {
+            "path": "configure-git-webserver",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "configure-git-webserver__brNP6ti",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__04-22-16",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "305af4e8-211d-45b8-b904-5ecc0b9698c8"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 79836,
+        "n_cache_tokens": 341670,
+        "n_output_tokens": 3792,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-26T04:39:30.117704Z",
+    "finished_at": "2026-05-26T04:43:24.552849Z",
+    "environment_setup": {
+        "started_at": "2026-05-26T04:39:30.118166Z",
+        "finished_at": "2026-05-26T04:39:39.821062Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-26T04:39:39.821076Z",
+        "finished_at": "2026-05-26T04:40:09.397775Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-26T04:40:09.397868Z",
+        "finished_at": "2026-05-26T04:43:09.220245Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-26T04:43:11.322986Z",
+        "finished_at": "2026-05-26T04:43:24.066939Z"
+    }
+}

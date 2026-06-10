@@ -1,0 +1,114 @@
+{
+    "id": "ad115935-b3d5-402c-b99f-a2307868b143",
+    "task_name": "mteb-retrieve",
+    "trial_name": "mteb-retrieve__GzrnveS",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__05-55-34/mteb-retrieve__GzrnveS",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "mteb-retrieve"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "c9b88a67c599defd76f11c87dc596dbfd16e2e3ea1e40d1abec4033db888473f",
+    "config": {
+        "task": {
+            "path": "mteb-retrieve",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "mteb-retrieve__GzrnveS",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__05-55-34",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "171bef4a-4fb8-4ec3-bad2-c565dfa1dc27"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 230115,
+        "n_cache_tokens": 857474,
+        "n_output_tokens": 6237,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-21T06:16:04.815552Z",
+    "finished_at": "2026-05-21T06:31:42.805319Z",
+    "environment_setup": {
+        "started_at": "2026-05-21T06:16:04.816400Z",
+        "finished_at": "2026-05-21T06:16:08.553811Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-21T06:16:08.553826Z",
+        "finished_at": "2026-05-21T06:17:27.250126Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-21T06:17:27.250216Z",
+        "finished_at": "2026-05-21T06:20:46.051436Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-21T06:20:46.792315Z",
+        "finished_at": "2026-05-21T06:21:32.125554Z"
+    }
+}

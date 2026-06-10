@@ -1,0 +1,131 @@
+{
+    "id": "b0f853ca-a71d-4e74-9042-703d35e1fe8a",
+    "task_name": "fix-git",
+    "trial_name": "fix-git__Rqv8RAT",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__14-25-15/fix-git__Rqv8RAT",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "fix-git"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "7fa0a681f751d73f290d862522a82a5e448fa529834987ee1b80e5665c51aa7e",
+    "config": {
+        "task": {
+            "path": "fix-git",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "fix-git__Rqv8RAT",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__14-25-15",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.01,
+                    "output_cost_per_token": 0.01
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "a21e3c64-dc70-4b05-8fdd-0dfa8d1d33dc"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 61028,
+        "n_cache_tokens": 38912,
+        "n_output_tokens": 2316,
+        "cost_usd": 244.32,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 13,
+            "api_request_times_msec": [
+                9212.164640426636,
+                10015.928030014038,
+                5896.423101425171,
+                5977.090358734131,
+                3683.307647705078,
+                6256.439447402954,
+                4215.499401092529,
+                8237.220764160156,
+                4892.756938934326,
+                7981.069087982178,
+                6462.11838722229,
+                7625.51212310791,
+                3784.571886062622
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-13T14:29:01.024144Z",
+    "finished_at": "2026-05-13T14:31:20.810880Z",
+    "environment_setup": {
+        "started_at": "2026-05-13T14:29:01.025163Z",
+        "finished_at": "2026-05-13T14:29:04.081595Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-13T14:29:04.081610Z",
+        "finished_at": "2026-05-13T14:29:16.376602Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-13T14:29:16.376700Z",
+        "finished_at": "2026-05-13T14:31:03.808886Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-13T14:31:06.230168Z",
+        "finished_at": "2026-05-13T14:31:16.932122Z"
+    }
+}

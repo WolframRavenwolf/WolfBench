@@ -1,0 +1,194 @@
+{
+    "id": "dc551f00-76cb-4c36-b3c7-9e232ecae9e8",
+    "task_name": "caffe-cifar-10",
+    "trial_name": "caffe-cifar-10__kPbsJy6",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-pro/2026-05-14__01-42-10/caffe-cifar-10__kPbsJy6",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "caffe-cifar-10"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "69e68a75ace210a7fdbce0d1605c0d530a7b5119791d91c6786f84313b30fc3a",
+    "config": {
+        "task": {
+            "path": "caffe-cifar-10",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "caffe-cifar-10__kPbsJy6",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-pro/2026-05-14__01-42-10",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.01,
+                    "output_cost_per_token": 0.01
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c10571f3-890b-4155-b75f-76ef2bffb3d4"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 1693751,
+        "n_cache_tokens": 448000,
+        "n_output_tokens": 13070,
+        "cost_usd": 12588.210000000001,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 76,
+            "api_request_times_msec": [
+                10205.872535705566,
+                5945.189952850342,
+                5986.331939697266,
+                4443.100690841675,
+                3586.2717628479004,
+                5343.99151802063,
+                5851.111173629761,
+                8324.972152709961,
+                3497.415542602539,
+                9174.305200576782,
+                2604.945182800293,
+                3428.849935531616,
+                3287.902593612671,
+                3683.403253555298,
+                5088.819265365601,
+                6073.6353397369385,
+                5314.103603363037,
+                6265.405178070068,
+                5739.691257476807,
+                4023.536443710327,
+                5224.09462928772,
+                5273.209571838379,
+                4375.293254852295,
+                3808.3393573760986,
+                4278.755187988281,
+                6311.696767807007,
+                9651.639699935913,
+                3556.051731109619,
+                4217.223167419434,
+                11059.794425964355,
+                4263.315916061401,
+                12886.404275894165,
+                8473.516702651978,
+                9669.851064682007,
+                9138.619184494019,
+                9300.640106201172,
+                11697.777032852173,
+                9250.043869018555,
+                11516.0551071167,
+                8693.418025970459,
+                8498.205184936523,
+                8760.057210922241,
+                3898.3521461486816,
+                9921.388626098633,
+                13062.514066696167,
+                7166.002988815308,
+                11079.262256622314,
+                6317.539215087891,
+                8126.920700073242,
+                13399.023294448853,
+                6311.178207397461,
+                6720.337867736816,
+                7709.043502807617,
+                7060.685873031616,
+                10794.801712036133,
+                5469.466686248779,
+                3461.860418319702,
+                6334.765434265137,
+                7130.574941635132,
+                15855.981588363647,
+                7273.377895355225,
+                5519.305229187012,
+                13998.783588409424,
+                9411.499500274658,
+                11286.797523498535,
+                25843.274116516113,
+                16273.88596534729,
+                34552.39248275757,
+                17751.065492630005,
+                95157.36651420593,
+                14336.262941360474,
+                5467.812776565552,
+                24018.38231086731,
+                12306.715250015259,
+                9498.427391052246,
+                10178.018569946289
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-14T01:42:15.749639Z",
+    "finished_at": "2026-05-14T02:12:02.968564Z",
+    "environment_setup": {
+        "started_at": "2026-05-14T01:42:15.749897Z",
+        "finished_at": "2026-05-14T01:42:22.578202Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-14T01:42:22.578212Z",
+        "finished_at": "2026-05-14T01:42:36.118967Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-14T01:42:36.119032Z",
+        "finished_at": "2026-05-14T02:11:29.702627Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-14T02:11:32.083263Z",
+        "finished_at": "2026-05-14T02:11:56.579734Z"
+    }
+}

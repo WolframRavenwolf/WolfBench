@@ -1,0 +1,113 @@
+{
+    "id": "92f966fc-7a44-4560-bc93-bc1f3d64e2c4",
+    "task_name": "db-wal-recovery",
+    "trial_name": "db-wal-recovery__Te9BHjc",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-wb-kimi-k26-v2/2026-05-16__04-31-07/db-wal-recovery__Te9BHjc",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "db-wal-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "01f470c86f3a1f7ce4d91bdf0aaaa89fa96a4124ac48617990e2735b5291913a",
+    "config": {
+        "task": {
+            "path": "db-wal-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "db-wal-recovery__Te9BHjc",
+        "trials_dir": "jobs/cw-ha-wb-kimi-k26-v2/2026-05-16__04-31-07",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 2.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "be578609-6c23-42b1-b178-e06073d7c750"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 326172,
+        "n_cache_tokens": 1119456,
+        "n_output_tokens": 101189,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/  1.3s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         sqlite3 /app/main.db \"PRAGMA journal_mode; SELECT * FROM sqlite_master;\"  0.2s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         sqlite3 /app/main.db \"PRAGMA wal_checkpoint; SELECT * FROM items ORDER BY id;\" && xxd /app/main.db-wal | head -30  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/ && echo \"---\" && xxd /app/main.db | head -20 && echo \"---\" && xxd /app/main.db-wal | he ... [truncated]\nStderr:\nbash: line 16:  4051 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      4052 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n    ...<6 lines>...\n    )\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\n    ...<4 lines>...\n    )\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/  1.3s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         sqlite3 /app/main.db \"PRAGMA journal_mode; SELECT * FROM sqlite_master;\"  0.2s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         sqlite3 /app/main.db \"PRAGMA wal_checkpoint; SELECT * FROM items ORDER BY id;\" && xxd /app/main.db-wal | head -30  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         ls -la /app/ && echo \"---\" && xxd /app/main.db | head -20 && echo \"---\" && xxd /app/main.db-wal | he ... [truncated]\nStderr:\nbash: line 16:  4051 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      4052 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-05-16T06:39:11.197626"
+    },
+    "started_at": "2026-05-16T06:23:19.674878Z",
+    "finished_at": "2026-05-16T06:39:27.410680Z",
+    "environment_setup": {
+        "started_at": "2026-05-16T06:23:19.675887Z",
+        "finished_at": "2026-05-16T06:23:22.478385Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-16T06:23:22.478401Z",
+        "finished_at": "2026-05-16T06:24:34.538902Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-16T06:24:34.538979Z",
+        "finished_at": "2026-05-16T06:39:11.196291Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-16T06:39:12.284443Z",
+        "finished_at": "2026-05-16T06:39:20.689614Z"
+    }
+}

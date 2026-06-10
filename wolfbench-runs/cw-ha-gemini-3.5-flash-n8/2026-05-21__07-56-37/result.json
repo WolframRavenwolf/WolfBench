@@ -1,0 +1,126 @@
+{
+    "id": "08da95a3-298c-4dbf-a9bc-44f715f9433e",
+    "started_at": "2026-05-21T07:56:40.467160",
+    "finished_at": "2026-05-21T10:01:31.456306",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 4,
+        "evals": {
+            "hermes__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 89,
+                "n_errors": 4,
+                "metrics": [
+                    {
+                        "mean": 0.6741573033707865
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "gpt2-codegolf__WYbjhAE",
+                            "winning-avg-corewars__WaR6K7w",
+                            "log-summary-date-ranges__RSQGEEs",
+                            "pytorch-model-cli__VweTKNb",
+                            "regex-chess__yg7PitV",
+                            "path-tracing__eEadR9q",
+                            "mteb-retrieve__Edrrq7Z",
+                            "custom-memory-heap-crash__6HevUkF",
+                            "configure-git-webserver__dgtZzyo",
+                            "overfull-hbox__VkDQzBk",
+                            "polyglot-rust-c__6hFrPgw",
+                            "compile-compcert__pzjWQLT",
+                            "db-wal-recovery__nsLevwS",
+                            "git-multibranch__ATR4TY2",
+                            "train-fasttext__MFY3NEc",
+                            "video-processing__bA8GEXe",
+                            "install-windows-3.11__xrDee5x",
+                            "make-doom-for-mips__fU9AeHP",
+                            "torch-pipeline-parallelism__KTjBV6i",
+                            "extract-moves-from-video__qGeY55M",
+                            "gcode-to-text__x39jkXr",
+                            "make-mips-interpreter__EHNbK8m",
+                            "mteb-leaderboard__njTzMTX",
+                            "extract-elf__ydgSTtK",
+                            "protein-assembly__ckF9rW5",
+                            "filter-js-from-html__QPfhQ35",
+                            "sam-cell-seg__XAeAvSG",
+                            "sanitize-git-repo__vzg4Er2",
+                            "dna-insert__TNfpr43"
+                        ],
+                        "1.0": [
+                            "llm-inference-batching-scheduler__44AWCY8",
+                            "break-filter-js-from-html__DxodJ85",
+                            "reshard-c4-data__iSvr6S5",
+                            "write-compressor__TubXymB",
+                            "merge-diff-arc-agi-task__foSpQCZ",
+                            "largest-eigenval__9gMtWVd",
+                            "password-recovery__xfGrQDJ",
+                            "portfolio-optimization__fFpXq9Z",
+                            "path-tracing-reverse__iPc3ZzM",
+                            "modernize-scientific-stack__Bo8nuVL",
+                            "torch-tensor-parallelism__BrcUAFa",
+                            "prove-plus-comm__rJZSLFf",
+                            "feal-linear-cryptanalysis__36nh9pF",
+                            "caffe-cifar-10__pP2qeyE",
+                            "distribution-search__KSqHfMF",
+                            "pypi-server__UPdUkQo",
+                            "adaptive-rejection-sampler__xtNH5JG",
+                            "multi-source-data-merger__yncEeT5",
+                            "crack-7z-hash__G4pJHY5",
+                            "chess-best-move__nVD6qjp",
+                            "cobol-modernization__bJcFqum",
+                            "hf-model-inference__JBA46Np",
+                            "headless-terminal__aRTvvc2",
+                            "fix-git__BWmViaM",
+                            "schemelike-metacircular-eval__s9uYC3x",
+                            "qemu-startup__qYgJkqP",
+                            "build-pov-ray__sv7SzeQ",
+                            "qemu-alpine-ssh__jAH89Y4",
+                            "kv-store-grpc__M88JLgh",
+                            "tune-mjcf__ggAJE2s",
+                            "count-dataset-tokens__8tUoe3t",
+                            "circuit-fibsqrt__NaemYYB",
+                            "mailman__NjC8owS",
+                            "raman-fitting__EMeXZfr",
+                            "query-optimize__ZqXBevH",
+                            "code-from-image__ADNxRhq",
+                            "fix-code-vulnerability__WUZJoqi",
+                            "financial-document-processor__fizqPUN",
+                            "mcmc-sampling-stan__boY8FES",
+                            "regex-log__ncguWSN",
+                            "feal-differential-cryptanalysis__NdfbSBT",
+                            "polyglot-c-py__BVQeahe",
+                            "cancel-async-tasks__bPHLmzz",
+                            "bn-fit-modify__2sxJiFR",
+                            "fix-ocaml-gc__SRKhFdD",
+                            "git-leak-recovery__KX29PWV",
+                            "build-cython-ext__NYBeXsU",
+                            "pytorch-model-recovery__ecBeySC",
+                            "model-extraction-relu-logits__ryrvJW8",
+                            "nginx-request-logging__fC9vrhq",
+                            "sparql-university__c5YVp96",
+                            "large-scale-text-editing__dA6vNDL",
+                            "sqlite-db-truncate__QCEHms9",
+                            "build-pmars__GPJQgKd",
+                            "rstan-to-pystan__CWUbeU3",
+                            "sqlite-with-gcov__Us4Hj5Q",
+                            "openssl-selfsigned-cert__NRT5ufd",
+                            "constraints-scheduling__MeJbi5z",
+                            "vulnerable-secret__8PX32RA",
+                            "dna-assembly__tLEtbpm"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "NonZeroAgentExitCodeError": [
+                        "log-summary-date-ranges__RSQGEEs",
+                        "compile-compcert__pzjWQLT",
+                        "train-fasttext__MFY3NEc",
+                        "install-windows-3.11__xrDee5x"
+                    ]
+                }
+            }
+        }
+    }
+}

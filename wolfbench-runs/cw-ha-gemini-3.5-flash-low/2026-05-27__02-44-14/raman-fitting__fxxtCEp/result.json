@@ -1,0 +1,115 @@
+{
+    "id": "8fbdb4d3-8f63-455f-8c70-3ad14c9444b4",
+    "task_name": "raman-fitting",
+    "trial_name": "raman-fitting__fxxtCEp",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-low/2026-05-27__02-44-14/raman-fitting__fxxtCEp",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "raman-fitting"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "732d69b125ace5638478701cfdfa709836b7f9e48b1d24f5ffdbdc19ea538c36",
+    "config": {
+        "task": {
+            "path": "raman-fitting",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "raman-fitting__fxxtCEp",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-low/2026-05-27__02-44-14",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "reasoning_effort": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f6cab9d9-567d-4d7b-b173-e8946ba323a9"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 459491,
+        "n_cache_tokens": 2526496,
+        "n_output_tokens": 12652,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-27T03:23:47.517243Z",
+    "finished_at": "2026-05-27T03:32:02.279224Z",
+    "environment_setup": {
+        "started_at": "2026-05-27T03:23:47.518183Z",
+        "finished_at": "2026-05-27T03:23:50.211918Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-27T03:23:50.211932Z",
+        "finished_at": "2026-05-27T03:25:26.025531Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-27T03:25:26.025630Z",
+        "finished_at": "2026-05-27T03:31:53.176186Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-27T03:31:53.916843Z",
+        "finished_at": "2026-05-27T03:31:58.893694Z"
+    }
+}

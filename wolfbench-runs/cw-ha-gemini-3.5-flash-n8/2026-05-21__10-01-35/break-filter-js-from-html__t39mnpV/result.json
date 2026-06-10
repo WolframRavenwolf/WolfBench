@@ -1,0 +1,114 @@
+{
+    "id": "5b01392c-4be9-4e48-9023-b7ada4f719dc",
+    "task_name": "break-filter-js-from-html",
+    "trial_name": "break-filter-js-from-html__t39mnpV",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__10-01-35/break-filter-js-from-html__t39mnpV",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "break-filter-js-from-html"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "b33421492e86b07de2a01bc2205f7e7d2fdc36446a84787265d99e5e138fdaaa",
+    "config": {
+        "task": {
+            "path": "break-filter-js-from-html",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "break-filter-js-from-html__t39mnpV",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__10-01-35",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "2fba8e18-3db0-4fcf-9cdf-ccb6fec5f900"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 370022,
+        "n_cache_tokens": 1092228,
+        "n_output_tokens": 3934,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-21T10:01:40.344413Z",
+    "finished_at": "2026-05-21T10:25:30.961231Z",
+    "environment_setup": {
+        "started_at": "2026-05-21T10:01:40.345306Z",
+        "finished_at": "2026-05-21T10:01:44.098339Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-21T10:01:44.098354Z",
+        "finished_at": "2026-05-21T10:02:43.807408Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-21T10:02:43.807594Z",
+        "finished_at": "2026-05-21T10:15:07.237429Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-21T10:15:07.940447Z",
+        "finished_at": "2026-05-21T10:15:14.391005Z"
+    }
+}

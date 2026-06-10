@@ -1,0 +1,115 @@
+{
+    "id": "0e25aba8-b8a0-4a6b-8dc9-ef0d334a58b6",
+    "task_name": "gpt2-codegolf",
+    "trial_name": "gpt2-codegolf__qzhQHhV",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-low/2026-05-27__03-56-53/gpt2-codegolf__qzhQHhV",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "gpt2-codegolf"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "c3dfea370953fe9b6cb53d368f1f242af2833cf1af623849bdaee8fe026b1cf1",
+    "config": {
+        "task": {
+            "path": "gpt2-codegolf",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "gpt2-codegolf__qzhQHhV",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-low/2026-05-27__03-56-53",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "reasoning_effort": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "b8109ca4-95d0-44e9-96f0-231cf00aaeaf"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 477502,
+        "n_cache_tokens": 1704860,
+        "n_output_tokens": 22035,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-27T03:56:58.269162Z",
+    "finished_at": "2026-05-27T04:11:46.335176Z",
+    "environment_setup": {
+        "started_at": "2026-05-27T03:56:58.269742Z",
+        "finished_at": "2026-05-27T03:57:01.457592Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-27T03:57:01.457605Z",
+        "finished_at": "2026-05-27T03:58:30.401988Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-27T03:58:30.402063Z",
+        "finished_at": "2026-05-27T04:10:54.159322Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-27T04:10:54.899269Z",
+        "finished_at": "2026-05-27T04:11:41.903639Z"
+    }
+}

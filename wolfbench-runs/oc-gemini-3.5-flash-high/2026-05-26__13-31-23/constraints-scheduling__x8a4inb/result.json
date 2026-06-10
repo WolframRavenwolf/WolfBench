@@ -1,0 +1,113 @@
+{
+    "id": "d51f6b0c-b0e2-43d6-bc7f-efaae944ba7a",
+    "task_name": "constraints-scheduling",
+    "trial_name": "constraints-scheduling__x8a4inb",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__13-31-23/constraints-scheduling__x8a4inb",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "constraints-scheduling"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "c69027b9099bb7ac63a753b310e31cfef9cc20dce2d1c6c88956c8a854d7ac16",
+    "config": {
+        "task": {
+            "path": "constraints-scheduling",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "constraints-scheduling__x8a4inb",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__13-31-23",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c112e5e6-3a59-46a8-ad94-4371176db47c"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 60021,
+        "n_cache_tokens": 410497,
+        "n_output_tokens": 14774,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-26T15:25:33.208021Z",
+    "finished_at": "2026-05-26T15:29:26.856700Z",
+    "environment_setup": {
+        "started_at": "2026-05-26T15:25:33.208452Z",
+        "finished_at": "2026-05-26T15:25:34.209502Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-26T15:25:34.209520Z",
+        "finished_at": "2026-05-26T15:25:56.898344Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-26T15:25:56.898437Z",
+        "finished_at": "2026-05-26T15:29:17.416342Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-26T15:29:18.671739Z",
+        "finished_at": "2026-05-26T15:29:26.569310Z"
+    }
+}

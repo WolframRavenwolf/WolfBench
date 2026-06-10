@@ -1,0 +1,172 @@
+{
+    "id": "72569f9b-5e8d-44de-a4cd-8643770ceee6",
+    "task_name": "chess-best-move",
+    "trial_name": "chess-best-move__N5Wne3t",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-kimi-k26-v2/2026-05-19__00-29-10/chess-best-move__N5Wne3t",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "chess-best-move"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "a31d482d846322d57f0e3ee3c56d4ff2171fe39908dadd8092d036f17114fbef",
+    "config": {
+        "task": {
+            "path": "chess-best-move",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "chess-best-move__N5Wne3t",
+        "trials_dir": "jobs/cw-t2-wb-kimi-k26-v2/2026-05-19__00-29-10",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.95,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "7aa15a90-c64c-4d3d-8945-01dd2e954b07"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 1764600,
+        "n_cache_tokens": 856704,
+        "n_output_tokens": 119730,
+        "cost_usd": 1478493.84,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 52,
+            "api_request_times_msec": [
+                1080.1541805267334,
+                1301.5754222869873,
+                1757.2965621948242,
+                1139.880657196045,
+                1667.588472366333,
+                2739.5215034484863,
+                788.9978885650635,
+                725.494384765625,
+                10290.548324584961,
+                6339.495420455933,
+                37585.66474914551,
+                15858.693838119507,
+                17805.18865585327,
+                12123.652935028076,
+                11114.407062530518,
+                8594.055652618408,
+                6262.7153396606445,
+                9689.329862594604,
+                44271.74973487854,
+                20880.605697631836,
+                41714.33973312378,
+                3735.3057861328125,
+                57511.92021369934,
+                7110.950946807861,
+                1695.9030628204346,
+                2648.0624675750732,
+                9209.202289581299,
+                1409.2426300048828,
+                1905.217170715332,
+                3067.002296447754,
+                1259.7510814666748,
+                2499.539613723755,
+                1274.1079330444336,
+                58381.56771659851,
+                6878.903865814209,
+                1875.171184539795,
+                31200.954914093018,
+                5618.266820907593,
+                7960.385799407959,
+                32993.25942993164,
+                7794.150114059448,
+                3521.397590637207,
+                1757.4567794799805,
+                2076.427936553955,
+                6797.077178955078,
+                4369.544982910156,
+                4844.337701797485,
+                2468.9278602600098,
+                2925.7407188415527,
+                4976.254224777222,
+                4046.177864074707,
+                3577.6169300079346
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-19T00:29:15.774378Z",
+    "finished_at": "2026-05-19T00:42:19.589355Z",
+    "environment_setup": {
+        "started_at": "2026-05-19T00:29:15.774677Z",
+        "finished_at": "2026-05-19T00:29:26.978939Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-19T00:29:26.978948Z",
+        "finished_at": "2026-05-19T00:29:33.877441Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-19T00:29:33.877503Z",
+        "finished_at": "2026-05-19T00:42:04.453847Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-19T00:42:05.209699Z",
+        "finished_at": "2026-05-19T00:42:14.741265Z"
+    }
+}

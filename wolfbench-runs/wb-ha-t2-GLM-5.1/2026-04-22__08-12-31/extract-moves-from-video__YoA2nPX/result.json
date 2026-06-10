@@ -1,0 +1,113 @@
+{
+    "id": "4acc92e2-8fcd-4fd3-bd22-85c7acbe0db6",
+    "task_name": "extract-moves-from-video",
+    "trial_name": "extract-moves-from-video__YoA2nPX",
+    "trial_uri": "file:///root/harbor/jobs/wb-ha-t2-GLM-5.1/2026-04-22__08-12-31/extract-moves-from-video__YoA2nPX",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "extract-moves-from-video"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "605fb166c0af666150b184a6ca50f1ca1c2221a5b93e44efd21c7ea40d746d54",
+    "config": {
+        "task": {
+            "path": "extract-moves-from-video",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "extract-moves-from-video__YoA2nPX",
+        "trials_dir": "jobs/wb-ha-t2-GLM-5.1/2026-04-22__08-12-31",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/zai-org/GLM-5.1",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200,
+                "request_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c20e4182-a0e9-498c-952d-b411ef12705a"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "zai-org/GLM-5.1",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 294430,
+        "n_cache_tokens": 564096,
+        "n_output_tokens": 9547,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 📚 preparing skill_view…\r\n  ┊ 📚 skill     youtube-content  0.0s\r\n  ┊ 📚 preparing skill_view…\r\n  ┊ 📚 skill     youtube-content  0.0s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\nLet me start by getting the YouTube transcript and downloading the video so I can analyze the actual gameplay.\r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip install youtube-transcript-api yt-dlp 2>&1 | tail -5  2.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip3 install youtube-transcript-api yt-dlp 2>&1 | tail -5  0.7s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which python3 && python3 --version && python3 -m pip install youtube-transcript-api yt-dlp 2>&1 | tail -10  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-get update && apt-get install -y python3-pip ffmpeg 2>&1 | tail -10  21.0s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         python3 -m pip install youtube-transcript-api yt ... [truncated]\nStderr:\nbash: line 3:  7337 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      7338 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/root/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 📚 preparing skill_view…\r\n  ┊ 📚 skill     youtube-content  0.0s\r\n  ┊ 📚 preparing skill_view…\r\n  ┊ 📚 skill     youtube-content  0.0s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\nLet me start by getting the YouTube transcript and downloading the video so I can analyze the actual gameplay.\r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip install youtube-transcript-api yt-dlp 2>&1 | tail -5  2.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip3 install youtube-transcript-api yt-dlp 2>&1 | tail -5  0.7s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which python3 && python3 --version && python3 -m pip install youtube-transcript-api yt-dlp 2>&1 | tail -10  0.2s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         apt-get update && apt-get install -y python3-pip ffmpeg 2>&1 | tail -10  21.0s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         python3 -m pip install youtube-transcript-api yt ... [truncated]\nStderr:\nbash: line 3:  7337 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      7338 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-04-22T12:50:35.721390"
+    },
+    "started_at": "2026-04-22T12:03:38.361147Z",
+    "finished_at": "2026-04-22T12:51:34.588592Z",
+    "environment_setup": {
+        "started_at": "2026-04-22T12:03:38.363251Z",
+        "finished_at": "2026-04-22T12:03:40.444652Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-22T12:03:40.444677Z",
+        "finished_at": "2026-04-22T12:07:34.681616Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-22T12:07:34.681795Z",
+        "finished_at": "2026-04-22T12:50:35.718747Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-22T12:50:38.019291Z",
+        "finished_at": "2026-04-22T12:50:59.128033Z"
+    }
+}

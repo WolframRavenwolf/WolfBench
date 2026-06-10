@@ -1,0 +1,113 @@
+{
+    "id": "a898a6bf-9b58-4b78-90f4-a636717fb24a",
+    "task_name": "gpt2-codegolf",
+    "trial_name": "gpt2-codegolf__yumUeWG",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__13-31-23/gpt2-codegolf__yumUeWG",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "gpt2-codegolf"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "c3dfea370953fe9b6cb53d368f1f242af2833cf1af623849bdaee8fe026b1cf1",
+    "config": {
+        "task": {
+            "path": "gpt2-codegolf",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "gpt2-codegolf__yumUeWG",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-daytona-high/2026-05-26__13-31-23",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c112e5e6-3a59-46a8-ad94-4371176db47c"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2020308,
+        "n_cache_tokens": 33941895,
+        "n_output_tokens": 264941,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-26T13:31:28.340291Z",
+    "finished_at": "2026-05-26T14:14:47.731015Z",
+    "environment_setup": {
+        "started_at": "2026-05-26T13:31:28.340901Z",
+        "finished_at": "2026-05-26T13:31:29.957211Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-26T13:31:29.957222Z",
+        "finished_at": "2026-05-26T13:31:51.993995Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-26T13:31:51.994131Z",
+        "finished_at": "2026-05-26T14:13:27.579404Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-26T14:13:29.073812Z",
+        "finished_at": "2026-05-26T14:14:47.444568Z"
+    }
+}

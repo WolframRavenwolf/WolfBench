@@ -1,0 +1,113 @@
+{
+    "id": "0d7beb81-3d21-45be-9874-81095278f6e8",
+    "task_name": "openssl-selfsigned-cert",
+    "trial_name": "openssl-selfsigned-cert__mFTub4o",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-low/2026-05-27__16-15-39/openssl-selfsigned-cert__mFTub4o",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "openssl-selfsigned-cert"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "8c096d8af92f88d8f876e26efc7f495ff13f50586736e56f35140fbb080ff390",
+    "config": {
+        "task": {
+            "path": "openssl-selfsigned-cert",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "openssl-selfsigned-cert__mFTub4o",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-low/2026-05-27__16-15-39",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "bbcdac04-7cb8-49b9-92b4-c95bc3fe7a13"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 78695,
+        "n_cache_tokens": 144600,
+        "n_output_tokens": 2865,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-27T18:34:22.153004Z",
+    "finished_at": "2026-05-27T18:37:51.079574Z",
+    "environment_setup": {
+        "started_at": "2026-05-27T18:34:22.153567Z",
+        "finished_at": "2026-05-27T18:34:29.649653Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-27T18:34:29.649667Z",
+        "finished_at": "2026-05-27T18:35:19.856210Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-27T18:35:19.856313Z",
+        "finished_at": "2026-05-27T18:37:38.595609Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-27T18:37:42.349839Z",
+        "finished_at": "2026-05-27T18:37:50.610987Z"
+    }
+}

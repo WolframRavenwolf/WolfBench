@@ -1,0 +1,127 @@
+{
+    "id": "e0512e02-c798-4f61-a4b1-05855dc6d4d5",
+    "started_at": "2026-05-20T13:37:56.193942",
+    "finished_at": "2026-05-20T14:48:46.408122",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 3,
+        "evals": {
+            "terminus-2__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 87,
+                "n_errors": 3,
+                "metrics": [
+                    {
+                        "mean": 0.5955056179775281
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "0.0": [
+                            "gpt2-codegolf__gmZP44X",
+                            "break-filter-js-from-html__2mctQ8Z",
+                            "password-recovery__y6RECpS",
+                            "regex-chess__CkbJBhh",
+                            "caffe-cifar-10__QJA4kWr",
+                            "mteb-retrieve__3tJdovb",
+                            "adaptive-rejection-sampler__yFk23w3",
+                            "chess-best-move__eAMrPfF",
+                            "polyglot-rust-c__zRu7oxQ",
+                            "train-fasttext__MFEtX7E",
+                            "video-processing__VtJDofN",
+                            "qemu-alpine-ssh__U2Yff8t",
+                            "install-windows-3.11__sP7uYrN",
+                            "make-doom-for-mips__X6m62Bw",
+                            "torch-pipeline-parallelism__cPYfFap",
+                            "tune-mjcf__sww2n6y",
+                            "extract-moves-from-video__JBtSdEF",
+                            "mteb-leaderboard__Wqtn3Wa",
+                            "mailman__WQQ8Bhs",
+                            "raman-fitting__QvuCK4p",
+                            "query-optimize__yeRyP7Q",
+                            "extract-elf__AVJwmdJ",
+                            "financial-document-processor__JAgbYqE",
+                            "filter-js-from-html__U4hzFYf",
+                            "polyglot-c-py__QcXizNu",
+                            "build-cython-ext__5bDSxhQ",
+                            "sam-cell-seg__BWegbaJ",
+                            "model-extraction-relu-logits__44w7MVk",
+                            "sparql-university__G9KrYXE",
+                            "sanitize-git-repo__pUTEEGw",
+                            "build-pmars__6ozaGoP",
+                            "sqlite-with-gcov__zCNDnTe",
+                            "dna-insert__UL2gKN7",
+                            "dna-assembly__T9xTr6i"
+                        ],
+                        "1.0": [
+                            "llm-inference-batching-scheduler__YCg9DBp",
+                            "reshard-c4-data__WjFroNZ",
+                            "write-compressor__S45N5ph",
+                            "merge-diff-arc-agi-task__4vNRckg",
+                            "winning-avg-corewars__diEQ6fr",
+                            "log-summary-date-ranges__kxQDxUU",
+                            "pytorch-model-cli__XwAH2pr",
+                            "largest-eigenval__45FVQQo",
+                            "portfolio-optimization__eSCmy7u",
+                            "path-tracing-reverse__rpMkhQU",
+                            "modernize-scientific-stack__2i5RPBj",
+                            "torch-tensor-parallelism__2xszYoK",
+                            "path-tracing__7q6JHqR",
+                            "feal-linear-cryptanalysis__dnwBpdc",
+                            "distribution-search__xEtWdPM",
+                            "pypi-server__7SGhkA9",
+                            "custom-memory-heap-crash__wAeqKKN",
+                            "multi-source-data-merger__8Dt4Wqk",
+                            "configure-git-webserver__PTQCSsh",
+                            "crack-7z-hash__uxrK2Ai",
+                            "cobol-modernization__wVhBPqR",
+                            "overfull-hbox__nTZced2",
+                            "hf-model-inference__G6W4ENr",
+                            "compile-compcert__esA5ACS",
+                            "headless-terminal__MAR6cwV",
+                            "fix-git__SAHg9Bt",
+                            "schemelike-metacircular-eval__PShMtHZ",
+                            "qemu-startup__hhe4k5a",
+                            "build-pov-ray__d3f8xZL",
+                            "git-multibranch__FDyCTS4",
+                            "kv-store-grpc__JZX4ZZg",
+                            "gcode-to-text__R5wUsMk",
+                            "make-mips-interpreter__iEJdznh",
+                            "count-dataset-tokens__xoNZn5v",
+                            "circuit-fibsqrt__KT9bTkN",
+                            "protein-assembly__vKMn2Km",
+                            "code-from-image__PrZMR9N",
+                            "fix-code-vulnerability__MJGCodr",
+                            "mcmc-sampling-stan__STomDJV",
+                            "regex-log__744x9ou",
+                            "feal-differential-cryptanalysis__UosuhMm",
+                            "cancel-async-tasks__iuaKNyS",
+                            "bn-fit-modify__wk7jGMT",
+                            "fix-ocaml-gc__YtEeXBp",
+                            "git-leak-recovery__dALsPTD",
+                            "pytorch-model-recovery__Urmtgs5",
+                            "nginx-request-logging__2a4grEz",
+                            "large-scale-text-editing__wYizbEt",
+                            "sqlite-db-truncate__upH2nxe",
+                            "rstan-to-pystan__exvX34R",
+                            "openssl-selfsigned-cert__KREKuzk",
+                            "constraints-scheduling__y8jgL3y",
+                            "vulnerable-secret__C4a3iae"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentTimeoutError": [
+                        "break-filter-js-from-html__2mctQ8Z"
+                    ],
+                    "RuntimeError": [
+                        "prove-plus-comm__QPvRRPQ"
+                    ],
+                    "AioRpcError": [
+                        "db-wal-recovery__LnZQSCu"
+                    ]
+                }
+            }
+        }
+    }
+}

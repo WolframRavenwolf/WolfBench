@@ -1,0 +1,135 @@
+{
+    "id": "07884f43-4fd9-4e40-bc37-9e6a5ad5352e",
+    "task_name": "pytorch-model-recovery",
+    "trial_name": "pytorch-model-recovery__j4aNXZv",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__20-17-59/pytorch-model-recovery__j4aNXZv",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "pytorch-model-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "9def2a29a9f98ee4ae428cc23e473a889f9f4fd87a62ea685a04192a6aefe20f",
+    "config": {
+        "task": {
+            "path": "pytorch-model-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "pytorch-model-recovery__j4aNXZv",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-pro/2026-05-13__20-17-59",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.01,
+                    "output_cost_per_token": 0.01
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f2e409cb-050f-4caf-8dab-23a5b713d8d6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 264214,
+        "n_cache_tokens": 244480,
+        "n_output_tokens": 10325,
+        "cost_usd": 300.59000000000003,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 17,
+            "api_request_times_msec": [
+                8977.417945861816,
+                3414.6478176116943,
+                17882.61127471924,
+                32859.04788970947,
+                24028.582334518433,
+                59533.97226333618,
+                52053.110122680664,
+                2936.0649585723877,
+                2762.4998092651367,
+                3472.0120429992676,
+                2776.022434234619,
+                31170.77922821045,
+                17503.784894943237,
+                54546.92339897156,
+                2772.693634033203,
+                3797.785997390747,
+                9968.693256378174
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-13T22:06:04.241542Z",
+    "finished_at": "2026-05-13T22:14:51.283835Z",
+    "environment_setup": {
+        "started_at": "2026-05-13T22:06:04.258122Z",
+        "finished_at": "2026-05-13T22:07:01.206495Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-13T22:07:01.206510Z",
+        "finished_at": "2026-05-13T22:07:14.085835Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-13T22:07:14.085940Z",
+        "finished_at": "2026-05-13T22:14:05.266508Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-13T22:14:07.607384Z",
+        "finished_at": "2026-05-13T22:14:44.333269Z"
+    }
+}

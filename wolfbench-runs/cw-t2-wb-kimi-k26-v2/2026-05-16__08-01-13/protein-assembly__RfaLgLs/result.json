@@ -1,0 +1,174 @@
+{
+    "id": "61ecc902-2390-41e2-935f-667876e00c1b",
+    "task_name": "protein-assembly",
+    "trial_name": "protein-assembly__RfaLgLs",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13/protein-assembly__RfaLgLs",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "protein-assembly"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "b8df06c6c42605ec37afb3b9c6e2f4feb1be9663380bd7129fcbaa9559253a60",
+    "config": {
+        "task": {
+            "path": "protein-assembly",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "protein-assembly__RfaLgLs",
+        "trials_dir": "jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.95,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "91203cce-65be-4ef1-851b-ec39178883f6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2323834,
+        "n_cache_tokens": 814144,
+        "n_output_tokens": 292280,
+        "cost_usd": 2733588.5400000005,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 54,
+            "api_request_times_msec": [
+                2339.008569717407,
+                3046.525716781616,
+                1232.1505546569824,
+                2112.0176315307617,
+                2509.8819732666016,
+                5594.205141067505,
+                8063.6444091796875,
+                3603.771448135376,
+                5202.00252532959,
+                11992.212295532227,
+                4916.75329208374,
+                1303.9488792419434,
+                6023.278713226318,
+                4240.04054069519,
+                4442.77286529541,
+                4798.50697517395,
+                5308.971405029297,
+                4618.565559387207,
+                15836.360931396484,
+                30640.165328979492,
+                54335.3910446167,
+                115150.53606033325,
+                11244.409322738647,
+                156109.30681228638,
+                24989.294052124023,
+                3628.533363342285,
+                197900.83384513855,
+                56381.96635246277,
+                11651.566505432129,
+                5879.508495330811,
+                16777.764081954956,
+                26680.049419403076,
+                8007.136106491089,
+                5969.994783401489,
+                2511.455774307251,
+                5070.303678512573,
+                2852.3025512695312,
+                6187.232732772827,
+                24706.717014312744,
+                11315.57583808899,
+                60759.12809371948,
+                16640.8588886261,
+                17593.092441558838,
+                25070.06788253784,
+                5558.502197265625,
+                15778.026342391968,
+                14746.80781364441,
+                10448.90809059143,
+                14407.773494720459,
+                43002.48599052429,
+                7421.731233596802,
+                39197.60298728943,
+                26432.316303253174,
+                23181.159019470215
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-16T08:01:18.426746Z",
+    "finished_at": "2026-05-16T08:38:00.002511Z",
+    "environment_setup": {
+        "started_at": "2026-05-16T08:01:18.435398Z",
+        "finished_at": "2026-05-16T08:01:29.831319Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-16T08:01:29.831335Z",
+        "finished_at": "2026-05-16T08:01:38.305869Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-16T08:01:38.305953Z",
+        "finished_at": "2026-05-16T08:37:46.272701Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-16T08:37:47.022020Z",
+        "finished_at": "2026-05-16T08:37:54.059036Z"
+    }
+}

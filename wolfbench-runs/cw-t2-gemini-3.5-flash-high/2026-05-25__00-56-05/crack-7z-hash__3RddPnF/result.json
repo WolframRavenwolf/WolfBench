@@ -1,0 +1,158 @@
+{
+    "id": "10457442-9a84-4019-95e2-9408e4ba0644",
+    "task_name": "crack-7z-hash",
+    "trial_name": "crack-7z-hash__3RddPnF",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-gemini-3.5-flash-high/2026-05-25__00-56-05/crack-7z-hash__3RddPnF",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "crack-7z-hash"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "6557afcd0ab96deef7a8292019ea507be18f91433df61618b622866a293525a8",
+    "config": {
+        "task": {
+            "path": "crack-7z-hash",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "crack-7z-hash__3RddPnF",
+        "trials_dir": "jobs/cw-t2-gemini-3.5-flash-high/2026-05-25__00-56-05",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "gemini/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "reasoning_effort": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "57cebd1a-9207-4a9a-b040-9283528a54f1"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "gemini"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 649731,
+        "n_cache_tokens": 415935,
+        "n_output_tokens": 7592,
+        "cost_usd": 0.48141225000000004,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 39,
+            "api_request_times_msec": [
+                3000.4236698150635,
+                3840.897560119629,
+                3719.0072536468506,
+                2769.4084644317627,
+                1357.954978942871,
+                1707.322120666504,
+                1790.9698486328125,
+                1708.1751823425293,
+                1623.0597496032715,
+                1923.9397048950195,
+                1508.3739757537842,
+                1798.734188079834,
+                2237.612247467041,
+                1815.7429695129395,
+                4818.661451339722,
+                1909.026861190796,
+                3604.8314571380615,
+                4545.713901519775,
+                3514.5413875579834,
+                4366.521596908569,
+                3969.593048095703,
+                4183.087110519409,
+                3996.570587158203,
+                1920.5942153930664,
+                2573.292016983032,
+                4748.09455871582,
+                1743.797779083252,
+                1653.2793045043945,
+                2358.0164909362793,
+                1811.739206314087,
+                1856.4679622650146,
+                1754.9679279327393,
+                1574.0082263946533,
+                3237.4393939971924,
+                1789.8118495941162,
+                1956.3777446746826,
+                1827.8112411499023,
+                1612.5454902648926,
+                1759.9613666534424
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-25T00:56:10.385191Z",
+    "finished_at": "2026-05-25T01:00:24.308286Z",
+    "environment_setup": {
+        "started_at": "2026-05-25T00:56:10.386070Z",
+        "finished_at": "2026-05-25T00:56:18.653421Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-25T00:56:18.653433Z",
+        "finished_at": "2026-05-25T00:56:27.846924Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-25T00:56:27.846971Z",
+        "finished_at": "2026-05-25T01:00:11.720786Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-25T01:00:12.446634Z",
+        "finished_at": "2026-05-25T01:00:20.858541Z"
+    }
+}

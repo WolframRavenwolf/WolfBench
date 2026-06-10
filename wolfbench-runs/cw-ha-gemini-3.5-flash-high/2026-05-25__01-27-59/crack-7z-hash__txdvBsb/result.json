@@ -1,0 +1,115 @@
+{
+    "id": "09d41299-2ebf-450f-9a38-415db2e34b56",
+    "task_name": "crack-7z-hash",
+    "trial_name": "crack-7z-hash__txdvBsb",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-high-n8/2026-05-25__01-27-59/crack-7z-hash__txdvBsb",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "crack-7z-hash"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "6557afcd0ab96deef7a8292019ea507be18f91433df61618b622866a293525a8",
+    "config": {
+        "task": {
+            "path": "crack-7z-hash",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "crack-7z-hash__txdvBsb",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-high-n8/2026-05-25__01-27-59",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "reasoning_effort": "high",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "76204a49-c76e-4a80-9c36-168146009c05"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 205307,
+        "n_cache_tokens": 306884,
+        "n_output_tokens": 914,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-25T01:45:01.041582Z",
+    "finished_at": "2026-05-25T01:48:31.048103Z",
+    "environment_setup": {
+        "started_at": "2026-05-25T01:45:01.042422Z",
+        "finished_at": "2026-05-25T01:45:04.473242Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-25T01:45:04.473255Z",
+        "finished_at": "2026-05-25T01:46:33.014432Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-25T01:46:33.014531Z",
+        "finished_at": "2026-05-25T01:48:18.431081Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-25T01:48:19.136846Z",
+        "finished_at": "2026-05-25T01:48:28.335746Z"
+    }
+}

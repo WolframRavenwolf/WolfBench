@@ -1,0 +1,130 @@
+{
+    "id": "d159f5da-9223-437f-91e3-3262f8161730",
+    "started_at": "2026-05-20T03:05:09.196903",
+    "finished_at": "2026-05-20T04:16:12.362937",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 5,
+        "evals": {
+            "terminus-2__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 86,
+                "n_errors": 5,
+                "metrics": [
+                    {
+                        "mean": 0.7078651685393258
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "llm-inference-batching-scheduler__meGdhk8",
+                            "reshard-c4-data__WzpftH2",
+                            "write-compressor__VmQbztc",
+                            "merge-diff-arc-agi-task__aBfCcR3",
+                            "winning-avg-corewars__nwmhD3q",
+                            "log-summary-date-ranges__r4GNfsV",
+                            "pytorch-model-cli__A5khX3y",
+                            "largest-eigenval__z956Nxk",
+                            "password-recovery__TBxv6tC",
+                            "portfolio-optimization__K9rLGoB",
+                            "path-tracing-reverse__oFHys8V",
+                            "modernize-scientific-stack__cizVCaj",
+                            "path-tracing__E5s8XdY",
+                            "feal-linear-cryptanalysis__mJ5p4E3",
+                            "distribution-search__utss4UW",
+                            "pypi-server__bVHPz2m",
+                            "custom-memory-heap-crash__U6BqnwM",
+                            "adaptive-rejection-sampler__qo7verb",
+                            "multi-source-data-merger__oVKVEoy",
+                            "configure-git-webserver__9H4Jj7D",
+                            "crack-7z-hash__dUx3nTp",
+                            "chess-best-move__naCrvho",
+                            "cobol-modernization__cELGEHh",
+                            "overfull-hbox__PE8gxJz",
+                            "polyglot-rust-c__nHjk9wM",
+                            "hf-model-inference__b87XeEs",
+                            "compile-compcert__X25cB9r",
+                            "headless-terminal__jgmumZR",
+                            "fix-git__fJRdFUL",
+                            "schemelike-metacircular-eval__eQBoda3",
+                            "qemu-startup__eWp7PY6",
+                            "build-pov-ray__euv9ELs",
+                            "git-multibranch__kYAnXSX",
+                            "qemu-alpine-ssh__H3AbWTr",
+                            "torch-pipeline-parallelism__zT5Sufn",
+                            "tune-mjcf__36n2PHu",
+                            "make-mips-interpreter__DQVMGsT",
+                            "count-dataset-tokens__mrMVN7q",
+                            "circuit-fibsqrt__ucqUXne",
+                            "protein-assembly__zFhpdKY",
+                            "code-from-image__dk3uR94",
+                            "fix-code-vulnerability__4XeG2o6",
+                            "financial-document-processor__PbHGZxp",
+                            "mcmc-sampling-stan__NJo7We3",
+                            "regex-log__nKRT2sE",
+                            "feal-differential-cryptanalysis__yWR4T8H",
+                            "cancel-async-tasks__Ys7YTgK",
+                            "bn-fit-modify__RRmfk7s",
+                            "fix-ocaml-gc__zukgfPF",
+                            "git-leak-recovery__gytYbii",
+                            "build-cython-ext__CHN4qN9",
+                            "pytorch-model-recovery__M3iGhSW",
+                            "nginx-request-logging__cJJV3hY",
+                            "sparql-university__KXncrHJ",
+                            "large-scale-text-editing__ZGcR6fE",
+                            "sqlite-db-truncate__X5WYcK5",
+                            "rstan-to-pystan__z4rspMC",
+                            "sqlite-with-gcov__TABedGs",
+                            "openssl-selfsigned-cert__v4xuHNn",
+                            "constraints-scheduling__cypPTWQ",
+                            "dna-insert__XVV3GtR",
+                            "vulnerable-secret__JM9qmzB",
+                            "dna-assembly__g8HHne2"
+                        ],
+                        "0.0": [
+                            "break-filter-js-from-html__6L6QHGN",
+                            "regex-chess__cTjg3dK",
+                            "torch-tensor-parallelism__RRBTdnN",
+                            "caffe-cifar-10__azGjNtF",
+                            "mteb-retrieve__ouBE8Mw",
+                            "db-wal-recovery__zrxKYrF",
+                            "train-fasttext__ZJ9aNyf",
+                            "video-processing__vcDEsEe",
+                            "kv-store-grpc__4jRW9X8",
+                            "install-windows-3.11__UXnD6ig",
+                            "extract-moves-from-video__3raCGhx",
+                            "gcode-to-text__mBM2gBy",
+                            "mteb-leaderboard__joc2q25",
+                            "mailman__8hpw3DE",
+                            "raman-fitting__PusDZ8e",
+                            "query-optimize__e7w3T5A",
+                            "extract-elf__bEg3wjs",
+                            "filter-js-from-html__eNGqfej",
+                            "polyglot-c-py__VAzfpUS",
+                            "sam-cell-seg__FTdYVM4",
+                            "model-extraction-relu-logits__vig7m3i",
+                            "sanitize-git-repo__GGh3QKa",
+                            "build-pmars__ivnbhBm"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "SandboxExecutionError": [
+                        "gpt2-codegolf__EU4SU98"
+                    ],
+                    "AgentTimeoutError": [
+                        "regex-chess__cTjg3dK",
+                        "install-windows-3.11__UXnD6ig"
+                    ],
+                    "RuntimeError": [
+                        "prove-plus-comm__3GHnFtV"
+                    ],
+                    "AioRpcError": [
+                        "make-doom-for-mips__J49EsUB"
+                    ]
+                }
+            }
+        }
+    }
+}

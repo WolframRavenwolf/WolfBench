@@ -1,0 +1,172 @@
+{
+    "id": "1bb6928b-c314-40e9-a9e9-9ed20ea3854e",
+    "task_name": "cobol-modernization",
+    "trial_name": "cobol-modernization__yjkKWXa",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-gemini-3.5-flash/2026-05-19__22-53-31/cobol-modernization__yjkKWXa",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "cobol-modernization"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "f8220a33bf193106989df1a28e4806985b12e5f93dcf07efb86acd8dbbc44f6a",
+    "config": {
+        "task": {
+            "path": "cobol-modernization",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "cobol-modernization__yjkKWXa",
+        "trials_dir": "jobs/cw-t2-gemini-3.5-flash/2026-05-19__22-53-31",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "gemini/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f797e6c5-d9b4-4465-996e-cc3174cf57c6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "gemini"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 2205727,
+        "n_cache_tokens": 1820463,
+        "n_output_tokens": 52978,
+        "cost_usd": 1.32776745,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 54,
+            "api_request_times_msec": [
+                2361.4349365234375,
+                1850.1918315887451,
+                4395.663022994995,
+                1984.7829341888428,
+                5483.808994293213,
+                3079.087972640991,
+                5249.633550643921,
+                2306.222438812256,
+                5702.534914016724,
+                1962.5968933105469,
+                1250.0946521759033,
+                2275.3748893737793,
+                7033.037424087524,
+                8183.204889297485,
+                2341.564893722534,
+                1581.1948776245117,
+                2248.1980323791504,
+                1978.6107540130615,
+                3116.964101791382,
+                5830.942630767822,
+                11295.347213745117,
+                3325.8848190307617,
+                3417.417287826538,
+                7358.124494552612,
+                3848.9739894866943,
+                5791.154384613037,
+                7733.258485794067,
+                7124.096632003784,
+                3136.9428634643555,
+                3406.7792892456055,
+                7468.325853347778,
+                2092.6055908203125,
+                6459.028482437134,
+                3222.55802154541,
+                2800.7290363311768,
+                3379.5652389526367,
+                3118.1161403656006,
+                7234.505891799927,
+                4544.6062088012695,
+                36091.800689697266,
+                1548.8076210021973,
+                22302.66809463501,
+                7099.632024765015,
+                2220.8468914031982,
+                5739.015579223633,
+                3062.21866607666,
+                2060.5762004852295,
+                9623.608350753784,
+                2906.0909748077393,
+                3849.9767780303955,
+                3416.522741317749,
+                2029.7057628631592,
+                1660.5055332183838,
+                1423.161506652832
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-19T22:53:40.989883Z",
+    "finished_at": "2026-05-19T23:10:46.924944Z",
+    "environment_setup": {
+        "started_at": "2026-05-19T22:53:40.991428Z",
+        "finished_at": "2026-05-19T22:53:50.467396Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-19T22:53:50.467406Z",
+        "finished_at": "2026-05-19T22:53:58.618548Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-19T22:53:58.618640Z",
+        "finished_at": "2026-05-19T23:00:13.334116Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-19T23:00:14.098200Z",
+        "finished_at": "2026-05-19T23:00:20.514929Z"
+    }
+}

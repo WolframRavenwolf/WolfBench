@@ -1,0 +1,114 @@
+{
+    "id": "ba64ae8e-7075-4dc4-836a-49eb09941741",
+    "task_name": "qemu-startup",
+    "trial_name": "qemu-startup__wvbQjQ5",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__03-55-34/qemu-startup__wvbQjQ5",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "qemu-startup"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "0f33bbc23fc771ea1ee1cadd076a439733e19bf3ef15bbf2d728bfe948ea44dd",
+    "config": {
+        "task": {
+            "path": "qemu-startup",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "qemu-startup__wvbQjQ5",
+        "trials_dir": "jobs/cw-ha-gemini-3.5-flash-n8/2026-05-21__03-55-34",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 3.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "v2026.5.16",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "6690cb5e-2f06-4c3b-9f34-787be93ae1f7"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.5.16",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 222656,
+        "n_cache_tokens": 797485,
+        "n_output_tokens": 4141,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-21T04:30:39.535862Z",
+    "finished_at": "2026-05-21T04:36:26.717961Z",
+    "environment_setup": {
+        "started_at": "2026-05-21T04:30:39.536675Z",
+        "finished_at": "2026-05-21T04:30:42.464316Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-21T04:30:42.464332Z",
+        "finished_at": "2026-05-21T04:31:49.289846Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-21T04:31:49.289945Z",
+        "finished_at": "2026-05-21T04:36:05.773406Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-21T04:36:06.478820Z",
+        "finished_at": "2026-05-21T04:36:22.002101Z"
+    }
+}

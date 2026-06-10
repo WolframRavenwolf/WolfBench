@@ -1,0 +1,123 @@
+{
+    "id": "76204a49-c76e-4a80-9c36-168146009c05",
+    "started_at": "2026-05-25T01:28:03.029240",
+    "finished_at": "2026-05-25T02:55:21.780226",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 1,
+        "evals": {
+            "hermes__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 89,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "mean": 0.6853932584269663
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "adaptive-rejection-sampler__yLCeGfV",
+                            "bn-fit-modify__aUwk3A4",
+                            "break-filter-js-from-html__Ljpt8Yd",
+                            "build-cython-ext__MGPYE5z",
+                            "build-pmars__qD7NUzm",
+                            "cancel-async-tasks__fT8d9rr",
+                            "chess-best-move__Jfg2rAK",
+                            "circuit-fibsqrt__nfg47Tr",
+                            "cobol-modernization__RTqVYWs",
+                            "code-from-image__XndwNsn",
+                            "compile-compcert__sBDcJF4",
+                            "constraints-scheduling__EFSz3Wc",
+                            "crack-7z-hash__txdvBsb",
+                            "distribution-search__3FC3XCu",
+                            "dna-assembly__V2vLBue",
+                            "dna-insert__MCNh2EK",
+                            "feal-differential-cryptanalysis__5QJb9dQ",
+                            "feal-linear-cryptanalysis__TPq7zgS",
+                            "financial-document-processor__FiyGcNG",
+                            "fix-code-vulnerability__ecTGBFQ",
+                            "fix-git__QzAMxqS",
+                            "fix-ocaml-gc__CnrjvFw",
+                            "gcode-to-text__5Cy7H2t",
+                            "git-leak-recovery__SrYtk2J",
+                            "git-multibranch__pHqK8tw",
+                            "headless-terminal__kFA4eAc",
+                            "hf-model-inference__6wENpQF",
+                            "kv-store-grpc__utYiTJr",
+                            "large-scale-text-editing__qrpKcfa",
+                            "largest-eigenval__WQVYtm9",
+                            "llm-inference-batching-scheduler__CiXYVcS",
+                            "log-summary-date-ranges__rY4DMHv",
+                            "mailman__feSpkwH",
+                            "mcmc-sampling-stan__XKjAwPc",
+                            "merge-diff-arc-agi-task__fuAnViU",
+                            "mteb-retrieve__GFHwXaz",
+                            "multi-source-data-merger__jYiMBLg",
+                            "nginx-request-logging__QiqejRW",
+                            "openssl-selfsigned-cert__us3JfyZ",
+                            "password-recovery__ifiQdLz",
+                            "path-tracing-reverse__X4rCbLB",
+                            "path-tracing__pWueirk",
+                            "polyglot-c-py__APogUAH",
+                            "prove-plus-comm__BmVuZKB",
+                            "pypi-server__cS7VsZg",
+                            "pytorch-model-cli__mUUxAAr",
+                            "pytorch-model-recovery__zHF6vDM",
+                            "qemu-startup__nU8CHtv",
+                            "query-optimize__RPv8GQG",
+                            "regex-log__4u9feJe",
+                            "reshard-c4-data__L9cA4wu",
+                            "rstan-to-pystan__xpiu4dz",
+                            "schemelike-metacircular-eval__r6Vtcy3",
+                            "sparql-university__4tseWSB",
+                            "sqlite-db-truncate__oqdapu7",
+                            "sqlite-with-gcov__GEvtoXE",
+                            "torch-tensor-parallelism__amm6gTZ",
+                            "tune-mjcf__aJxv6mQ",
+                            "video-processing__JmZ7SLU",
+                            "vulnerable-secret__Fo7UG4a",
+                            "write-compressor__An7VZPj"
+                        ],
+                        "0.0": [
+                            "build-pov-ray__XjM9ETW",
+                            "caffe-cifar-10__4vXUdJc",
+                            "configure-git-webserver__Leb4iKb",
+                            "count-dataset-tokens__qwjFnT9",
+                            "custom-memory-heap-crash__jq7HL34",
+                            "db-wal-recovery__uiVNRZ3",
+                            "extract-elf__rGThLQE",
+                            "extract-moves-from-video__9YquZ9r",
+                            "filter-js-from-html__mk3VqiG",
+                            "gpt2-codegolf__YUAADAR",
+                            "install-windows-3.11__WD6GiZr",
+                            "make-doom-for-mips__y4dBV8W",
+                            "make-mips-interpreter__vdtyLax",
+                            "model-extraction-relu-logits__ADvDnWV",
+                            "modernize-scientific-stack__g2cDgCk",
+                            "mteb-leaderboard__afq7VQ2",
+                            "overfull-hbox__R2Eds3R",
+                            "polyglot-rust-c__DSwQnqx",
+                            "portfolio-optimization__nr2LiFF",
+                            "protein-assembly__KLDvsbG",
+                            "qemu-alpine-ssh__A3bVCa3",
+                            "raman-fitting__rE4cpLg",
+                            "regex-chess__TFoJVX4",
+                            "sam-cell-seg__qvgSBBu",
+                            "sanitize-git-repo__FsJgq45",
+                            "torch-pipeline-parallelism__uvJQr4P",
+                            "train-fasttext__bQYNMo7",
+                            "winning-avg-corewars__YA7LhKu"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "NonZeroAgentExitCodeError": [
+                        "install-windows-3.11__WD6GiZr"
+                    ]
+                }
+            }
+        }
+    }
+}

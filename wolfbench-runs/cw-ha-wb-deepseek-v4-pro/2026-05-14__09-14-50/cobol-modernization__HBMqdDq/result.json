@@ -1,0 +1,108 @@
+{
+    "id": "951c6958-282f-4e2f-b88b-a995c4e6d532",
+    "task_name": "cobol-modernization",
+    "trial_name": "cobol-modernization__HBMqdDq",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-wb-deepseek-v4-pro/2026-05-14__09-14-50/cobol-modernization__HBMqdDq",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "cobol-modernization"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "f8220a33bf193106989df1a28e4806985b12e5f93dcf07efb86acd8dbbc44f6a",
+    "config": {
+        "task": {
+            "path": "cobol-modernization",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "cobol-modernization__HBMqdDq",
+        "trials_dir": "jobs/cw-ha-wb-deepseek-v4-pro/2026-05-14__09-14-50",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 2.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Pro",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "2d57dca3-9eec-49f8-a553-bc51cbe55d60"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Pro",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 25433,
+        "n_cache_tokens": 214528,
+        "n_output_tokens": 2615,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-14T09:14:55.042782Z",
+    "finished_at": "2026-05-14T09:36:01.768355Z",
+    "environment_setup": {
+        "started_at": "2026-05-14T09:14:55.046946Z",
+        "finished_at": "2026-05-14T09:15:03.363841Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-14T09:15:03.363853Z",
+        "finished_at": "2026-05-14T09:16:12.095430Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-14T09:16:12.095518Z",
+        "finished_at": "2026-05-14T09:35:41.752858Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-14T09:35:44.136071Z",
+        "finished_at": "2026-05-14T09:35:54.324033Z"
+    }
+}

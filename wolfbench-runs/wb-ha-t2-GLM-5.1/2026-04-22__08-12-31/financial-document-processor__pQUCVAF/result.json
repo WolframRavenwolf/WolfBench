@@ -1,0 +1,113 @@
+{
+    "id": "5e5feabb-8beb-4339-b588-0b1118b74835",
+    "task_name": "financial-document-processor",
+    "trial_name": "financial-document-processor__pQUCVAF",
+    "trial_uri": "file:///root/harbor/jobs/wb-ha-t2-GLM-5.1/2026-04-22__08-12-31/financial-document-processor__pQUCVAF",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "financial-document-processor"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "e8ee9e8948d949d0abe46d431736d1cf04e8aab76d98fc9c819fb26960ab1352",
+    "config": {
+        "task": {
+            "path": "financial-document-processor",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "financial-document-processor__pQUCVAF",
+        "trials_dir": "jobs/wb-ha-t2-GLM-5.1/2026-04-22__08-12-31",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/zai-org/GLM-5.1",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": null,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200,
+                "request_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "c20e4182-a0e9-498c-952d-b411ef12705a"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "zai-org/GLM-5.1",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 26206,
+        "n_cache_tokens": 262080,
+        "n_output_tokens": 3547,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 🐍 preparing execute_code…\r\n  ┊ 🐍 exec      from hermes_tools import terminal, read_file, write_file, search_files  1.8s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         mkdir -p /app/invoices /app/other  0.2s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\nNow I need to extract text from each document. I'll use OCR for JPGs and pdftotext for PDFs.\r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which tesseract pdftotext 2>&1; apt list --installed 2>/dev/null | grep -E \"tesseract|poppler\" 2>&1  0.8s [exit 1]\r\n  ┊ 💻 preparing terminal…\r\n\n  ⚠️  DANGEROUS COMMAND: script execution via -e/-c flag\n      pip list 2>/dev/null | grep -iE \"pillow|pytesseract|pdf|ocr\" ; which tesseract ; which pdftotext ; python3 -c \"import PIL; print('PIL ok')\" 2>&1; python3 -c \"import pytesseract; print('pytesseract ok')\" 2>&1; python3 -c \"import fitz; print('fitz ok')\" 2>&1; python3 -c \"import pdfp ... [truncated]\nStderr:\nbash: line 15:  7216 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      7217 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/root/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n  File \"/usr/lib/python3.12/asyncio/tasks.py\", line 520, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/root/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n  ┊ 🐍 preparing execute_code…\r\n  ┊ 🐍 exec      from hermes_tools import terminal, read_file, write_file, search_files  1.8s\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         mkdir -p /app/invoices /app/other  0.2s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\nNow I need to extract text from each document. I'll use OCR for JPGs and pdftotext for PDFs.\r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         which tesseract pdftotext 2>&1; apt list --installed 2>/dev/null | grep -E \"tesseract|poppler\" 2>&1  0.8s [exit 1]\r\n  ┊ 💻 preparing terminal…\r\n\n  ⚠️  DANGEROUS COMMAND: script execution via -e/-c flag\n      pip list 2>/dev/null | grep -iE \"pillow|pytesseract|pdf|ocr\" ; which tesseract ; which pdftotext ; python3 -c \"import PIL; print('PIL ok')\" 2>&1; python3 -c \"import pytesseract; print('pytesseract ok')\" 2>&1; python3 -c \"import fitz; print('fitz ok')\" 2>&1; python3 -c \"import pdfp ... [truncated]\nStderr:\nbash: line 15:  7216 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model zai-org/GLM-5.1 2>&1\n      7217 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-04-22T11:39:01.123489"
+    },
+    "started_at": "2026-04-22T11:30:51.174746Z",
+    "finished_at": "2026-04-22T11:40:10.030345Z",
+    "environment_setup": {
+        "started_at": "2026-04-22T11:30:51.204002Z",
+        "finished_at": "2026-04-22T11:30:53.219306Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-04-22T11:30:53.219321Z",
+        "finished_at": "2026-04-22T11:34:28.928929Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-04-22T11:34:28.929075Z",
+        "finished_at": "2026-04-22T11:39:01.118059Z"
+    },
+    "verifier": {
+        "started_at": "2026-04-22T11:39:03.056718Z",
+        "finished_at": "2026-04-22T11:39:26.965879Z"
+    }
+}

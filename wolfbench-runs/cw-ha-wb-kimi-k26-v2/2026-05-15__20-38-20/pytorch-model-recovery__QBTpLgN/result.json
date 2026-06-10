@@ -1,0 +1,113 @@
+{
+    "id": "cf1d1e0e-446b-469a-86ec-3df047ab2186",
+    "task_name": "pytorch-model-recovery",
+    "trial_name": "pytorch-model-recovery__QBTpLgN",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-wb-kimi-k26-v2/2026-05-15__20-38-20/pytorch-model-recovery__QBTpLgN",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "pytorch-model-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "9def2a29a9f98ee4ae428cc23e473a889f9f4fd87a62ea685a04192a6aefe20f",
+    "config": {
+        "task": {
+            "path": "pytorch-model-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "pytorch-model-recovery__QBTpLgN",
+        "trials_dir": "jobs/cw-ha-wb-kimi-k26-v2/2026-05-15__20-38-20",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": 2.0,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "hermes",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "base_url": "https://api.inference.wandb.ai/v1",
+                "version": "v2026.3.30"
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "7d8061fa-85bc-4f0f-875a-99c69ce9e895"
+    },
+    "agent_info": {
+        "name": "hermes",
+        "version": "v2026.3.30",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 87667,
+        "n_cache_tokens": 164544,
+        "n_output_tokens": 17408,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": {
+        "exception_type": "NonZeroAgentExitCodeError",
+        "exception_message": "Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 📋 preparing todo…\r\n  ┊ 📋 plan      6 task(s)  0.0s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 🐍 preparing execute_code…\r\n  ┊ 🐍 exec      import torch  3.2s [error]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n   \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip install torch --index-url https://download.pytorch.org/whl/cpu  2.1s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n\n  ⚠️  DANGEROUS COMMAND: script execution via  ... [truncated]\nStderr:\nbash: line 14:  4523 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      4524 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n",
+        "exception_traceback": "Traceback (most recent call last):\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 500, in run\n    await self._execute_agent()\n  File \"/home/exedev/harbor/src/harbor/trial/trial.py\", line 268, in _execute_agent\n    await asyncio.wait_for(\n    ...<6 lines>...\n    )\n  File \"/home/exedev/.local/share/uv/python/cpython-3.13.13-linux-x86_64-gnu/lib/python3.13/asyncio/tasks.py\", line 507, in wait_for\n    return await fut\n           ^^^^^^^^^\n  File \"/home/exedev/harbor/src/harbor/agents/installed/base.py\", line 394, in run\n    raise NonZeroAgentExitCodeError(\n    ...<4 lines>...\n    )\nharbor.agents.installed.base.NonZeroAgentExitCodeError: Agent command failed (exit code 134)\nCommand: export PATH=\"$HOME/.local/bin:$PATH\" && hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1 | stdbuf -oL tee /logs/agent/hermes.txt\nStdout:\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 📋 preparing todo…\r\n  ┊ 📋 plan      6 task(s)  0.0s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 🐍 preparing execute_code…\r\n  ┊ 🐍 exec      import torch  3.2s [error]\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n   \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n  ┊ 💻 $         pip install torch --index-url https://download.pytorch.org/whl/cpu  2.1s\r\n\r\n╭─ ⚕ Hermes ───────────────────────────────────────────────────────────────────╮\r\n \r\n╰──────────────────────────────────────────────────────────────────────────────╯\r\n  ┊ 💻 preparing terminal…\r\n\n  ⚠️  DANGEROUS COMMAND: script execution via  ... [truncated]\nStderr:\nbash: line 14:  4523 Aborted                 hermes --yolo chat -q \"$HARBOR_INSTRUCTION\" -Q --model moonshotai/Kimi-K2.6 2>&1\n      4524 Done                    | stdbuf -oL tee /logs/agent/hermes.txt\n\n\n",
+        "occurred_at": "2026-05-15T21:29:09.292714"
+    },
+    "started_at": "2026-05-15T21:23:33.642252Z",
+    "finished_at": "2026-05-15T21:29:45.689638Z",
+    "environment_setup": {
+        "started_at": "2026-05-15T21:23:33.670893Z",
+        "finished_at": "2026-05-15T21:23:36.438424Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-15T21:23:36.438440Z",
+        "finished_at": "2026-05-15T21:24:48.297150Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-15T21:24:48.297267Z",
+        "finished_at": "2026-05-15T21:29:09.291194Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-15T21:29:09.999284Z",
+        "finished_at": "2026-05-15T21:29:40.857006Z"
+    }
+}

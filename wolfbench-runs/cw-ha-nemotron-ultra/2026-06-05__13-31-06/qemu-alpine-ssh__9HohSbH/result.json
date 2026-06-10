@@ -1,0 +1,114 @@
+{
+  "id": "ac5cddf6-634d-44e4-92d2-e1b858434748",
+  "task_name": "qemu-alpine-ssh",
+  "trial_name": "qemu-alpine-ssh__9HohSbH",
+  "trial_uri": "file:///home/exedev/harbor/jobs/cw-ha-nemotron-ultra/2026-06-05__13-31-06/qemu-alpine-ssh__9HohSbH",
+  "task_id": {
+    "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+    "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+    "path": "qemu-alpine-ssh"
+  },
+  "source": "terminal-bench",
+  "task_checksum": "a6cd0bf0752902f3e284a6a9672d801de83fb9d0cf769c95f09fed2fd213548c",
+  "config": {
+    "task": {
+      "path": "qemu-alpine-ssh",
+      "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+      "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+      "overwrite": false,
+      "download_dir": null,
+      "source": "terminal-bench"
+    },
+    "trial_name": "qemu-alpine-ssh__9HohSbH",
+    "trials_dir": "jobs/cw-ha-nemotron-ultra/2026-06-05__13-31-06",
+    "timeout_multiplier": 1.0,
+    "agent_timeout_multiplier": null,
+    "verifier_timeout_multiplier": null,
+    "agent_setup_timeout_multiplier": 3.0,
+    "environment_build_timeout_multiplier": null,
+    "agent": {
+      "name": "hermes",
+      "import_path": null,
+      "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+      "override_timeout_sec": 3600.0,
+      "override_setup_timeout_sec": null,
+      "max_timeout_sec": null,
+      "kwargs": {
+        "base_url": "https://api.inference.wandb.ai/v1",
+        "version": "v2026.5.16",
+        "model_info": {
+          "max_input_tokens": 262144,
+          "max_output_tokens": 32000,
+          "input_cost_per_token": 0.0,
+          "output_cost_per_token": 0.0
+        }
+      },
+      "env": {}
+    },
+    "environment": {
+      "type": "wandb",
+      "import_path": null,
+      "force_build": false,
+      "delete": true,
+      "override_cpus": 4,
+      "override_memory_mb": 8192,
+      "override_storage_mb": 10240,
+      "override_gpus": null,
+      "suppress_override_warnings": true,
+      "mounts_json": null,
+      "env": {},
+      "kwargs": {
+        "request_timeout_seconds": 3700,
+        "max_lifetime_seconds": 7200,
+        "max_timeout_seconds": 7200
+      }
+    },
+    "verifier": {
+      "override_timeout_sec": null,
+      "max_timeout_sec": null,
+      "disable": false
+    },
+    "artifacts": [],
+    "job_id": "bfb3bb6a-93b0-4124-bbcb-a44df7292a3e"
+  },
+  "agent_info": {
+    "name": "hermes",
+    "version": "v2026.5.16",
+    "model_info": {
+      "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+      "provider": "wandb"
+    }
+  },
+  "agent_result": {
+    "n_input_tokens": 2017769,
+    "n_cache_tokens": 0,
+    "n_output_tokens": 8555,
+    "cost_usd": null,
+    "rollout_details": null,
+    "metadata": null
+  },
+  "verifier_result": {
+    "rewards": {
+      "reward": 0.0
+    }
+  },
+  "exception_info": null,
+  "started_at": "2026-06-05T21:09:38.146755Z",
+  "finished_at": "2026-06-05T21:43:14.335981Z",
+  "environment_setup": {
+    "started_at": "2026-06-05T21:09:38.147465Z",
+    "finished_at": "2026-06-05T21:09:41.598476Z"
+  },
+  "agent_setup": {
+    "started_at": "2026-06-05T21:09:41.598488Z",
+    "finished_at": "2026-06-05T21:10:42.765393Z"
+  },
+  "agent_execution": {
+    "started_at": "2026-06-05T21:10:42.765477Z",
+    "finished_at": "2026-06-05T21:41:43.820287Z"
+  },
+  "verifier": {
+    "started_at": "2026-06-05T21:41:44.970387Z",
+    "finished_at": "2026-06-05T21:43:08.840285Z"
+  }
+}

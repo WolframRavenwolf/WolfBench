@@ -1,0 +1,129 @@
+{
+    "id": "cb2bad5e-c353-4bd8-ab9e-f3753fff0572",
+    "started_at": "2026-05-23T19:46:21.351551",
+    "finished_at": "2026-05-23T22:30:27.299454",
+    "n_total_trials": 89,
+    "stats": {
+        "n_trials": 89,
+        "n_errors": 7,
+        "evals": {
+            "openclaw__gemini-3.5-flash__terminal-bench": {
+                "n_trials": 89,
+                "n_errors": 7,
+                "metrics": [
+                    {
+                        "mean": 0.7303370786516854
+                    }
+                ],
+                "reward_stats": {
+                    "reward": {
+                        "1.0": [
+                            "adaptive-rejection-sampler__ynrscFU",
+                            "bn-fit-modify__yo83sfE",
+                            "break-filter-js-from-html__U3vq46h",
+                            "build-cython-ext__dUCNG3L",
+                            "build-pmars__yAUNQFx",
+                            "build-pov-ray__tPxQLiJ",
+                            "chess-best-move__4Wga3MS",
+                            "circuit-fibsqrt__SPWdCeP",
+                            "cobol-modernization__bApeiCG",
+                            "code-from-image__omfx4ZE",
+                            "compile-compcert__suqkxFf",
+                            "constraints-scheduling__hJfVvoq",
+                            "count-dataset-tokens__PhA3Fxs",
+                            "crack-7z-hash__HwNf38f",
+                            "custom-memory-heap-crash__LMUKuWH",
+                            "db-wal-recovery__BeWGevp",
+                            "distribution-search__x75nKyc",
+                            "feal-differential-cryptanalysis__pmivC8S",
+                            "feal-linear-cryptanalysis__K2SJMKN",
+                            "financial-document-processor__xDY4LGc",
+                            "fix-code-vulnerability__KGJv7Pa",
+                            "fix-git__cBurM34",
+                            "fix-ocaml-gc__2pJf2gd",
+                            "git-leak-recovery__5ukrWJf",
+                            "git-multibranch__rHAUK9g",
+                            "gpt2-codegolf__EFmu7em",
+                            "headless-terminal__TFYZeEQ",
+                            "hf-model-inference__ZPAedva",
+                            "kv-store-grpc__nuguooi",
+                            "large-scale-text-editing__uu3bqkC",
+                            "largest-eigenval__R97kNAb",
+                            "llm-inference-batching-scheduler__CF5anxf",
+                            "log-summary-date-ranges__QwfDCoT",
+                            "mailman__WZppctp",
+                            "mcmc-sampling-stan__MjeAvw6",
+                            "merge-diff-arc-agi-task__CJVx3R7",
+                            "modernize-scientific-stack__bntdJYv",
+                            "mteb-leaderboard__qU5W9VV",
+                            "multi-source-data-merger__DuCDhus",
+                            "nginx-request-logging__nayfCLw",
+                            "openssl-selfsigned-cert__Ya32kRr",
+                            "overfull-hbox__V2GrB84",
+                            "password-recovery__TopaREF",
+                            "path-tracing-reverse__eiCDixb",
+                            "portfolio-optimization__TzCWDSF",
+                            "protein-assembly__A9utj9Z",
+                            "prove-plus-comm__6wkLeFn",
+                            "pypi-server__8U3Xon3",
+                            "pytorch-model-cli__uMiUXHP",
+                            "pytorch-model-recovery__RnWoYU8",
+                            "qemu-alpine-ssh__YK5meD7",
+                            "qemu-startup__cAUhjC8",
+                            "query-optimize__JCgKgkR",
+                            "raman-fitting__Xcqs6xg",
+                            "regex-log__zf24eJj",
+                            "reshard-c4-data__kuMr4aT",
+                            "rstan-to-pystan__cxEnYkm",
+                            "sanitize-git-repo__ZmCAoUi",
+                            "sparql-university__r5ozjXd",
+                            "sqlite-db-truncate__325DnQ4",
+                            "sqlite-with-gcov__6rq3CVC",
+                            "torch-tensor-parallelism__DfxTrpV",
+                            "tune-mjcf__cJmiN76",
+                            "vulnerable-secret__ZcUKgxF",
+                            "write-compressor__sC9eKnc"
+                        ],
+                        "0.0": [
+                            "caffe-cifar-10__se4uyoT",
+                            "cancel-async-tasks__sMQcszc",
+                            "configure-git-webserver__EiefAhT",
+                            "dna-assembly__gEMRPtN",
+                            "dna-insert__f5dhNAu",
+                            "extract-elf__faw8fSQ",
+                            "extract-moves-from-video__SgnT4k8",
+                            "filter-js-from-html__dJKd3PW",
+                            "gcode-to-text__jm2pk86",
+                            "install-windows-3.11__Kyb7UMB",
+                            "make-doom-for-mips__t95e3bJ",
+                            "make-mips-interpreter__LApcWQC",
+                            "model-extraction-relu-logits__fm8bFcL",
+                            "mteb-retrieve__SLmpzCi",
+                            "path-tracing__E5gCCvU",
+                            "polyglot-c-py__jmEwaWW",
+                            "polyglot-rust-c__CxyF6XP",
+                            "regex-chess__Jw5dPWy",
+                            "sam-cell-seg__W3DQfp3",
+                            "schemelike-metacircular-eval__a3vHk48",
+                            "torch-pipeline-parallelism__V7YwL48",
+                            "train-fasttext__yzfgfDT",
+                            "video-processing__XsiNrqp",
+                            "winning-avg-corewars__oHbc3bp"
+                        ]
+                    }
+                },
+                "exception_stats": {
+                    "AgentTimeoutError": [
+                        "db-wal-recovery__BeWGevp",
+                        "install-windows-3.11__Kyb7UMB",
+                        "kv-store-grpc__nuguooi",
+                        "mailman__WZppctp",
+                        "make-doom-for-mips__t95e3bJ",
+                        "pypi-server__8U3Xon3",
+                        "qemu-startup__cAUhjC8"
+                    ]
+                }
+            }
+        }
+    }
+}

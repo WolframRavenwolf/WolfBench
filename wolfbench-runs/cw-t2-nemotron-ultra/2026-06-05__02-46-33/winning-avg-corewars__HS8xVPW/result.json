@@ -1,0 +1,155 @@
+{
+    "id": "463e1163-e217-4378-b7be-bd5299cf016c",
+    "task_name": "winning-avg-corewars",
+    "trial_name": "winning-avg-corewars__HS8xVPW",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-nemotron-ultra/2026-06-05__02-46-33/winning-avg-corewars__HS8xVPW",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "winning-avg-corewars"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "693d17797b3d2920f9f0316b3f758aee6b228e816c78bab22b75eae684853f13",
+    "config": {
+        "task": {
+            "path": "winning-avg-corewars",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "winning-avg-corewars__HS8xVPW",
+        "trials_dir": "jobs/cw-t2-nemotron-ultra/2026-06-05__02-46-33",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "temperature": 1.0,
+                "llm_kwargs": {
+                    "top_p": 0.95,
+                    "extra_body": {
+                        "chat_template_kwargs": {
+                            "force_nonempty_content": true
+                        }
+                    }
+                },
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.0,
+                    "output_cost_per_token": 0.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "191c1c99-791a-4c38-b630-696d02929a86"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 633160,
+        "n_cache_tokens": 0,
+        "n_output_tokens": 41887,
+        "cost_usd": null,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 28,
+            "api_request_times_msec": [
+                2862.8523349761963,
+                31577.31795310974,
+                15126.618385314941,
+                23623.104095458984,
+                34711.8239402771,
+                24871.51861190796,
+                16297.909259796143,
+                14772.929906845093,
+                42489.85528945923,
+                34280.79319000244,
+                7415.578126907349,
+                9012.709856033325,
+                28245.335578918457,
+                5669.885158538818,
+                41679.56519126892,
+                5283.337831497192,
+                38353.30605506897,
+                9019.192695617676,
+                15486.069440841675,
+                3567.594289779663,
+                13065.977096557617,
+                19680.41682243347,
+                7394.6075439453125,
+                25540.107011795044,
+                5236.412763595581,
+                2935.4569911956787,
+                11877.339601516724,
+                3097.421407699585
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-06-05T02:46:38.248375Z",
+    "finished_at": "2026-06-05T03:06:26.529046Z",
+    "environment_setup": {
+        "started_at": "2026-06-05T02:46:38.248983Z",
+        "finished_at": "2026-06-05T02:46:41.693523Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-06-05T02:46:41.693542Z",
+        "finished_at": "2026-06-05T02:46:44.426539Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-06-05T02:46:44.426710Z",
+        "finished_at": "2026-06-05T03:06:13.851368Z"
+    },
+    "verifier": {
+        "started_at": "2026-06-05T03:06:14.887751Z",
+        "finished_at": "2026-06-05T03:06:24.243528Z"
+    }
+}

@@ -1,0 +1,113 @@
+{
+    "id": "ac34caf6-3990-4e3d-861a-77ff6a6e12c1",
+    "task_name": "circuit-fibsqrt",
+    "trial_name": "circuit-fibsqrt__SMEjUGS",
+    "trial_uri": "file:///home/exedev/harbor/jobs/oc-gemini-3.5-flash-low/2026-05-27__22-50-25/circuit-fibsqrt__SMEjUGS",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "circuit-fibsqrt"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "c0e478819545e6c9db2d42b3996441ca0ee55fde09d4cea5b7f9fbdf83bfd337",
+    "config": {
+        "task": {
+            "path": "circuit-fibsqrt",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "circuit-fibsqrt__SMEjUGS",
+        "trials_dir": "jobs/oc-gemini-3.5-flash-low/2026-05-27__22-50-25",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "openclaw",
+            "import_path": null,
+            "model_name": "google/gemini-3.5-flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "version": "2026.4.23",
+                "context_window": 1048576,
+                "max_tokens": 65536,
+                "thinking": "low",
+                "model_info": {
+                    "max_input_tokens": 1048576,
+                    "max_output_tokens": 65536,
+                    "input_cost_per_token": 1.5e-6,
+                    "output_cost_per_token": 9e-6,
+                    "cache_read_input_token_cost": 1.5e-7
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "daytona",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": 0,
+            "suppress_override_warnings": false,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {}
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "623f811d-cee2-452a-ae3a-739f64e74a37"
+    },
+    "agent_info": {
+        "name": "openclaw",
+        "version": "2026.4.23",
+        "model_info": {
+            "name": "gemini-3.5-flash",
+            "provider": "google"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 161751,
+        "n_cache_tokens": 2178457,
+        "n_output_tokens": 48328,
+        "cost_usd": null,
+        "rollout_details": null,
+        "metadata": null
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-28T00:01:04.129766Z",
+    "finished_at": "2026-05-28T00:08:46.476502Z",
+    "environment_setup": {
+        "started_at": "2026-05-28T00:01:04.130789Z",
+        "finished_at": "2026-05-28T00:01:06.859508Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-28T00:01:06.859527Z",
+        "finished_at": "2026-05-28T00:01:36.480348Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-28T00:01:36.480448Z",
+        "finished_at": "2026-05-28T00:08:22.265981Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-28T00:08:28.734085Z",
+        "finished_at": "2026-05-28T00:08:46.169640Z"
+    }
+}

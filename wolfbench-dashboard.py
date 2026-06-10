@@ -15,6 +15,12 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+    # Work around stale generated OpenTelemetry protobuf stubs that some fresh
+    # weave/uv resolutions can pull in. This must be set before protobuf is
+    # imported anywhere in the process.
+    import os as _os
+    _os.environ.setdefault("PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION", "python")
+
     import marimo as mo
     import json
     import subprocess
@@ -271,7 +277,7 @@ def _(filtered_indices, mo, vm_preset, vm_rows):
             data=vm_rows,
             selection="multi",
             initial_selection=_init,
-            page_size=30,
+            page_size=50,
             label="Selected VMs will be scanned",
         )
     else:

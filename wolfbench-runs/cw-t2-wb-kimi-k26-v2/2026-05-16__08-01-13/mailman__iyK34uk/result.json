@@ -1,0 +1,139 @@
+{
+    "id": "60b9177d-df8e-4154-9b79-69b7a99aa78e",
+    "task_name": "mailman",
+    "trial_name": "mailman__iyK34uk",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13/mailman__iyK34uk",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "mailman"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "e9dc41ba89f17a0f2db146fc147c13e6ec85e80ea4f00ab460f50ac7fbacc0e9",
+    "config": {
+        "task": {
+            "path": "mailman",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "mailman__iyK34uk",
+        "trials_dir": "jobs/cw-t2-wb-kimi-k26-v2/2026-05-16__08-01-13",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/moonshotai/Kimi-K2.6",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.95,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "91203cce-65be-4ef1-851b-ec39178883f6"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "moonshotai/Kimi-K2.6",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 215971,
+        "n_cache_tokens": 78368,
+        "n_output_tokens": 9370,
+        "cost_usd": 180741.73,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 19,
+            "api_request_times_msec": [
+                1709.489107131958,
+                2022.8350162506104,
+                2048.1948852539062,
+                1849.5371341705322,
+                1207.618236541748,
+                2182.8577518463135,
+                1552.8123378753662,
+                837.4536037445068,
+                1819.4537162780762,
+                3143.291711807251,
+                1702.5651931762695,
+                7725.01015663147,
+                2340.86012840271,
+                2555.180072784424,
+                2118.614673614502,
+                5091.000318527222,
+                2483.443021774292,
+                2047.1351146697998,
+                1877.1965503692627
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-16T08:01:18.408365Z",
+    "finished_at": "2026-05-16T08:04:20.000894Z",
+    "environment_setup": {
+        "started_at": "2026-05-16T08:01:18.408686Z",
+        "finished_at": "2026-05-16T08:01:26.591547Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-16T08:01:26.591561Z",
+        "finished_at": "2026-05-16T08:01:33.498855Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-16T08:01:33.498950Z",
+        "finished_at": "2026-05-16T08:03:48.614077Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-16T08:03:49.676931Z",
+        "finished_at": "2026-05-16T08:04:15.019125Z"
+    }
+}

@@ -1,0 +1,201 @@
+{
+    "id": "5a37b458-0039-44cf-b98e-29ec1df0d5d8",
+    "task_name": "db-wal-recovery",
+    "trial_name": "db-wal-recovery__R7eUNBM",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4/2026-05-10__23-22-38/db-wal-recovery__R7eUNBM",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "db-wal-recovery"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "01f470c86f3a1f7ce4d91bdf0aaaa89fa96a4124ac48617990e2735b5291913a",
+    "config": {
+        "task": {
+            "path": "db-wal-recovery",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "db-wal-recovery__R7eUNBM",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4/2026-05-10__23-22-38",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_creation_input_token_cost": 0.0,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "da71a514-da64-4a0b-9e09-ab97ecca1086"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Flash",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 3300959,
+        "n_cache_tokens": 1063424,
+        "n_output_tokens": 34411,
+        "cost_usd": 2433450.09,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 81,
+            "api_request_times_msec": [
+                5321.713209152222,
+                3950.831413269043,
+                3050.10724067688,
+                4089.9877548217773,
+                1887.1192932128906,
+                4363.528251647949,
+                4881.017684936523,
+                8332.300424575806,
+                8283.148527145386,
+                11319.614887237549,
+                14501.921653747559,
+                11677.613019943237,
+                12101.725816726685,
+                5688.729524612427,
+                2560.248851776123,
+                6521.172046661377,
+                7794.916868209839,
+                3275.7811546325684,
+                11956.08115196228,
+                10884.432077407837,
+                13404.651165008545,
+                12136.213541030884,
+                12954.870700836182,
+                2457.180976867676,
+                12347.651720046997,
+                35340.768575668335,
+                4104.757308959961,
+                17634.081602096558,
+                10563.053131103516,
+                11244.718313217163,
+                20246.063947677612,
+                17112.79058456421,
+                20732.94448852539,
+                14635.195255279541,
+                6791.8384075164795,
+                35236.382246017456,
+                32404.487133026123,
+                34172.11318016052,
+                23322.572231292725,
+                16099.550724029541,
+                23217.58794784546,
+                8174.304008483887,
+                11734.917879104614,
+                6146.597146987915,
+                9076.564073562622,
+                7602.59747505188,
+                34069.96440887451,
+                16156.276941299438,
+                7303.354501724243,
+                19589.179277420044,
+                21832.870483398438,
+                7514.753341674805,
+                20799.318075180054,
+                8362.08724975586,
+                16559.690713882446,
+                36604.48622703552,
+                19761.617422103882,
+                19409.889221191406,
+                13908.516645431519,
+                17809.451818466187,
+                24384.554624557495,
+                26856.82988166809,
+                13881.449937820435,
+                25150.33459663391,
+                31837.401390075684,
+                45799.12495613098,
+                27210.322618484497,
+                20106.022119522095,
+                9005.711317062378,
+                18193.57967376709,
+                31139.26935195923,
+                29412.952184677124,
+                18820.265769958496,
+                20440.073490142822,
+                25287.672758102417,
+                29516.717433929443,
+                23202.50105857849,
+                26375.62394142151,
+                51990.55337905884,
+                15516.646146774292,
+                19612.648487091064
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 0.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-10T23:24:44.331521Z",
+    "finished_at": "2026-05-10T23:50:38.688340Z",
+    "environment_setup": {
+        "started_at": "2026-05-10T23:24:44.332465Z",
+        "finished_at": "2026-05-10T23:24:51.209346Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-10T23:24:51.209362Z",
+        "finished_at": "2026-05-10T23:25:01.856685Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-10T23:25:01.856772Z",
+        "finished_at": "2026-05-10T23:50:14.523740Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-10T23:50:17.008120Z",
+        "finished_at": "2026-05-10T23:50:30.426460Z"
+    }
+}

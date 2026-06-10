@@ -1,0 +1,152 @@
+{
+    "id": "7b202c1f-9ec8-4b04-958d-dbe5e6e821ea",
+    "task_name": "build-cython-ext",
+    "trial_name": "build-cython-ext__4Ka4tsQ",
+    "trial_uri": "file:///home/exedev/harbor/jobs/cw-t2-wb-deepseek-v4-flash/2026-05-12__00-12-24/build-cython-ext__4Ka4tsQ",
+    "task_id": {
+        "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+        "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+        "path": "build-cython-ext"
+    },
+    "source": "terminal-bench",
+    "task_checksum": "2ee06f290911251b296fa2e57db2da0c2c399e326585f3ed47531bb43887d4dd",
+    "config": {
+        "task": {
+            "path": "build-cython-ext",
+            "git_url": "https://github.com/laude-institute/terminal-bench-2.git",
+            "git_commit_id": "69671fbaac6d67a7ef0dfec016cc38a64ef7a77c",
+            "overwrite": false,
+            "download_dir": null,
+            "source": "terminal-bench"
+        },
+        "trial_name": "build-cython-ext__4Ka4tsQ",
+        "trials_dir": "jobs/cw-t2-wb-deepseek-v4-flash/2026-05-12__00-12-24",
+        "timeout_multiplier": 1.0,
+        "agent_timeout_multiplier": null,
+        "verifier_timeout_multiplier": null,
+        "agent_setup_timeout_multiplier": null,
+        "environment_build_timeout_multiplier": null,
+        "agent": {
+            "name": "terminus-2",
+            "import_path": null,
+            "model_name": "wandb/deepseek-ai/DeepSeek-V4-Flash",
+            "override_timeout_sec": 3600.0,
+            "override_setup_timeout_sec": null,
+            "max_timeout_sec": null,
+            "kwargs": {
+                "api_base": "https://api.inference.wandb.ai/v1",
+                "model_info": {
+                    "max_input_tokens": 262144,
+                    "max_output_tokens": 32000,
+                    "input_cost_per_token": 0.95,
+                    "cache_read_input_token_cost": 0.16,
+                    "output_cost_per_token": 4.0
+                }
+            },
+            "env": {}
+        },
+        "environment": {
+            "type": "wandb",
+            "import_path": null,
+            "force_build": false,
+            "delete": true,
+            "override_cpus": 4,
+            "override_memory_mb": 8192,
+            "override_storage_mb": 10240,
+            "override_gpus": null,
+            "suppress_override_warnings": true,
+            "mounts_json": null,
+            "env": {},
+            "kwargs": {
+                "request_timeout_seconds": 3700,
+                "max_lifetime_seconds": 7200,
+                "max_timeout_seconds": 7200
+            }
+        },
+        "verifier": {
+            "override_timeout_sec": null,
+            "max_timeout_sec": null,
+            "disable": false
+        },
+        "artifacts": [],
+        "job_id": "f5921ed2-8c68-4364-a7de-d6e111e82f1d"
+    },
+    "agent_info": {
+        "name": "terminus-2",
+        "version": "2.0.0",
+        "model_info": {
+            "name": "deepseek-ai/DeepSeek-V4-Flash",
+            "provider": "wandb"
+        }
+    },
+    "agent_result": {
+        "n_input_tokens": 464573,
+        "n_cache_tokens": 122368,
+        "n_output_tokens": 6727,
+        "cost_usd": 371581.63,
+        "rollout_details": [],
+        "metadata": {
+            "n_episodes": 33,
+            "api_request_times_msec": [
+                12544.88730430603,
+                18319.99707221985,
+                2352.344751358032,
+                10995.18632888794,
+                5147.550344467163,
+                5803.510904312134,
+                6755.316257476807,
+                17920.199394226074,
+                4349.525213241577,
+                7274.374723434448,
+                3666.229009628296,
+                18168.02453994751,
+                7081.451416015625,
+                13812.621593475342,
+                14863.611459732056,
+                40316.78652763367,
+                20678.674697875977,
+                13204.518795013428,
+                14787.535667419434,
+                9034.522533416748,
+                4279.942512512207,
+                15747.786521911621,
+                13844.745635986328,
+                25975.82459449768,
+                25964.79105949402,
+                22975.56233406067,
+                8857.487916946411,
+                17641.236782073975,
+                10167.582988739014,
+                11829.47564125061,
+                5649.622201919556,
+                14645.303964614868,
+                5346.3380336761475
+            ],
+            "summarization_count": 0
+        }
+    },
+    "verifier_result": {
+        "rewards": {
+            "reward": 1.0
+        }
+    },
+    "exception_info": null,
+    "started_at": "2026-05-12T00:57:58.356153Z",
+    "finished_at": "2026-05-12T01:08:39.357737Z",
+    "environment_setup": {
+        "started_at": "2026-05-12T00:57:58.356896Z",
+        "finished_at": "2026-05-12T00:58:02.242263Z"
+    },
+    "agent_setup": {
+        "started_at": "2026-05-12T00:58:02.242279Z",
+        "finished_at": "2026-05-12T00:58:15.104478Z"
+    },
+    "agent_execution": {
+        "started_at": "2026-05-12T00:58:15.104573Z",
+        "finished_at": "2026-05-12T01:08:19.596490Z"
+    },
+    "verifier": {
+        "started_at": "2026-05-12T01:08:21.989832Z",
+        "finished_at": "2026-05-12T01:08:31.834102Z"
+    }
+}
