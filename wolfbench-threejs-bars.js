@@ -4,13 +4,15 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     var chartArea = document.querySelector('.chart-area');
     if (!chartArea) return;
 
-    var tokenDepthModes = ['flat', 'spaced'];
+    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both'];
     var renderer = null;
     var scene = null;
     var camera = null;
     var canvas = null;
+    var labelLayer = null;
     var root = null;
     var queued = false;
+    var settleQueued = false;
     var materials = new Map();
     var baseSegmentOrder = ['solid', 'worst', 'average', 'best', 'ceiling'];
     var metricLabels = {
@@ -21,7 +23,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         ceiling: 'Ceiling'
     };
     var tokensPerDepthPixel = 1e7;
-    var maxDepth = 400;
+    var costPerDepthPixel = 5;
     var projectX = 0.74;
     var projectY = 0.31;
     var projectZ = 0.28;
@@ -29,6 +31,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     var tokenGap = 0;
     var missingDepth = 2;
     var spacedVisualGap = 8;
+    var depthLabelAngle = -Math.atan2(projectY, projectX) * 180 / Math.PI;
     var shearMatrix = new THREE.Matrix4().set(
         1, 0, projectX, 0,
         0, 1, projectY, 0,
@@ -39,7 +42,10 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     chartArea.classList.add('three-bars');
 
     function normalizeTokenDepthMode(mode) {
-        if (mode === 'overlap' || mode === 'spaced' || mode === 'on' || mode === '3d') return 'spaced';
+        if (mode === 'overlap' || mode === 'spaced' || mode === 'on' || mode === '3d') return 'tokens';
+        if (mode === 'tokens' || mode === 'token') return 'tokens';
+        if (mode === 'cost' || mode === 'costs' || mode === 'usd') return 'cost';
+        if (mode === 'both' || mode === 'tokens+cost' || mode === 'tokens-cost' || mode === 'token+cost' || mode === 'token-cost' || mode === 'tokens_cost' || mode === 'combined') return 'both';
         return 'flat';
     }
 
@@ -55,13 +61,38 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         return String(Math.round(value));
     }
 
+    function formatCostLabel(value) {
+        if (!value || value <= 0) return '';
+        return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
     function stripZeros(text) {
         return text.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
     }
 
-    function depthFor(total) {
+    function depthForTokens(total) {
         if (!total || total <= 0) return 0;
-        return Math.min(maxDepth, total / tokensPerDepthPixel);
+        return total / tokensPerDepthPixel;
+    }
+
+    function depthForCost(cost) {
+        if (!cost || cost <= 0) return 0;
+        return cost / costPerDepthPixel;
+    }
+
+	    function depthScaleLabelForMode(mode) {
+	        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · 100 px = 1B tokens';
+	        if (mode === 'cost') return '3D depth scale: 1 px = $5 run cost · 100 px = $500';
+	        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M · Cost shadow 1 px = $5';
+	        return '';
+	    }
+
+    function updateDepthScaleLine(mode) {
+        var line = document.getElementById('depthScaleLine');
+        if (!line) return;
+        var label = depthScaleLabelForMode(mode);
+        line.hidden = !label;
+        line.textContent = label;
     }
 
     function toNumber(value) {
@@ -92,7 +123,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         var input = toNumber(wrapper.getAttribute('data-token-input'));
         var output = toNumber(wrapper.getAttribute('data-token-output'));
         var total = toNumber(wrapper.getAttribute('data-token-total')) || input + output;
-        return {input: input, output: output, total: total};
+        var cost = toNumber(wrapper.getAttribute('data-cost-total'));
+        return {input: input, output: output, total: total, cost: cost};
     }
 
     function readScores(wrapper, inner) {
@@ -282,8 +314,10 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        var template = captureHtmlSegmentTemplate(inner, fallbackColor);
 	        if (!template) return;
 	        var unit = currentChartUnit();
-	        var visible = baseSegmentOrder.slice().reverse();
-	        var signature = unit + '|' + visible.map(function(key) {
+	        var wrapper = inner.closest('.bar-wrapper');
+	        var isSingleRun = wrapper && wrapper.getAttribute('data-runs') === '1';
+	        var visible = isSingleRun ? ['solid'] : baseSegmentOrder.slice().reverse();
+		        var signature = unit + '|' + (isSingleRun ? 'single' : 'stacked') + '|' + visible.map(function(key) {
 	            return key + ':' + Math.max(0.5, template.heights[unit][key] || 0).toFixed(1);
 	        }).join('|');
 	        if (container.getAttribute('data-front-segment-signature') === signature) return;
@@ -320,6 +354,17 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	            syncHtmlFrontSegments(inner, fallbackColor);
 	        });
 	    }
+
+    function queueRenderAfterLayoutSettle() {
+        if (settleQueued) return;
+        settleQueued = true;
+        window.requestAnimationFrame(function() {
+            window.requestAnimationFrame(function() {
+                settleQueued = false;
+                queueRender();
+            });
+        });
+    }
 
 	    function syncLabelsToSegments(inner, segments) {
 	        var tops = {};
@@ -367,9 +412,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	            color: 0xffffff,
 	            transparent: true,
 	            opacity: opacity,
-	            side: THREE.DoubleSide,
+		            side: THREE.DoubleSide,
 	            depthTest: false,
-	            depthWrite: false
+		            depthWrite: false
 	        });
 	        material.toneMapped = false;
 	        materials.set(cacheKey, material);
@@ -406,6 +451,31 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             depthTest: true,
             depthWrite: true
         });
+        material.toneMapped = false;
+        materials.set(cacheKey, material);
+        return material;
+    }
+
+    function costShadowGradientStops() {
+        return [
+            new THREE.Color(0x5f6670),
+            new THREE.Color(0xa7adb5),
+            new THREE.Color(0x4c535c)
+        ];
+    }
+
+    function costShadowMaterialFor(key, opacity) {
+        var cacheKey = 'cost-shadow|' + key + '|' + opacity;
+        if (materials.has(cacheKey)) return materials.get(cacheKey);
+	        var material = new THREE.MeshBasicMaterial({
+	            color: 0xffffff,
+	            vertexColors: true,
+	            transparent: true,
+	            opacity: opacity,
+	            side: THREE.DoubleSide,
+	            depthTest: true,
+		            depthWrite: true
+	        });
         material.toneMapped = false;
         materials.set(cacheKey, material);
         return material;
@@ -536,6 +606,54 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        return geometry;
 	    }
 
+	    function clearDepthLabels() {
+	        if (!labelLayer) return;
+	        labelLayer.replaceChildren();
+	    }
+
+	    function depthLabelText(token, mode) {
+	        if (mode === 'cost' || mode === 'cost-shadow') return formatCostLabel(token.cost);
+	        if (!token.total || token.total <= 0) return '';
+	        return compactTokenValue(token.total);
+	    }
+
+	    function addDepthLabel(x, screenBottom, width, visualDepth, token, mode, options) {
+	        if (!labelLayer) return null;
+	        options = options || {};
+	        var text = depthLabelText(token, mode);
+	        if (!text) return null;
+	        var label = document.createElement('div');
+	        label.className = 'three-bars-depth-label';
+	        label.textContent = text;
+	        label.setAttribute('data-depth-mode', mode);
+	        labelLayer.appendChild(label);
+	        var projectedY = visualDepth * projectY / projectX;
+	        var depthEdgeLength = Math.sqrt(visualDepth * visualDepth + projectedY * projectedY);
+	        var labelWidth = label.offsetWidth || 0;
+	        var depthFitPadding = 2;
+	        var forcedOrientation = options.orientation || '';
+	        var fitsDepthEdge = forcedOrientation === 'edge'
+	            ? true
+	            : (forcedOrientation === 'vertical' ? false : labelWidth + depthFitPadding <= depthEdgeLength);
+	        var yOffset = Number.isFinite(options.yOffset) ? options.yOffset : 0;
+	        label.setAttribute('data-depth-orientation', fitsDepthEdge ? 'edge' : 'vertical');
+	        if (fitsDepthEdge) {
+	            label.style.left = (x + width + 5).toFixed(1) + 'px';
+	            label.style.top = (screenBottom - 20 + yOffset).toFixed(1) + 'px';
+	            label.style.transform = 'rotate(' + depthLabelAngle.toFixed(2) + 'deg)';
+	        } else {
+	            label.style.left = (x + width + Math.max(5, Math.min(10, visualDepth * 0.25 + 5))).toFixed(1) + 'px';
+	            label.style.top = (screenBottom - 20 + yOffset).toFixed(1) + 'px';
+	            label.style.transform = 'rotate(-90deg)';
+	        }
+	        var layerRect = labelLayer.getBoundingClientRect();
+	        var labelRect = label.getBoundingClientRect();
+	        return {
+	            right: labelRect.right - layerRect.left,
+	            bottom: labelRect.bottom - layerRect.top
+	        };
+	    }
+
     function disposeObject(object) {
         object.traverse(function(child) {
             if (child.geometry) child.geometry.dispose();
@@ -547,7 +665,10 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             canvas = document.createElement('canvas');
             canvas.className = 'three-bars-canvas';
             chartArea.insertBefore(canvas, chartArea.firstChild);
-            renderer = new THREE.WebGLRenderer({canvas: canvas, alpha: true, antialias: true, powerPreference: 'high-performance'});
+            labelLayer = document.createElement('div');
+            labelLayer.className = 'three-bars-depth-label-layer';
+            chartArea.insertBefore(labelLayer, canvas.nextSibling);
+            renderer = new THREE.WebGLRenderer({canvas: canvas, alpha: true, antialias: true, preserveDrawingBuffer: true, powerPreference: 'high-performance'});
             renderer.outputColorSpace = THREE.SRGBColorSpace;
 	            renderer.toneMapping = THREE.NoToneMapping;
 	            renderer.toneMappingExposure = 1;
@@ -572,11 +693,30 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         renderer.setSize(width, height, false);
         canvas.style.width = width + 'px';
         canvas.style.height = height + 'px';
+        if (labelLayer) {
+            labelLayer.style.width = width + 'px';
+            labelLayer.style.height = height + 'px';
+        }
         camera.left = 0;
         camera.right = width;
         camera.top = height;
         camera.bottom = 0;
         camera.updateProjectionMatrix();
+    }
+
+    function chartLayoutWidth() {
+        var rect = chartArea.getBoundingClientRect();
+        var style = window.getComputedStyle(chartArea);
+        var minWidth = parseFloat(style.minWidth) || 0;
+        var styleWidth = parseFloat(style.width) || 0;
+        var modelsRow = chartArea.querySelector('.models-row');
+        var rowWidth = modelsRow ? modelsRow.scrollWidth : 0;
+        return Math.max(1, Math.ceil(Math.max(rect.width, styleWidth, minWidth, rowWidth, chartArea.offsetWidth || 0)));
+    }
+
+    function setChartArea3DWidth(width) {
+        if (!width || width <= 1) return;
+        chartArea.style.minWidth = Math.ceil(width) + 'px';
     }
 
     function clearRoot() {
@@ -588,7 +728,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         }
     }
 
-    function buildSegments(scores, totalHeight) {
+    function buildSegments(scores, totalHeight, isSingleRun) {
+        if (isSingleRun) {
+            var singleTop = clamp(scores.ceiling || scores.average || scores.solid || 0, 0, totalHeight);
+            return singleTop > 1.1 ? [{key: 'solid', bottom: 0, top: singleTop}] : [];
+        }
         var bounds = {
             solid: clamp(scores.solid, 0, totalHeight),
             worst: clamp(Math.max(scores.worst, scores.solid), 0, totalHeight),
@@ -606,8 +750,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         return ranges.filter(function(seg) { return seg.top - seg.bottom > 1.1; });
     }
 
-    function buildMetricFilteredSegments(scores, totalHeight, metric) {
-        if (!metric) return buildSegments(scores, totalHeight);
+    function buildMetricFilteredSegments(scores, totalHeight, metric, isSingleRun) {
+        if (!metric) return buildSegments(scores, totalHeight, isSingleRun);
         var top = clamp(scores[metric] || 0, 0, totalHeight);
         if (top <= 1.1) return [];
         return [{key: metric, bottom: 0, top: top, filtered: true}];
@@ -637,43 +781,150 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        }
 	    }
 
+	    function roundedPolygonPoints(vertices, radii) {
+	        var points = [];
+	        function pushRoundedPoint(x, y) {
+	            var last = points[points.length - 1];
+	            if (last && Math.abs(last.x - x) < 0.01 && Math.abs(last.y - y) < 0.01) return;
+	            points.push(new THREE.Vector2(x, y));
+	        }
+	        vertices.forEach(function(vertex, index) {
+	            var prev = vertices[(index - 1 + vertices.length) % vertices.length];
+	            var next = vertices[(index + 1) % vertices.length];
+	            var radius = radii[index] || 0;
+	            var prevVector = new THREE.Vector2(prev.x - vertex.x, prev.y - vertex.y);
+	            var nextVector = new THREE.Vector2(next.x - vertex.x, next.y - vertex.y);
+	            var prevLength = prevVector.length();
+	            var nextLength = nextVector.length();
+	            if (radius <= 0.01 || prevLength <= 0.01 || nextLength <= 0.01) {
+	                pushRoundedPoint(vertex.x, vertex.y);
+	                return;
+	            }
+	            var distance = Math.min(radius, prevLength * 0.48, nextLength * 0.48);
+	            var start = new THREE.Vector2(vertex.x, vertex.y).add(prevVector.normalize().multiplyScalar(distance));
+	            var end = new THREE.Vector2(vertex.x, vertex.y).add(nextVector.normalize().multiplyScalar(distance));
+	            pushRoundedPoint(start.x, start.y);
+	            for (var step = 1; step <= 5; step++) {
+	                var t = step / 5;
+	                var inv = 1 - t;
+	                var x = inv * inv * start.x + 2 * inv * t * vertex.x + t * t * end.x;
+	                var y = inv * inv * start.y + 2 * inv * t * vertex.y + t * t * end.y;
+	                pushRoundedPoint(x, y);
+	            }
+	        });
+	        return points;
+	    }
+
+	    function createCostShadowGeometry(width, height, depth, zStart, radii) {
+	        var dx = depth * projectX;
+	        var dy = depth * projectY;
+	        var z = -projectZ * (zStart || 0);
+	        radii = radii || {};
+	        var shadowRadii = [
+	            radii.bl || 0,
+	            (radii.br || 0) * 0.65,
+	            radii.br || 0,
+	            radii.tr || 0,
+	            radii.tl || 0,
+	            (radii.tl || 0) * 0.65
+	        ];
+	        var points = roundedPolygonPoints([
+	            {x: 0, y: 0},
+	            {x: width, y: 0},
+	            {x: width + dx, y: dy},
+	            {x: width + dx, y: height + dy},
+	            {x: dx, y: height + dy},
+	            {x: 0, y: height}
+	        ], shadowRadii);
+	        var triangles = THREE.ShapeUtils.triangulateShape(points, []);
+		        var positions = [];
+		        var colors = [];
+		        var stops = costShadowGradientStops();
+		        var spanWidth = Math.max(width + Math.abs(dx), 1);
+		        var spanHeight = Math.max(height + Math.abs(dy), 1);
+		        function vertex(point) {
+		            positions.push(point.x, point.y, z);
+		            var px = clamp(point.x / spanWidth, 0, 1);
+		            var py = clamp(point.y / spanHeight, 0, 1);
+		            var color = gradientColorAt(stops, clamp(0.08 + (px * 0.35 + (1 - py) * 0.65) * 0.84, 0, 1));
+		            color.multiplyScalar(0.88);
+		            colors.push(color.r, color.g, color.b);
+		        }
+		        triangles.forEach(function(face) {
+		            vertex(points[face[0]]);
+		            vertex(points[face[1]]);
+		            vertex(points[face[2]]);
+		        });
+		        var geometry = new THREE.BufferGeometry();
+		        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+		        geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+		        return geometry;
+		    }
+
+	    function addCostShadowMesh(x, y, width, height, depth, key, meta, radii, zStart) {
+	        if (depth <= 0.4 || height <= 0.7) return;
+	        var geometry = createCostShadowGeometry(width, height, depth, zStart || 0, radii || {});
+	        var material = costShadowMaterialFor(key, 0.46);
+	        var mesh = new THREE.Mesh(geometry, material);
+	        mesh.position.set(x, y, 0);
+	        mesh.castShadow = false;
+	        mesh.receiveShadow = false;
+	        mesh.renderOrder = 4;
+	        mesh.userData = meta;
+	        root.add(mesh);
+	    }
+
     function updateLegend(mode) {
         var toggle = document.getElementById('svgIsoLegend');
-        if (!toggle) return;
+        if (!toggle) {
+            updateDepthScaleLine(mode);
+            return;
+        }
         var label = toggle.querySelector('.svg-iso-label');
         toggle.classList.toggle('active', mode !== 'flat');
         toggle.classList.toggle('dimmed', mode === 'flat');
         toggle.setAttribute('data-token-depth', mode);
-        toggle.setAttribute('aria-label', mode === 'flat' ? 'Bar mode: 2D' : 'Bar mode: 3D');
+        toggle.setAttribute('aria-label', mode === 'flat' ? 'Bar mode: 2D' : 'Bar mode: 3D ' + mode);
         if (mode === 'flat') {
             if (label) label.textContent = 'Bars: 2D';
-            toggle.title = 'Bars are in 2D. Click for 3D token depth.';
+            toggle.title = 'Bars are in 2D. Click for 3D: Tokens.';
+        } else if (mode === 'tokens') {
+            if (label) label.textContent = 'Bars: 3D Tokens';
+            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear token volume: 1px = 10M tokens. Front depth is input, rear depth is output. Click for 3D Cost.';
+        } else if (mode === 'cost') {
+            if (label) label.textContent = 'Bars: 3D Cost';
+            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear run cost: 1px = $5. No log scale, no per-chart normalization. Click for 3D Tokens + Cost.';
         } else {
-            if (label) label.textContent = 'Bars: 3D';
-            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is absolute linear token volume: 1px = 10M tokens, capped at 400px. Front depth is input, rear depth is output. Click for 2D bars.';
+            if (label) label.textContent = 'Bars: 3D Tokens + Cost';
+            toggle.title = 'Main bar uses token depth; the neutral gray shadow uses run cost. Click for 2D bars.';
         }
+        updateDepthScaleLine(mode);
     }
 
     function renderThreeBars() {
         var mode = currentTokenDepthMode();
         updateLegend(mode);
         if (mode === 'flat') {
+            if (window.updateChartWidth) window.updateChartWidth();
             syncHtmlFrontSegmentsForVisibleBars();
             if (window.WolfBenchApplyCurrentUnit) window.WolfBenchApplyCurrentUnit();
             chartArea.classList.remove('three-bars-ready');
             if (canvas) canvas.style.display = 'none';
+            clearDepthLabels();
             clearRoot();
             return;
         }
-        var width = chartArea.scrollWidth || chartArea.offsetWidth;
+        var width = chartLayoutWidth();
         var height = chartArea.offsetHeight;
         setupRenderer(width, height);
         canvas.style.display = 'block';
         clearRoot();
-        var activeMetric = currentMetricFilter();
-        var areaRect = chartArea.getBoundingClientRect();
-        var wrappers = Array.prototype.slice.call(chartArea.querySelectorAll('.bar-wrapper'));
-        wrappers.forEach(function(wrapper) {
+        clearDepthLabels();
+	        var activeMetric = currentMetricFilter();
+	        var areaRect = chartArea.getBoundingClientRect();
+	        var wrappers = Array.prototype.slice.call(chartArea.querySelectorAll('.bar-wrapper'));
+	        var requiredRight = width;
+	        wrappers.forEach(function(wrapper) {
             if (wrapper.offsetParent === null || wrapper.classList.contains('agent-hidden') || wrapper.classList.contains('bar-dismissed')) return;
             var inner = wrapper.querySelector('.bar-inner');
             var bar = wrapper.querySelector('.bar');
@@ -681,33 +932,98 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             var rect = inner.getBoundingClientRect();
             if (!rect.width || !rect.height) return;
             var token = readTokenData(wrapper);
+            var usingCostDepth = mode === 'cost';
+            var usingBothDepth = mode === 'both';
             var hasTokenData = token.total > 0;
-            var depth = hasTokenData ? depthFor(token.total) : missingDepth;
+            var hasCostData = token.cost > 0;
+            var depth = usingCostDepth
+                ? (hasCostData ? depthForCost(token.cost) : missingDepth)
+                : (hasTokenData ? depthForTokens(token.total) : missingDepth);
             if (!depth) return;
+            var costDepth = usingBothDepth && hasCostData ? depthForCost(token.cost) : 0;
             var visualDepth = Math.max(2, depth * projectX);
+            var costVisualDepth = costDepth ? Math.max(2, costDepth * projectX) : 0;
+            var costShadowOffsetX = usingBothDepth ? Math.max(5, Math.min(8, rect.width * 0.11)) : 0;
+	            var costShadowOffsetY = usingBothDepth ? -4 : 0;
+            var rightExtent = Math.max(visualDepth, costDepth ? costShadowOffsetX + costVisualDepth : 0);
             var rowGap = wrapper.parentElement ? Number.parseFloat(window.getComputedStyle(wrapper.parentElement).columnGap || window.getComputedStyle(wrapper.parentElement).gap) || 0 : 0;
             var projectedDepth = visualDepth;
-            var spacingReserve = Math.max(0, visualDepth + spacedVisualGap - rowGap);
+            var spacingReserve = Math.max(0, rightExtent + spacedVisualGap - rowGap);
             wrapper.style.setProperty('--iso-depth', projectedDepth.toFixed(1) + 'px');
             wrapper.style.setProperty('--iso-visual-depth', visualDepth.toFixed(1) + 'px');
             wrapper.style.setProperty('--iso-spacing', spacingReserve.toFixed(1) + 'px');
             bar.style.setProperty('--iso-depth', projectedDepth.toFixed(1) + 'px');
             bar.style.setProperty('--iso-visual-depth', visualDepth.toFixed(1) + 'px');
             bar.style.setProperty('--iso-spacing', spacingReserve.toFixed(1) + 'px');
-            var scores = readScores(wrapper, inner);
-            var segments = buildMetricFilteredSegments(scores, rect.height, activeMetric);
-            var label = wrapper.querySelector('.bar-top-label');
+	            var scores = readScores(wrapper, inner);
+	            var isSingleRun = wrapper.getAttribute('data-runs') === '1';
+	            var segments = buildMetricFilteredSegments(scores, rect.height, activeMetric, isSingleRun);
+	            if (!segments.length) return;
+	            var label = wrapper.querySelector('.bar-top-label');
             var fallbackColor = label ? window.getComputedStyle(label).color : 'rgb(255,204,51)';
             syncHtmlFrontSegments(inner, fallbackColor);
             syncLabelsToSegments(inner, segments);
-            var inputShare = hasTokenData ? clamp(token.input / token.total, 0, 1) : 1;
-            var inputDepth = depth * inputShare;
-            var outputDepth = Math.max(0, depth - inputDepth);
+            var inputShare = !usingCostDepth && hasTokenData ? clamp(token.input / token.total, 0, 1) : 1;
+            var inputDepth = usingCostDepth ? depth : depth * inputShare;
+            var outputDepth = usingCostDepth ? 0 : Math.max(0, depth - inputDepth);
             var outputStart = inputDepth + (outputDepth > 1.5 ? tokenGap : 0);
             var outputActualDepth = Math.max(0, outputDepth - (outputDepth > 1.5 ? tokenGap : 0));
             var x = rect.left - areaRect.left;
+            var screenBottom = (rect.top - areaRect.top) + rect.height;
             var bottomY = height - ((rect.top - areaRect.top) + rect.height);
-	            segments.forEach(function(segment, segmentIndex) {
+			            var tokenLabelBounds = addDepthLabel(
+			                x,
+			                screenBottom,
+			                rect.width,
+			                visualDepth,
+			                token,
+			                usingBothDepth ? 'tokens' : mode,
+			                usingBothDepth ? {orientation: 'vertical', yOffset: -13} : null
+			            );
+			            if (tokenLabelBounds) requiredRight = Math.max(requiredRight, tokenLabelBounds.right + 12);
+			            if (usingBothDepth && costDepth) {
+			                var costLabelBounds = addDepthLabel(x + costShadowOffsetX, screenBottom - costShadowOffsetY, rect.width, costVisualDepth, token, 'cost-shadow', {orientation: 'edge'});
+			                if (costLabelBounds) requiredRight = Math.max(requiredRight, costLabelBounds.right + 12);
+			            }
+		            if (usingBothDepth && costDepth) {
+		                var shadowBottom = segments.reduce(function(min, segment) { return Math.min(min, segment.bottom); }, Number.POSITIVE_INFINITY);
+		                var shadowTop = segments.reduce(function(max, segment) { return Math.max(max, segment.top); }, 0);
+		                if (Number.isFinite(shadowBottom) && shadowTop - shadowBottom > 1.1) {
+		                    var shadowHeight = Math.max(0.5, shadowTop - shadowBottom - segmentGap);
+		                    var shadowY = bottomY + shadowBottom + segmentGap * 0.5;
+		                    var shadowOuterRadius = Math.min(7.5, rect.width * 0.18, shadowHeight * 0.28);
+		                    var shadowRadii = {
+		                        tl: shadowOuterRadius,
+		                        tr: shadowOuterRadius,
+		                        br: Math.min(4.5, shadowOuterRadius),
+		                        bl: Math.min(4.5, shadowOuterRadius)
+		                    };
+		                    var shadowMeta = {
+		                        agent: wrapper.getAttribute('data-agent') || '',
+		                        metric: 'cost-shadow',
+		                        metricLabel: 'Run cost',
+		                        depthMode: 'cost-shadow',
+		                        costUsd: token.cost,
+		                        inputTokens: token.input,
+		                        outputTokens: token.output,
+		                        totalTokens: token.total
+		                    };
+			                    var shadowZStart = depth + 1;
+				                    addCostShadowMesh(
+					                        x + costShadowOffsetX,
+					                        shadowY + costShadowOffsetY,
+			                        rect.width,
+			                        shadowHeight,
+			                        costDepth,
+			                        'cost-shadow',
+			                        shadowMeta,
+			                        shadowRadii,
+			                        shadowZStart
+			                    );
+			                    requiredRight = Math.max(requiredRight, x + costShadowOffsetX + rect.width + costVisualDepth + 12);
+			                }
+			            }
+		            segments.forEach(function(segment, segmentIndex) {
 	                var segHeight = segment.top - segment.bottom;
 	                var displayHeight = Math.max(0.5, segHeight - segmentGap);
 	                var y = bottomY + segment.bottom + segmentGap * 0.5;
@@ -723,21 +1039,37 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
                     br: isBottom ? Math.min(4.5, outerRadius) : 0,
                     bl: isBottom ? Math.min(4.5, outerRadius) : 0
                 };
-                var meta = {
-                    agent: wrapper.getAttribute('data-agent') || '',
-                    metric: segment.key,
-                    metricLabel: metricLabels[segment.key],
-                    inputTokens: token.input,
-	                    outputTokens: token.output,
-	                    totalTokens: token.total
-	                };
-	                var inputHasFront = inputDepth > 0.4;
-	                addSegmentMesh(x, y, rect.width, displayHeight, 0, inputDepth, baseColor, gradientStops, segment.key, false, meta, radii, true);
-	                addSegmentMesh(x, y, rect.width, displayHeight, outputStart, outputActualDepth, baseColor, gradientStops, segment.key, true, meta, radii, !inputHasFront);
-	            });
-        });
-        renderer.render(scene, camera);
-        chartArea.classList.add('three-bars-ready');
+	                var meta = {
+	                    agent: wrapper.getAttribute('data-agent') || '',
+	                    metric: segment.key,
+	                    metricLabel: metricLabels[segment.key],
+	                    depthMode: usingCostDepth ? 'cost' : 'tokens',
+	                    costUsd: token.cost,
+	                    inputTokens: token.input,
+		                    outputTokens: token.output,
+		                    totalTokens: token.total
+		                };
+		                var inputHasFront = inputDepth > 0.4;
+			                addSegmentMesh(x, y, rect.width, displayHeight, 0, inputDepth, baseColor, gradientStops, segment.key, false, meta, radii, true);
+			                addSegmentMesh(x, y, rect.width, displayHeight, outputStart, outputActualDepth, baseColor, gradientStops, segment.key, true, meta, radii, !inputHasFront);
+		            });
+	        });
+	        var settledWidth = chartLayoutWidth();
+	        var requiredWidth = Math.ceil(Math.max(settledWidth, requiredRight));
+	        if (requiredWidth > width + 2) {
+	            setChartArea3DWidth(requiredWidth);
+	            chartArea.classList.remove('three-bars-ready');
+	            clearRoot();
+	            clearDepthLabels();
+	            queueRenderAfterLayoutSettle();
+	            return;
+	        }
+	        setChartArea3DWidth(Math.max(width, requiredWidth));
+	        renderer.render(scene, camera);
+	        chartArea.classList.add('three-bars-ready');
+        if (window.WolfBenchRefreshModelHighlights && chartArea.querySelector('.model-group.model-highlighted')) {
+            window.requestAnimationFrame(window.WolfBenchRefreshModelHighlights);
+        }
     }
 
     function queueRender() {
@@ -751,10 +1083,11 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 
     window.WolfBenchThreeBars = {
         render: queueRender,
+        renderNow: renderThreeBars,
         modes: tokenDepthModes,
-        scale: {
-            tokensPerDepthPixel: tokensPerDepthPixel,
-            maxDepth: maxDepth,
+	        scale: {
+		            tokensPerDepthPixel: tokensPerDepthPixel,
+		            costPerDepthPixel: costPerDepthPixel,
             missingDepth: missingDepth,
             projectX: projectX,
             projectY: projectY

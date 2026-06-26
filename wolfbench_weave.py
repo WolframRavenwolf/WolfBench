@@ -11,6 +11,8 @@ Usage:
     python wolfbench_weave.py status
 """
 
+from __future__ import annotations
+
 import argparse
 import asyncio
 import json
@@ -20,6 +22,7 @@ import sys
 import warnings
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 # Work around stale generated OpenTelemetry protobuf stubs that some fresh
 # weave/uv resolutions can pull in. This must be set before importing weave.
@@ -540,23 +543,46 @@ async def upload_evaluations(
             filter=_CF(op_names=[_eval_op]),
             sort_by=[{"field": "started_at", "direction": "desc"}],
             limit=max(_total_runs * 2, 200),
-            columns=["id", "display_name"],
+            columns=["id", "trace_id", "display_name"],
         ))
+        _call_ids_by_run = {}
+        _trace_ids_by_run = {}
+        for c in _eval_calls:
+            display_name = c.display_name or ""
+            if not display_name.startswith(_prefix):
+                continue
+            run_label = display_name[len(_prefix):]
+            _call_ids_by_run.setdefault(run_label, c.id)
+            _trace_ids_by_run.setdefault(run_label, getattr(c, "trace_id", None))
+
         _call_ids = [
-            c.id for c in _eval_calls
-            if (c.display_name or "").startswith(_prefix)
-        ][:len(models)]
+            _call_ids_by_run[run_label]
+            for run_label, _model in models
+            if run_label in _call_ids_by_run
+        ]
+        _trace_ids = [
+            _trace_ids_by_run[run_label]
+            for run_label, _model in models
+            if _trace_ids_by_run.get(run_label)
+        ]
 
         # Update manifest (new unified format)
         manifest.setdefault("evaluations", {})[key] = {
             "eval_name": f"Terminal-Bench 2.0: {label}",
             "weave_url": url,
             "eval_call_ids": _call_ids,
+            "eval_trace_ids": _trace_ids,
             "runs": {
                 r["timestamp"]: {
                     "vm": r["vm"],
                     "score": r["score"],
                     "uploaded": True,
+                    "eval_call_id": _call_ids_by_run.get(
+                        r["timestamp"].replace("/", "-").replace(" ", "_")
+                    ),
+                    "eval_trace_id": _trace_ids_by_run.get(
+                        r["timestamp"].replace("/", "-").replace(" ", "_")
+                    ),
                     "has_traces": run_trace_counts.get(r["timestamp"], 0) > 0,
                     "n_traces": run_trace_counts.get(r["timestamp"], 0),
                 }
@@ -868,6 +894,104 @@ def get_evaluation_urls(
         url = eval_data.get("weave_url", "")
         if url:
             urls[(agent, version, model_display, timeout, thinking)] = url
+    return urls
+
+
+def _weave_base_url(manifest: dict, eval_data: dict) -> str:
+    """Return the W&B project URL prefix for Weave links."""
+    weave_url = eval_data.get("weave_url") or ""
+    if "/weave/" in weave_url:
+        return weave_url.split("/weave/", 1)[0]
+
+    entity = manifest.get("entity")
+    project = manifest.get("project") or DEFAULT_PROJECT
+    if not entity:
+        return ""
+    return f"https://wandb.ai/{entity}/{project}"
+
+
+def _weave_call_url(manifest: dict, eval_data: dict, call_id: str) -> str:
+    """Build a Weave call URL for a stored call id."""
+    base_url = _weave_base_url(manifest, eval_data)
+    if not base_url:
+        return ""
+    return f"{base_url}/weave/calls/{call_id}"
+
+
+def _weave_call_redirect_url(manifest: dict, eval_data: dict, call_id: str) -> str:
+    """Build W&B's stable SDK redirect URL for a stored Weave call id."""
+    base_url = _weave_base_url(manifest, eval_data)
+    if not base_url:
+        return ""
+    return f"{base_url}/r/call/{quote(call_id, safe='')}"
+
+
+def _weave_trace_url(manifest: dict, eval_data: dict, trace_id: str) -> str:
+    """Build a Weave trace URL for a stored trace id."""
+    base_url = _weave_base_url(manifest, eval_data)
+    if not base_url:
+        return ""
+    return f"{base_url}/weave/traces/{trace_id}"
+
+
+def get_run_urls(
+    manifest: dict | Path | None = None,
+) -> dict[tuple, str]:
+    """Return {(agent, version, model_display, timeout, thinking, timestamp): url}.
+
+    New manifests store eval_trace_id/eval_call_id directly on each run. Older
+    manifests only have eval_trace_ids/eval_call_ids at the evaluation level;
+    those IDs were captured newest first, so we map them back to run insertion
+    order in reverse.
+    """
+    if manifest is None:
+        manifest = load_manifest()
+    elif isinstance(manifest, Path):
+        manifest = load_manifest(manifest)
+
+    urls = {}
+    for key, eval_data in manifest.get("evaluations", {}).items():
+        agent, version, model_display, timeout, thinking = parse_manifest_key(key)
+        runs = eval_data.get("runs") or {}
+        if not runs:
+            continue
+
+        legacy_call_ids = eval_data.get("eval_call_ids") or []
+        legacy_trace_ids = eval_data.get("eval_trace_ids") or []
+        legacy_by_timestamp = {}
+        if len(legacy_call_ids) == len(runs):
+            legacy_by_timestamp = {
+                timestamp: call_id
+                for timestamp, call_id in zip(reversed(list(runs.keys())), legacy_call_ids)
+            }
+        legacy_trace_by_timestamp = {}
+        if len(legacy_trace_ids) == len(runs):
+            legacy_trace_by_timestamp = {
+                timestamp: trace_id
+                for timestamp, trace_id in zip(reversed(list(runs.keys())), legacy_trace_ids)
+            }
+
+        for timestamp, run_entry in runs.items():
+            trace_id = (
+                run_entry.get("eval_trace_id")
+                or run_entry.get("trace_id")
+                or legacy_trace_by_timestamp.get(timestamp)
+            )
+            call_id = (
+                run_entry.get("eval_call_id")
+                or run_entry.get("call_id")
+                or legacy_by_timestamp.get(timestamp)
+            )
+            if not trace_id and not call_id:
+                continue
+            url = (
+                run_entry.get("weave_url")
+                or (call_id and _weave_call_redirect_url(manifest, eval_data, call_id))
+                or (trace_id and _weave_trace_url(manifest, eval_data, trace_id))
+                or (call_id and _weave_call_url(manifest, eval_data, call_id))
+            )
+            if url:
+                urls[(agent, version, model_display, timeout, thinking, timestamp)] = url
     return urls
 
 

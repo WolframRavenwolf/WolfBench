@@ -427,17 +427,21 @@ def _(all_vms, hcr, mo, raw_results, scan_completed):
             _tok_in = _run.get("tokens_in")
             _tok_out = _run.get("tokens_out")
             _tok_cache = _run.get("tokens_cache")
+            _tok_cache_write = _run.get("tokens_cache_write")
             _cost = _run.get("cost_usd")
 
-            # Total prompt = uncached input + cached input
+            # tokens_cache is a discounted subset of tokens_in, not extra input.
             _tok_prompt = None
-            if _tok_in is not None or _tok_cache is not None:
-                _tok_prompt = (_tok_in or 0) + (_tok_cache or 0)
+            if _tok_in is not None or _tok_cache_write is not None:
+                _tok_prompt = (_tok_in or 0) + (_tok_cache_write or 0)
+            _tok_uncached = None
+            if _tok_in is not None:
+                _tok_uncached = max((_tok_in or 0) - (_tok_cache or 0), 0)
 
             # % cached = cache / total_prompt
             _cached_pct = "-"
-            if _tok_prompt and _tok_cache:
-                _cached_pct = f"{_tok_cache / _tok_prompt:.0%}"
+            if _tok_in and _tok_cache:
+                _cached_pct = f"{_tok_cache / _tok_in:.0%}"
 
             # Jobs folder: immediate parent of the timestamp dir in run_dir
             _run_dir = _run.get("run_dir", "")
@@ -467,7 +471,7 @@ def _(all_vms, hcr, mo, raw_results, scan_completed):
                 "errors": _lost,
                 "duration": _dur,
                 "n": _n_str,
-                "uncached_in": _fmt_tokens(_tok_in),
+                "uncached_in": _fmt_tokens(_tok_uncached),
                 "cached_in": _fmt_tokens(_tok_cache),
                 "total_in": _fmt_tokens(_tok_prompt),
                 "cached%": _cached_pct,
@@ -967,7 +971,7 @@ def _(get_overrides, selected_runs):
 
 
 @app.cell
-def _(LOCAL_RUNS_DIR, Path, final_valid, get_dl_done, json, mo):
+def _(LOCAL_RUNS_DIR, Path, final_valid, get_dl_done, hcr, json, mo):
     _dl_done = get_dl_done()
     _vm_only = [r for r in final_valid if r.get("vm") != "local"]
     # Local runs without trajectories — can upgrade via Full download,
@@ -976,7 +980,7 @@ def _(LOCAL_RUNS_DIR, Path, final_valid, get_dl_done, json, mo):
     for _r in final_valid:
         if _r.get("vm") != "local":
             continue
-        if any(Path(_r["run_dir"]).glob("**/agent/trajectory.json")):
+        if hcr.local_trajectories_complete(_r["run_dir"]):
             continue
         # Check if we already tried a full download — source simply has no trajectories
         _mp = Path(_r["run_dir"]) / "_meta.json"
@@ -988,82 +992,71 @@ def _(LOCAL_RUNS_DIR, Path, final_valid, get_dl_done, json, mo):
             except (json.JSONDecodeError, OSError):
                 pass
         _needs_traj.append(_r)
-    _n_meta = len(_vm_only)
-    _n_full = len(_vm_only) + len(_needs_traj)
-    # Disable based on completion state: full covers meta
-    _meta_disabled = _n_meta == 0 or _dl_done in ("meta", "full")
-    _full_disabled = _n_full == 0 or _dl_done == "full"
-    download_meta_btn = mo.ui.run_button(
+    _n_complete = len(_vm_only) + len(_needs_traj)
+    # Complete-run download covers both metadata and trajectories.
+    _download_disabled = _n_complete == 0 or _dl_done == "full"
+    download_runs_btn = mo.ui.run_button(
         label=(
-            f"Download Metadata — done ✓" if _dl_done in ("meta", "full")
-            else f"Download Metadata ({_n_meta} runs)"
+            f"Download Complete Runs — done ✓" if _dl_done == "full"
+            else f"Download Complete Runs ({_n_complete} runs)"
         ),
-        disabled=_meta_disabled,
-    )
-    download_full_btn = mo.ui.run_button(
-        label=(
-            f"Download Full + Trajectories — done ✓" if _dl_done == "full"
-            else f"Download Full + Trajectories ({_n_full} runs)"
-        ),
-        disabled=_full_disabled,
+        disabled=_download_disabled,
     )
     if len(final_valid) == 0:
         _hint = mo.md('<span style="color:#9BA1A6;font-size:0.85rem;">Disabled: no runs selected</span>')
-    elif _dl_done:
-        _hint = mo.md(f'<span style="color:#9BA1A6;font-size:0.85rem;">Download complete ({_dl_done}). Re-scan to reset.</span>')
-    elif _n_full == 0 and _n_meta == 0:
+    elif _dl_done == "full":
+        _hint = mo.md('<span style="color:#9BA1A6;font-size:0.85rem;">Download complete. Re-scan to reset.</span>')
+    elif _n_complete == 0:
         _hint = mo.md('<span style="color:#9BA1A6;font-size:0.85rem;">Disabled: all runs already local (with trajectories)</span>')
     else:
         _parts = []
         if _needs_traj:
             _parts.append(f"{len(_needs_traj)} local run(s) missing trajectories")
         _parts.append(
-            "Metadata = result.json + config.json (~fast). "
-            "Full = includes trajectory.json files (~slow, needed for Weave trace upload)."
+            "Downloads config.json, result.json, and trajectory.json files. "
+            "Needed for local analysis and Weave trace upload."
         )
         _hint = mo.md(f'<span style="color:#9BA1A6;font-size:0.85rem;">{" · ".join(_parts)}</span>')
     mo.vstack([
         mo.md(f"### Step 3: Download to Local Storage\n\n`{LOCAL_RUNS_DIR}`"),
-        mo.hstack([download_meta_btn, download_full_btn], justify="start", gap=1),
+        mo.hstack([download_runs_btn], justify="start", gap=1),
         _hint,
     ])
-    return download_full_btn, download_meta_btn
+    return (download_runs_btn,)
 
 
 @app.cell
-def _(LOCAL_RUNS_DIR, Path, download_full_btn, download_meta_btn, final_valid, hcr, json, mo, set_dl_done, set_dl_msg):
-    _do_meta = download_meta_btn.value
-    _do_full = download_full_btn.value
+def _(LOCAL_RUNS_DIR, Path, download_runs_btn, final_valid, hcr, json, mo, set_dl_done, set_dl_msg):
+    _do_download = download_runs_btn.value
 
-    if (_do_meta or _do_full) and final_valid:
+    if _do_download and final_valid:
         _vm_only = [r for r in final_valid if r.get("vm") != "local"]
 
-        # For Full downloads, also include local runs missing trajectories
+        # Complete-run downloads also include local runs missing trajectories.
         _to_download = list(_vm_only)
-        if _do_full:
-            for _r in final_valid:
-                if _r.get("vm") != "local":
-                    continue
-                if any(Path(_r["run_dir"]).glob("**/agent/trajectory.json")):
-                    continue
-                _meta_path = Path(_r["run_dir"]) / "_meta.json"
-                if not _meta_path.exists():
-                    continue
-                try:
-                    _meta = json.loads(_meta_path.read_text())
-                except (json.JSONDecodeError, OSError):
-                    continue
-                # Skip if we already tried a full download — source has no trajectories
-                if _meta.get("download_mode") == "full":
-                    continue
-                _src_vm = _meta.get("source_vm")
-                _src_dir = _meta.get("source_run_dir")
-                if _src_vm and _src_dir:
-                    _to_download.append({**_r, "vm": _src_vm, "run_dir": _src_dir})
+        for _r in final_valid:
+            if _r.get("vm") != "local":
+                continue
+            if hcr.local_trajectories_complete(_r["run_dir"]):
+                continue
+            _meta_path = Path(_r["run_dir"]) / "_meta.json"
+            if not _meta_path.exists():
+                continue
+            try:
+                _meta = json.loads(_meta_path.read_text())
+            except (json.JSONDecodeError, OSError):
+                continue
+            # Skip if we already tried a full download — source has no trajectories
+            if _meta.get("download_mode") == "full":
+                continue
+            _src_vm = _meta.get("source_vm")
+            _src_dir = _meta.get("source_run_dir")
+            if _src_vm and _src_dir:
+                _to_download.append({**_r, "vm": _src_vm, "run_dir": _src_dir})
 
         if _to_download:
-            _include_traj = bool(_do_full)
-            _mode = "full + trajectories" if _include_traj else "metadata"
+            _include_traj = True
+            _mode = "complete runs"
             with mo.status.spinner(f"Downloading {len(_to_download)} runs ({_mode})..."):
                 _results = hcr.download_runs(
                     _to_download,
@@ -1075,7 +1068,7 @@ def _(LOCAL_RUNS_DIR, Path, download_full_btn, download_meta_btn, final_valid, h
             _skip = sum(1 for r in _results if r["status"] == "skipped")
             _err = sum(1 for r in _results if r["status"] == "error")
             if _err == 0:
-                set_dl_done("full" if _do_full else "meta")
+                set_dl_done("full")
             set_dl_msg({
                 "text": (
                     f"Downloaded **{_ok}**, skipped **{_skip}** (already complete), "

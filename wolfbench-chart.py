@@ -10,21 +10,53 @@ Usage:
     python wolfbench-chart.py --min-runs 3       # Require ≥3 runs
 """
 
+from __future__ import annotations
+
 import argparse
 import base64
 import json
 import re
 from collections import Counter, defaultdict
-from datetime import date
+from datetime import date, datetime, timezone
 from html import escape as _html_escape
+from io import BytesIO
 from pathlib import Path
 
+try:
+    from PIL import Image
+except ImportError:  # pragma: no cover - only used when Pillow is unavailable.
+    Image = None
+
 TOTAL_TASKS = 89
+AGENT_LOGO_EMBED_SIZE_PX = 32
 DEFAULT_RUNS = 5       # Baseline run count — hidden on bars; only deviations shown
 DEFAULT_TIMEOUT_H = 1  # Baseline timeout in hours — hidden on bars; only deviations shown
 DEFAULT_VERSIONS = {   # Baseline agent versions — hidden on bars; only deviations shown
     "terminus-2": "2.0.0",
 }
+
+AGENT_LOGOS = {
+    "terminus-2": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill-rule="evenodd" d="M4 4.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-11a2 2 0 0 0-2-2H4Zm0 3h16v10H4v-10Zm3.2 2.1-1 1.1 2 1.8-2 1.8 1 1.1 3.3-2.9-3.3-2.9Zm4.4 4.5v1.5h5.5v-1.5h-5.5Z"/></svg>""",
+    "claude-code": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/></svg>""",
+    "hermes": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13.1 1.7 5.9 13h4.5l-1.5 9.3 9.3-12.4h-5.1l2.1-8.2h-2.1Z"/><path d="M2 7.1c3.9-.4 6.4.4 8.1 2.4l-1 1.6C7.4 9.9 5.4 9.3 2 9.6V7.1Zm20 0c-3.2-.3-5.6.2-7.3 1.5l-.6 2.4c1.7-1.2 3.9-1.7 7.9-1.4V7.1Z"/></svg>""",
+    "openclaw": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.1 6.4 1.8 12l4.3 5.6 2-1.5L5 12l3.1-4.1-2-1.5Zm11.8 0-2 1.5L19 12l-3.1 4.1 2 1.5 4.3-5.6-4.3-5.6ZM11 20.2 14.5 3.8h-2.4L8.6 20.2H11Z"/></svg>""",
+    "cline-cli": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m23.365 13.556-1.442-2.895V8.994c0-2.764-2.218-5.002-4.954-5.002h-2.464c.178-.367.276-.779.276-1.213A2.77 2.77 0 0 0 12.018 0a2.77 2.77 0 0 0-2.763 2.779c0 .434.098.846.276 1.213H7.067c-2.736 0-4.954 2.238-4.954 5.002v1.667L.64 13.549c-.149.29-.149.636 0 .927l1.472 2.855v1.667C2.113 21.762 4.33 24 7.067 24h9.902c2.736 0 4.954-2.238 4.954-5.002V17.33l1.44-2.865c.143-.286.143-.622.002-.91m-12.854 2.36a2.27 2.27 0 0 1-2.261 2.273 2.27 2.27 0 0 1-2.261-2.273v-4.042A2.27 2.27 0 0 1 8.249 9.6a2.267 2.267 0 0 1 2.262 2.274zm7.285 0a2.27 2.27 0 0 1-2.26 2.273 2.27 2.27 0 0 1-2.262-2.273v-4.042A2.267 2.267 0 0 1 15.535 9.6a2.267 2.267 0 0 1 2.261 2.274z"/></svg>""",
+    "cursor-cli": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"/></svg>""",
+    "codex": """<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729Zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944Zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464ZM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872Zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667Zm2.0107-3.0231-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66ZM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813Zm1.0976-2.3654 2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg>""",
+}
+
+AGENT_LOGO_ASSETS = {
+    "terminus-2": ("agent-icons/terminus-2.png", "image/png"),
+    "claude-code": ("agent-icons/claude-code.svg", "image/svg+xml"),
+    "hermes": ("agent-icons/hermes.svg", "image/svg+xml"),
+    "openclaw": ("agent-icons/openclaw.svg", "image/svg+xml"),
+    "cline-cli": ("agent-icons/cline-cli.svg", "image/svg+xml"),
+    "cursor-cli": ("agent-icons/cursor-cli.svg", "image/svg+xml"),
+    "codex": ("agent-icons/codex.svg", "image/svg+xml"),
+}
+
+AGENT_LOGO_BRANDED: set[str] = {"openclaw"}
+_AGENT_LOGO_ASSET_CACHE: dict[tuple[str, str], str] = {}
 
 AGENT_CONFIG = {
     "terminus-2": {
@@ -128,6 +160,79 @@ AGENT_CONFIG = {
 }
 
 
+def _raster_logo_data_uri(logo_path: Path, mime: str) -> str:
+    if Image is None:
+        raise RuntimeError("Pillow is required to normalize raster agent logos.")
+
+    with Image.open(logo_path) as source:
+        image = source.convert("RGBA")
+
+    alpha_bbox = image.getchannel("A").getbbox()
+    if alpha_bbox:
+        image = image.crop(alpha_bbox)
+
+    resampling = getattr(getattr(Image, "Resampling", Image), "LANCZOS")
+    image.thumbnail((AGENT_LOGO_EMBED_SIZE_PX, AGENT_LOGO_EMBED_SIZE_PX), resampling)
+
+    canvas = Image.new("RGBA", (AGENT_LOGO_EMBED_SIZE_PX, AGENT_LOGO_EMBED_SIZE_PX), (0, 0, 0, 0))
+    offset = (
+        (AGENT_LOGO_EMBED_SIZE_PX - image.width) // 2,
+        (AGENT_LOGO_EMBED_SIZE_PX - image.height) // 2,
+    )
+    canvas.alpha_composite(image, offset)
+
+    buffer = BytesIO()
+    canvas.save(buffer, format="PNG", optimize=True)
+    encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return f"data:image/png;base64,{encoded}"
+
+
+def _strip_svg_tooltip_nodes(svg: str) -> str:
+    return re.sub(r"<(?:title|desc)\b[^>]*>.*?</(?:title|desc)>", "", svg, flags=re.IGNORECASE | re.DOTALL)
+
+
+def _agent_logo_html(agent: str, title: str) -> str:
+    safe_title = _html_escape(title)
+    if agent in AGENT_LOGO_ASSETS:
+        cache_key = (agent, title)
+        cached_logo = _AGENT_LOGO_ASSET_CACHE.get(cache_key)
+        if cached_logo is not None:
+            return cached_logo
+        rel_path, mime = AGENT_LOGO_ASSETS[agent]
+        logo_path = Path(__file__).parent / rel_path
+        if logo_path.exists():
+            safe_agent = _html_escape(agent)
+            logo_classes = f"agent-logo agent-logo-{safe_agent}"
+            if agent in AGENT_LOGO_BRANDED:
+                logo_classes += " agent-logo-branded"
+            if mime == "image/svg+xml":
+                svg = _strip_svg_tooltip_nodes(logo_path.read_text(encoding="utf-8").strip())
+                logo = f'<span class="{logo_classes}" title="{safe_title}" aria-hidden="true">{svg}</span>'
+            else:
+                data_uri = _raster_logo_data_uri(logo_path, mime)
+                logo = (
+                    f'<span class="{logo_classes}" title="{safe_title}" aria-hidden="true">'
+                    f'<img src="{data_uri}" alt="" decoding="async">'
+                    f'</span>'
+                )
+            _AGENT_LOGO_ASSET_CACHE[cache_key] = logo
+            return logo
+
+    logo = AGENT_LOGOS.get(agent)
+    if not logo:
+        return f'<span class="agent-logo agent-logo-missing" title="{safe_title}" aria-hidden="true"></span>'
+    svg = _strip_svg_tooltip_nodes(logo)
+    return f'<span class="agent-logo agent-logo-{_html_escape(agent)}" title="{safe_title}" aria-hidden="true">{svg}</span>'
+
+
+def _agent_badge_html(agent: str, name: str) -> str:
+    safe_name = _html_escape(name)
+    return (
+        f'<span class="agent-badge" title="{safe_name}" aria-label="{safe_name}">'
+        f'{_agent_logo_html(agent, name)}</span>'
+    )
+
+
 _HEX_RE = re.compile(r"#[0-9a-fA-F]{6}")
 
 
@@ -225,6 +330,19 @@ def _resolve_provider_vendor(r: dict) -> tuple[str, str]:
     return (pd or provider, vd or vendor)
 
 
+def _positive_cost_usd(value) -> float | None:
+    try:
+        cost = float(value)
+    except (TypeError, ValueError):
+        return None
+    return cost if cost > 0 else None
+
+
+def _fmt_cost_usd(value) -> str:
+    cost = _positive_cost_usd(value)
+    return f"${cost:,.2f}" if cost is not None else "-"
+
+
 METRIC_LABELS = {
     "ceiling": ("★", "Ceiling",  "ever solved"),
     "best":    ("▲", "Best-of",  "peak run"),
@@ -254,9 +372,15 @@ def compute_metrics(runs: list[dict]) -> dict | None:
 
     token_input_total = 0
     token_output_total = 0
+    cost_total = 0.0
+    cost_runs = 0
     for r in runs:
-        token_input_total += (r.get("tokens_in") or 0) + (r.get("tokens_cache") or 0)
+        token_input_total += (r.get("tokens_in") or 0) + (r.get("tokens_cache_write") or 0)
         token_output_total += r.get("tokens_out") or 0
+        cost = _positive_cost_usd(r.get("cost_usd"))
+        if cost is not None:
+            cost_total += cost
+            cost_runs += 1
 
     avg_score = sum(scores) / len(scores)
     return {
@@ -283,6 +407,8 @@ def compute_metrics(runs: list[dict]) -> dict | None:
         "tokens_out_total": token_output_total,
         "tokens_total": token_input_total + token_output_total,
         "tokens_runs": n_runs,
+        "cost_total_usd": cost_total,
+        "cost_runs": cost_runs,
     }
 
 
@@ -292,6 +418,39 @@ def _fmt_timeout_h(sec: float | int | None) -> str:
         return ""
     h = sec / 3600
     return f"{h:.0f}h" if h == int(h) else f"{h:.1f}h"
+
+
+def _parse_run_datetime(value: str | None) -> datetime | None:
+    """Parse ISO datetimes or Harbor run-dir timestamps."""
+    if not value:
+        return None
+    raw = str(value).strip()
+    if not raw:
+        return None
+    normalized = raw.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is not None:
+            return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        return parsed
+    except ValueError:
+        pass
+    match = re.match(r"^(\d{4}-\d{2}-\d{2})__(\d{2})-(\d{2})(?:-(\d{2}))?", raw)
+    if not match:
+        return None
+    date_part, hh, mm, ss = match.groups()
+    try:
+        return datetime.fromisoformat(f"{date_part}T{hh}:{mm}:{ss or '00'}")
+    except ValueError:
+        return None
+
+
+def _run_datetime_label_and_sort(run: dict) -> tuple[str, str]:
+    dt = _parse_run_datetime(run.get("started_at")) or _parse_run_datetime(run.get("timestamp"))
+    if dt is None:
+        ts = str(run.get("timestamp") or "").strip()
+        return (ts[:10] if ts else "-", "")
+    return dt.strftime("%Y-%m-%d %H:%M"), str(int(dt.timestamp()))
 
 
 # Scale: pixels per percentage point
@@ -344,7 +503,7 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
         bottom_px = val * PX_PER_PCT
         abs_bottom_px = _abs_px(abs_val)
         label_parts = [
-            f'<span class="seg-label"'
+            f'<span class="seg-label seg-label-single" data-metric="solid"'
             f' data-true-bottom="{bottom_px:.1f}"'
             f' data-bottom-pct="{bottom_px:.1f}" data-bottom-abs="{abs_bottom_px:.1f}"'
             f' style="bottom: {bottom_px:.1f}px;">'
@@ -426,7 +585,10 @@ def _bar_segments_html(metrics: dict, agent_cfg: dict) -> str:
         </div>'''
 
 
-def _build_runs_table_html(runs: list[dict]) -> str:
+def _build_runs_table_html(
+    runs: list[dict],
+    weave_run_urls: dict[tuple, str] | None = None,
+) -> str:
     """Build a collapsed HTML <details> table showing individual run data."""
     if not runs:
         return ""
@@ -442,16 +604,93 @@ def _build_runs_table_html(runs: list[dict]) -> str:
             return f"{n / 1_000:.0f}K"
         return str(n)
 
+    def _safe_float(value) -> float:
+        try:
+            f = float(value or 0)
+        except (TypeError, ValueError):
+            return 0.0
+        return f if f > 0 else 0.0
+
+    def _fmt_duration_total(seconds: float) -> str:
+        total = int(round(seconds))
+        if total <= 0:
+            return "n/a"
+        days, rem = divmod(total, 86_400)
+        hours, rem = divmod(rem, 3_600)
+        minutes, _ = divmod(rem, 60)
+        parts = []
+        if days:
+            parts.append(f"{days}d")
+        if hours or days:
+            parts.append(f"{hours}h")
+        parts.append(f"{minutes}m")
+        return " ".join(parts)
+
+    def _build_resource_stats_text(visible_runs: list[dict]) -> str:
+        n_visible = len(visible_runs)
+        duration_total = 0.0
+        duration_runs = 0
+        token_in_total = 0
+        token_out_total = 0
+        token_runs = 0
+        cost_total = 0.0
+        cost_runs = 0
+
+        for _r in visible_runs:
+            _duration = _safe_float(_r.get("duration_sec"))
+            if _duration:
+                duration_total += _duration
+                duration_runs += 1
+
+            _tok_in = (_r.get("tokens_in") or 0) + (_r.get("tokens_cache_write") or 0)
+            _tok_out = _r.get("tokens_out") or 0
+            _tok_total = _tok_in + _tok_out
+            if _tok_total:
+                token_in_total += _tok_in
+                token_out_total += _tok_out
+                token_runs += 1
+
+            _cost = _positive_cost_usd(_r.get("cost_usd"))
+            if _cost is not None:
+                cost_total += _cost
+                cost_runs += 1
+
+        duration_label = _fmt_duration_total(duration_total)
+        if duration_runs and duration_runs != n_visible:
+            duration_label += f" (timing data for {duration_runs}/{n_visible} runs)"
+
+        token_total = token_in_total + token_out_total
+        if token_total:
+            token_label = f"{_fmt_tok(token_total)} ({_fmt_tok(token_in_total)} in, {_fmt_tok(token_out_total)} out)"
+            if token_runs != n_visible:
+                token_label += f" (token data for {token_runs}/{n_visible} runs)"
+        else:
+            token_label = "n/a"
+
+        if cost_runs:
+            cost_label = _fmt_cost_usd(cost_total)
+            if cost_runs != n_visible:
+                cost_label += f" (cost data for {cost_runs}/{n_visible} runs)"
+        else:
+            cost_label = "n/a"
+
+        return (
+            f"Total runtime: {duration_label} · "
+            f"Total tokens: {token_label} · "
+            f"Total cost: {cost_label}."
+        )
+
     # Sort: date descending (latest first)
-    sorted_runs = sorted(runs, key=lambda r: r.get("timestamp", ""), reverse=True)
+    sorted_runs = sorted(
+        runs,
+        key=lambda r: _parse_run_datetime(r.get("started_at")) or _parse_run_datetime(r.get("timestamp")) or datetime.min,
+        reverse=True,
+    )
 
     rows: list[str] = []
     for r in sorted_runs:
-        # Date+Time merged: "2026-03-01 13:43"
         ts = r.get("timestamp", "")
-        dt = ts[:10] if ts else "-"
-        tm = ts[12:17].replace("-", ":") if len(ts) >= 17 else ""
-        date_time = f"{dt} {tm}".strip() if dt != "-" else "-"
+        date_time, date_sort_value = _run_datetime_label_and_sort(r)
 
         # Agent (full name) + version in brackets: "OpenClaw (v2026.2.17)"
         agent = r.get("agent", "?")
@@ -465,6 +704,17 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         model = _resolve_display_name(r)
 
         think = _resolve_thinking(r)
+        run_url = (weave_run_urls or {}).get(
+            (agent, ver if ver != "-" else "unknown", model, r.get("timeout_sec"), think, ts)
+        )
+        if run_url:
+            date_cell = (
+                f'<a class="run-link" href="{_html_escape(run_url)}" target="_blank" '
+                f'rel="noopener noreferrer" title="View this run trace on W&amp;B Weave">'
+                f'{_html_escape(date_time)}</a>'
+            )
+        else:
+            date_cell = _html_escape(date_time)
 
         score = f'{r["score"]:.1%}' if r.get("score") is not None else "?"
         n_p = r.get("n_passed", 0)
@@ -478,18 +728,20 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         ato = eb.get("AgentTimeoutError", 0)
         lost = max(0, n_t - n_p - n_f)
 
+        duration_sec = _safe_float(r.get("duration_sec"))
         dur = "-"
-        if r.get("duration_sec"):
-            h, rem = divmod(int(r["duration_sec"]), 3600)
+        if duration_sec:
+            h, rem = divmod(int(duration_sec), 3600)
             m, _ = divmod(rem, 60)
             dur = f"{h}h{m:02d}m"
 
-        # Total In = uncached input + cached input
+        # tokens_cache is a discounted subset of tokens_in, not extra input.
         tok_in_raw = r.get("tokens_in")
+        tok_cache_write_raw = r.get("tokens_cache_write")
         tok_cache_raw = r.get("tokens_cache")
         tok_total_in = None
-        if tok_in_raw is not None or tok_cache_raw is not None:
-            tok_total_in = (tok_in_raw or 0) + (tok_cache_raw or 0)
+        if tok_in_raw is not None or tok_cache_write_raw is not None:
+            tok_total_in = (tok_in_raw or 0) + (tok_cache_write_raw or 0)
         tok_in = _fmt_tok(tok_total_in)
         tok_out_raw = r.get("tokens_out")
         tok_out = _fmt_tok(tok_out_raw)
@@ -499,14 +751,18 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         )
         tok_total = _fmt_tok(tok_total_raw)
 
-        # Cost (commented out for now — uncomment when more models have cost)
-        # cost = r.get("cost_usd")
-        # cost_str = f"${cost:.2f}" if cost else "-"
+        cost_value = _positive_cost_usd(r.get("cost_usd"))
+        cost_str = _fmt_cost_usd(cost_value)
+        cost_sort_value = f"{cost_value:.6f}" if cost_value is not None else ""
+        cost_attr = f"{cost_value:.6f}" if cost_value is not None else "0"
 
         _passed_json = json.dumps(r.get("passed_tasks", []), separators=(",", ":"))
         rows.append(
-            f"<tr data-agent=\"{_html_escape(agent)}\" data-model=\"{_html_escape(model)}\" data-passed='{_passed_json}'>"
-            f"<td>{_html_escape(date_time)}</td>"
+            f"<tr data-agent=\"{_html_escape(agent)}\" data-model=\"{_html_escape(model)}\" data-passed='{_passed_json}' "
+            f'data-duration-sec="{duration_sec:.3f}" data-token-input="{int(tok_total_in or 0)}" '
+            f'data-token-output="{int(tok_out_raw or 0)}" data-token-total="{int(tok_total_raw or 0)}" '
+            f'data-cost-usd="{cost_attr}">'
+            f"<td data-sort-value=\"{date_sort_value}\">{date_cell}</td>"
             f"<td>{_html_escape(agent_ver)}</td>"
             f"<td>{_html_escape(provider)}</td>"
             f"<td>{_html_escape(vendor)}</td>"
@@ -522,7 +778,7 @@ def _build_runs_table_html(runs: list[dict]) -> str:
             f"<td>{tok_in}</td>"
             f"<td>{tok_out}</td>"
             f"<td>{tok_total}</td>"
-            # f"<td class='n'>{cost_str}</td>"
+            f"<td class='n' data-sort-value=\"{cost_sort_value}\">{cost_str}</td>"
             f"</tr>"
         )
 
@@ -537,16 +793,21 @@ def _build_runs_table_html(runs: list[dict]) -> str:
     _never_solved = TOTAL_TASKS - _solved_once
     _pct = lambda x: round(x / TOTAL_TASKS * 100)
     _task_stats_html = (
-        f'<p class="task-stats" id="taskStats" data-total-tasks="{TOTAL_TASKS}">Across these runs, '
+        f'<p class="task-stats" id="taskStats" data-total-tasks="{TOTAL_TASKS}">Across these {_n_total_runs} runs, '
         f'{_solved_once} ({_pct(_solved_once)}%) of the {TOTAL_TASKS} tasks were solved at least once, '
         f'{_solved_always} ({_pct(_solved_always)}%) were solved every time, '
         f'and {_never_solved} ({_pct(_never_solved)}%) were never solved.</p>'
+    )
+    _resource_stats_html = (
+        f'<p class="task-stats run-resource-stats" id="runResourceStats">'
+        f'{_html_escape(_build_resource_stats_text(runs))}</p>'
     )
 
     return (
         f'<details class="runs-details">\n'
         f'<summary>Run Details ({len(runs)} runs)</summary>\n'
         f'{_task_stats_html}\n'
+        f'{_resource_stats_html}\n'
         f'<div class="runs-table-wrap">\n'
         f'<table class="runs-table">\n'
         f'<thead><tr>'
@@ -556,7 +817,7 @@ def _build_runs_table_html(runs: list[dict]) -> str:
         f'<th>Timeout</th><th>Timeouts</th><th>Err</th>'
         f'<th>Duration</th>'
         f'<th>In</th><th>Out</th><th>Total</th>'
-        # f'<th>Cost</th>'
+        f'<th>Cost</th>'
         f'</tr></thead>\n'
         f'<tbody>\n{"".join(rows)}\n</tbody>\n'
         f'</table>\n'
@@ -573,10 +834,14 @@ def generate_html(
     chart_date: str | None = None,
     runs: list[dict] | None = None,
     weave_urls: dict[tuple, str] | None = None,
+    weave_run_urls: dict[tuple, str] | None = None,
 ) -> Path:
-    # Embed logo as base64
-    _logo_path = Path(__file__).parent / "Endorsed_secondary_goldwhite.png"
-    logo_b64 = base64.b64encode(_logo_path.read_bytes()).decode("ascii")
+    # Embed logos as base64 so the generated HTML stays standalone.
+    _asset_dir = Path(__file__).parent
+    _wolfbench_logo_path = _asset_dir / "WolfBench-Logo-256.png"
+    _wandb_cw_logo_path = _asset_dir / "Endorsed_secondary_goldwhite.png"
+    wolfbench_logo_b64 = base64.b64encode(_wolfbench_logo_path.read_bytes()).decode("ascii")
+    wandb_cw_logo_b64 = base64.b64encode(_wandb_cw_logo_path.read_bytes()).decode("ascii")
     three_bars_js = (Path(__file__).parent / "wolfbench-threejs-bars.js").read_text()
 
     # Filter
@@ -670,22 +935,18 @@ def generate_html(
             cfg = AGENT_CONFIG[agent]
             segments = _bar_segments_html(m, cfg)
             n_runs = m["n_runs"]
-            bar_w = 32 if n_runs == 1 else 56 + 8 * max(0, min(n_runs, 10) - 5)
+            bar_w = 56 + 8 * max(0, min(n_runs, 10) - 5)
             group_bar_widths.append(bar_w)
-            _to_sec = m.get("timeout_sec")
-            _to_h = _to_sec / 3600 if _to_sec else None
-            _runs_diff = n_runs != DEFAULT_RUNS
-            _to_diff = _to_h is not None and _to_h != DEFAULT_TIMEOUT_H
-            _run_label = ""
-            if _runs_diff and _to_diff:
-                _run_label = f"{n_runs}R@{_fmt_timeout_h(_to_sec)}"
-            elif _runs_diff:
-                _run_label = f"{n_runs}R"
-            elif _to_diff:
-                _run_label = _fmt_timeout_h(_to_sec)
             _ver_is_default = ver == "unknown" or ver == DEFAULT_VERSIONS.get(agent)
-            ver_line = "" if _ver_is_default else f'<br><span class="version-label">{ver}</span>'
-            thinking_line = f'<br><span class="thinking-label">\U0001f9e0 {thinking}</span>' if thinking != "-" else ""
+            top_label_parts = []
+            if not _ver_is_default:
+                top_label_parts.append(f'<span class="version-label">{ver}</span>')
+            if thinking != "-":
+                top_label_parts.append(f'<span class="thinking-label">\U0001f9e0 {thinking}</span>')
+            top_label_html = (
+                f'<div class="bar-top-label">{"<br>".join(top_label_parts)}</div>'
+                if top_label_parts else ""
+            )
             _wurl = (weave_urls or {}).get((agent, ver, model, m.get("timeout_sec"), thinking))
             _wopen = f'<a href="{_html_escape(_wurl)}" target="_blank" class="bar-link" title="View on W&amp;B Weave">' if _wurl else ""
             _wclose = "</a>" if _wurl else ""
@@ -701,14 +962,20 @@ def generate_html(
             _tok_out = int(round(m.get("tokens_out_total") or 0))
             _tok_total = int(round(m.get("tokens_total") or (_tok_in + _tok_out)))
             _tok_runs = int(m.get("tokens_runs") or n_runs)
+            _cost_total = float(m.get("cost_total_usd") or 0)
+            _cost_runs = int(m.get("cost_runs") or 0)
+            _agent_version = "" if ver == "unknown" else ver
+            _agent_badge = _agent_badge_html(agent, cfg["name"])
             bars_html.append(f'''
                 <div class="bar-wrapper" data-agent="{agent}" data-runs="{n_runs}" data-bar-scores='{_bar_scores_json}'
-                     data-token-input="{_tok_in}" data-token-output="{_tok_out}" data-token-total="{_tok_total}" data-token-runs="{_tok_runs}" draggable="true">
-                    <div class="bar-top-label"><span class="agent-label">{cfg["label"]}</span>{ver_line}{thinking_line}</div>
+                     data-agent-name="{_html_escape(cfg["name"])}" data-agent-version="{_html_escape(_agent_version)}"
+                     data-token-input="{_tok_in}" data-token-output="{_tok_out}" data-token-total="{_tok_total}" data-token-runs="{_tok_runs}"
+                     data-cost-total="{_cost_total:.6f}" data-cost-runs="{_cost_runs}" draggable="true">
+                    {top_label_html}
                     {_wopen}<div class="bar" data-agent="{agent}" style="width: {bar_w}px;">
                         {segments}
+                        <div class="bar-bottom-label">{_agent_badge}</div>
                     </div>{_wclose}
-                    <div class="bar-bottom-label">{f'<span class="run-count">{_run_label}</span>' if _run_label else ''}</div>
                 </div>''')
 
         group_w = (sum(group_bar_widths) + max(0, len(group_bar_widths) - 1) * 8) if group_bar_widths else 0
@@ -719,6 +986,7 @@ def generate_html(
         display = MODEL_DISPLAY.get(model, model)
         model_groups_html.append(f'''
             <div class="model-group" data-model="{_html_escape(model)}" data-width="{group_w}" data-orig-order="{_model_idx}" data-scores='{_scores_json}'>
+                <div class="model-highlight-box" aria-hidden="true"></div>
                 <div class="model-label">{display}</div>
                 <div class="bars-row">
                     {"".join(bars_html)}
@@ -728,7 +996,7 @@ def generate_html(
     # Minimum chart width based on actual bar content
     n_groups = len(model_group_widths)
     chart_min_w = (
-        sum(model_group_widths) + max(0, n_groups - 1) * 64 + 2 * 24
+        sum(model_group_widths) + max(0, n_groups - 1) * 64 + 2 * 48
     ) if n_groups else 400
 
     # Legend
@@ -737,7 +1005,7 @@ def generate_html(
         cfg = AGENT_CONFIG[agent]
         legend_agents.append(
             f'<span class="legend-agent legend-agent-{agent}" data-agent="{agent}" draggable="true">'
-            f'{cfg["label"]} = {cfg["name"]}</span>'
+            f'{_agent_badge_html(agent, cfg["name"])}<span class="legend-agent-name">{cfg["name"]}</span></span>'
         )
 
     legend_metrics = []
@@ -883,8 +1151,12 @@ def generate_html(
 .task-stats {
     color: #8b949e;
     font-size: 0.85rem;
-    margin: 8px 0 12px;
+    margin: 8px 0 0;
     line-height: 1.5;
+}
+.run-resource-stats {
+    margin-top: 0;
+    margin-bottom: 12px;
 }
 .runs-table-wrap {
     overflow-x: auto;
@@ -930,30 +1202,39 @@ def generate_html(
 }
 .runs-table th[data-sort='asc']::after { content: '\\25B2'; color: #FFCC33; }
 .runs-table th[data-sort='desc']::after { content: '\\25BC'; color: #FFCC33; }
+.runs-table a.run-link {
+    color: #FFCC33;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255,204,51,0.35);
+}
+.runs-table a.run-link:hover {
+    color: #FFE082;
+    border-bottom-color: #FFE082;
+}
 """
 
     token_depth_css = """
 /* 2D/3D token-depth bar rendering */
 .chart-area.svg-iso .models-row {
-    z-index: 2;
+    z-index: 5;
 }
-.chart-area.svg-iso.token-depth-spaced .models-row {
+.chart-area.svg-iso.token-depth-3d .models-row {
     gap: 72px;
 }
 .chart-area.svg-iso .bars-row {
     gap: 8px;
     align-items: flex-end;
 }
-.chart-area.svg-iso.three-bars.token-depth-spaced .bars-row {
+.chart-area.svg-iso.three-bars.token-depth-3d .bars-row {
     gap: 6px;
 }
 .chart-area.svg-iso .bar-wrapper {
     margin-right: 0;
 }
-.chart-area.svg-iso.token-depth-spaced .bar-wrapper {
+.chart-area.svg-iso.token-depth-3d .bar-wrapper {
     margin-right: var(--iso-depth, 0px);
 }
-.chart-area.svg-iso.three-bars.token-depth-spaced .bar-wrapper {
+.chart-area.svg-iso.three-bars.token-depth-3d .bar-wrapper {
     margin-right: var(--iso-spacing, 0px);
 }
 .chart-area.svg-iso .bar-link {
@@ -1076,27 +1357,63 @@ def generate_html(
     pointer-events: none;
     z-index: 2;
 }
-.chart-area.three-bars.token-depth-spaced .bar {
+.chart-area.three-bars .three-bars-depth-label-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 12;
+}
+.chart-area.three-bars:not(.token-depth-3d) .three-bars-depth-label-layer {
+    display: none;
+}
+.three-bars-depth-label {
+    position: absolute;
+    display: inline-block;
+    color: white;
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    transform-origin: 0 50%;
+    text-shadow:
+        -1px -1px 0 rgba(0,0,0,0.8),
+         1px -1px 0 rgba(0,0,0,0.8),
+        -1px  1px 0 rgba(0,0,0,0.8),
+         1px  1px 0 rgba(0,0,0,0.8),
+         0 0 6px rgba(0,0,0,0.6);
+}
+.three-bars-depth-label[data-depth-mode="cost"] {
+    font-size: 0.76rem;
+}
+.three-bars-depth-label[data-depth-mode="cost-shadow"] {
+    color: #d8dee9;
+    font-size: 0.72rem;
+    opacity: 0.82;
+}
+.chart-area.three-bars.token-depth-3d .bar {
     filter: none;
 }
-.chart-area.three-bars.token-depth-spaced:not(.three-bars-ready) .three-bars-canvas {
+.chart-area.three-bars.token-depth-3d:not(.three-bars-ready) .three-bars-canvas {
     visibility: hidden;
 }
-.chart-area.three-bars.three-bars-ready.token-depth-spaced .bar-segments {
+.chart-area.three-bars.three-bars-ready.token-depth-3d .bar-segments {
     opacity: 0;
     box-shadow: none !important;
 }
-.chart-area.three-bars.token-depth-spaced .bar-top-label,
-.chart-area.three-bars.token-depth-spaced .bar-bottom-label {
+.chart-area.three-bars.token-depth-3d .bar-top-label,
+.chart-area.three-bars.token-depth-3d .bar-bottom-label {
     z-index: 4;
 }
-.chart-area.three-bars.token-depth-spaced .bar-labels {
+.chart-area.three-bars.token-depth-3d .bar-labels {
     z-index: 4;
 }
 """
 
     # Build runs table HTML
-    runs_table_html = _build_runs_table_html(runs or [])
+    runs_table_html = _build_runs_table_html(runs or [], weave_run_urls=weave_run_urls)
 
     # ------------------------------------------------------------------
     # JavaScript for interactivity
@@ -1113,7 +1430,7 @@ def generate_html(
     )
 
     url_state_js = """(function() {
-    var MANAGED_PARAMS = ['agents', 'agentOrder', 'models', 'modelOrder', 'metric', 'unit', 'barSort', 'runSort', 'tokenDepth'];
+    var MANAGED_PARAMS = ['agents', 'agentOrder', 'models', 'modelOrder', 'metric', 'unit', 'barSort', 'runSort', '3D', '3d', 'tokenDepth'];
     var params = new URLSearchParams(window.location.search);
 
     function listParam(name) {
@@ -1151,8 +1468,11 @@ def generate_html(
     }
 
     function parseTokenDepth() {
-        var raw = (params.get('tokenDepth') || '').toLowerCase();
-        if (raw === 'overlap' || raw === 'spaced' || raw === 'on' || raw === '3d') return 'spaced';
+        var raw = (params.get('3D') || params.get('3d') || params.get('tokenDepth') || '').toLowerCase();
+        if (raw === 'overlap' || raw === 'spaced' || raw === 'on' || raw === '3d') return 'tokens';
+        if (raw === 'tokens' || raw === 'token') return 'tokens';
+        if (raw === 'cost' || raw === 'costs' || raw === 'usd') return 'cost';
+        if (raw === 'both' || raw === 'tokens+cost' || raw === 'tokens-cost' || raw === 'token+cost' || raw === 'token-cost' || raw === 'tokens_cost' || raw === 'combined') return 'both';
         return 'flat';
     }
 
@@ -1214,8 +1534,12 @@ def generate_html(
         var tokenDepthMode = (typeof window._tokenDepthMode === 'string')
             ? window._tokenDepthMode
             : api.state.tokenDepth;
-        if (tokenDepthMode === 'spaced') {
-            out.set('tokenDepth', 'spaced');
+        if (tokenDepthMode === 'tokens') {
+            out.set('3D', 'tokens');
+        } else if (tokenDepthMode === 'cost') {
+            out.set('3D', 'cost');
+        } else if (tokenDepthMode === 'both') {
+            out.set('3D', 'both');
         }
 
         var unitToggle = document.getElementById('unitToggle');
@@ -1509,11 +1833,12 @@ AGENT_VERSIONS_PLACEHOLDER
             } else if (versionLine) {
                 versionLine.innerHTML = versionLineDefault;
             }
-        } else {
-            // All active — no filter
-            if (versionLine) versionLine.innerHTML = versionLineDefault;
-        }
-        syncModelButtonAvailability();
+	        } else {
+	            // All active — no filter
+	            if (versionLine) versionLine.innerHTML = versionLineDefault;
+	        }
+	        if (window.WolfBenchClearHiddenModelHighlights) window.WolfBenchClearHiddenModelHighlights();
+	        syncModelButtonAvailability();
         // Count visible agents — hide top labels when only one is shown
         var visibleAgents = {};
         modelGroups.forEach(function(g) {
@@ -1925,15 +2250,16 @@ AGENT_VERSIONS_PLACEHOLDER
 
     // Hide model groups where all bars are hidden (e.g. single-run models during metric filter)
     function hideEmptyGroups(active) {
-        document.querySelectorAll('.model-group').forEach(function(g) {
-            if (active) {
-                var hasBars = g.querySelector('.bar-wrapper:not(.agent-hidden):not([data-runs="1"])') !== null;
-                g.classList.toggle('metric-hidden', !hasBars);
-            } else {
-                g.classList.remove('metric-hidden');
-            }
-        });
-    }
+	        document.querySelectorAll('.model-group').forEach(function(g) {
+	            if (active) {
+	                var hasBars = g.querySelector('.bar-wrapper:not(.agent-hidden):not([data-runs="1"])') !== null;
+	                g.classList.toggle('metric-hidden', !hasBars);
+	            } else {
+	                g.classList.remove('metric-hidden');
+	            }
+	        });
+	        if (window.WolfBenchClearHiddenModelHighlights) window.WolfBenchClearHiddenModelHighlights();
+	    }
 
     function setMetricFilter(metric) {
         if (!chartArea) return;
@@ -2034,6 +2360,929 @@ AGENT_VERSIONS_PLACEHOLDER
     if (urlState.unit === 'abs') setUnitMode('abs');
 })();"""
 
+    chart_screenshot_js = """(function() {
+    var saveButton = document.getElementById('chartSaveToggle');
+    if (!saveButton) return;
+    var restoreTimers = new WeakMap();
+
+    function rememberButtonDefaults(button) {
+        if (!button || button._wolfbenchExportDefaults) return;
+        button._wolfbenchExportDefaults = {
+            text: button.textContent,
+            title: button.getAttribute('title') || '',
+            aria: button.getAttribute('aria-label') || button.getAttribute('title') || ''
+        };
+    }
+
+    function setButtonState(button, state, text, title) {
+        if (!button) return;
+        rememberButtonDefaults(button);
+        var defaults = button._wolfbenchExportDefaults;
+        button.classList.remove('copying', 'saved', 'failed', 'partial');
+        if (state) button.classList.add(state);
+        button.textContent = text || defaults.text;
+        button.setAttribute('title', title || defaults.title);
+        button.setAttribute('aria-label', title || defaults.aria);
+        if (restoreTimers.has(button)) clearTimeout(restoreTimers.get(button));
+        if (state === 'saved' || state === 'failed' || state === 'partial') {
+            restoreTimers.set(button, setTimeout(function() {
+                button.classList.remove('saved', 'failed', 'partial');
+                button.textContent = defaults.text;
+                button.setAttribute('title', defaults.title);
+                button.setAttribute('aria-label', defaults.aria);
+            }, 2200));
+        }
+    }
+
+    var html2canvasPromise = null;
+    function loadHtml2Canvas() {
+        if (window.html2canvas) return Promise.resolve(window.html2canvas);
+        if (html2canvasPromise) return html2canvasPromise;
+        html2canvasPromise = new Promise(function(resolve, reject) {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+            script.async = true;
+            script.crossOrigin = 'anonymous';
+            script.onload = function() {
+                if (window.html2canvas) resolve(window.html2canvas);
+                else reject(new Error('Screenshot renderer did not initialize.'));
+            };
+            script.onerror = function() {
+                reject(new Error('Could not load screenshot renderer.'));
+            };
+            document.head.appendChild(script);
+        });
+        return html2canvasPromise;
+    }
+
+    function canvasToBlob(canvas) {
+        return new Promise(function(resolve, reject) {
+            canvas.toBlob(function(blob) {
+                if (blob) resolve(blob);
+                else reject(new Error('Could not render chart PNG.'));
+            }, 'image/png');
+        });
+    }
+
+    function nextFrame() {
+        return new Promise(function(resolve) { requestAnimationFrame(function() { resolve(); }); });
+    }
+
+    function numericPx(value) {
+        var n = parseFloat(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function chartExportFilename() {
+        var h1 = document.querySelector('h1');
+        var text = h1 ? h1.textContent : '';
+        var match = text.match(/\\(([^)]+)\\)/);
+        var date = match ? match[1].trim() : new Date().toISOString().slice(0, 10);
+        return 'wolfbench-chart-' + date + '.png';
+    }
+
+    function naturalElementWidth(el) {
+        if (!el) return 0;
+        var clone = el.cloneNode(true);
+        clone.style.position = 'absolute';
+        clone.style.left = '-100000px';
+        clone.style.top = '0';
+        clone.style.width = 'max-content';
+        clone.style.maxWidth = 'none';
+        clone.style.whiteSpace = 'nowrap';
+        clone.style.visibility = 'hidden';
+        clone.style.pointerEvents = 'none';
+        document.body.appendChild(clone);
+        var width = clone.getBoundingClientRect().width;
+        clone.remove();
+        return Math.ceil(width);
+    }
+
+    function elementVisible(el) {
+        return !!(el && el.offsetParent !== null && !el.classList.contains('model-hidden') &&
+            !el.classList.contains('model-hidden-user') && !el.classList.contains('metric-hidden'));
+    }
+
+    function headerMinExportWidth(header) {
+        if (!header) return 0;
+        var style = getComputedStyle(header);
+        var gap = numericPx(style.columnGap || style.gap) || 24;
+        var wolfLogo = header.querySelector('.header-logo-wolfbench');
+        var wandbLogo = header.querySelector('.header-logo-wandb');
+        var title = header.querySelector('h1');
+        var titleWidth = naturalElementWidth(title);
+        var leftCol = Math.max(72, naturalElementWidth(wolfLogo) || (wolfLogo ? wolfLogo.getBoundingClientRect().width : 0));
+        var rightCol = Math.max(132, naturalElementWidth(wandbLogo) || (wandbLogo ? wandbLogo.getBoundingClientRect().width : 0));
+        return Math.ceil(Math.max(112 + leftCol + titleWidth + rightCol + gap * 2 + 32, 860));
+    }
+
+    function visibleChartContentWidth(chartArea, modelsRow) {
+        if (!chartArea) return 0;
+        var areaRect = chartArea.getBoundingClientRect();
+        var maxRight = 0;
+        function includeRect(rect, extra) {
+            if (!rect || (!rect.width && !rect.height)) return;
+            maxRight = Math.max(maxRight, Math.ceil(rect.right - areaRect.left + (extra || 0)));
+        }
+        if (modelsRow) {
+            Array.prototype.forEach.call(modelsRow.querySelectorAll('.model-group'), function(group) {
+                if (!elementVisible(group)) return;
+                includeRect(group.getBoundingClientRect());
+                var barsRow = group.querySelector('.bars-row');
+                var label = group.querySelector('.model-label');
+                var highlight = group.querySelector('.model-highlight-box');
+                includeRect(barsRow && barsRow.getBoundingClientRect());
+                includeRect(label && label.getBoundingClientRect(), 8);
+                includeRect(highlight && highlight.getBoundingClientRect());
+            });
+        }
+        Array.prototype.forEach.call(chartArea.querySelectorAll('.bar-wrapper:not(.agent-hidden):not(.bar-dismissed)'), function(wrapper) {
+            if (wrapper.offsetParent === null) return;
+            var inner = wrapper.querySelector('.bar-inner') || wrapper.querySelector('.bar');
+            if (!inner) return;
+            var depth = parseFloat(wrapper.getAttribute('data-token-depth')) || 0;
+            includeRect(inner.getBoundingClientRect(), Math.max(0, depth * 0.74) + 16);
+        });
+        Array.prototype.forEach.call(chartArea.querySelectorAll('.three-bars-depth-label'), function(label) {
+            if (label.offsetParent === null) return;
+            includeRect(label.getBoundingClientRect(), 8);
+        });
+        if (modelsRow) {
+            var rowStyle = getComputedStyle(modelsRow);
+            maxRight += numericPx(rowStyle.paddingRight) || 48;
+        }
+        return Math.ceil(Math.max(0, maxRight));
+    }
+
+    function visibleChartContentBottom(chartArea, modelsRow) {
+        if (!chartArea) return 0;
+        var areaRect = chartArea.getBoundingClientRect();
+        var maxBottom = Math.ceil(Math.max(chartArea.scrollHeight || 0, areaRect.height || 0));
+        function includeRect(rect, extra) {
+            if (!rect || (!rect.width && !rect.height)) return;
+            maxBottom = Math.max(maxBottom, Math.ceil(rect.bottom - areaRect.top + (extra || 0)));
+        }
+        if (modelsRow) {
+            Array.prototype.forEach.call(modelsRow.querySelectorAll('.model-group'), function(group) {
+                if (!elementVisible(group)) return;
+                var barsRow = group.querySelector('.bars-row');
+                var label = group.querySelector('.model-label');
+                var highlight = group.querySelector('.model-highlight-box');
+                includeRect(group.getBoundingClientRect());
+                includeRect(barsRow && barsRow.getBoundingClientRect());
+                includeRect(label && label.getBoundingClientRect(), 10);
+                includeRect(highlight && highlight.getBoundingClientRect(), 6);
+            });
+        }
+        Array.prototype.forEach.call(chartArea.querySelectorAll('.three-bars-depth-label'), function(label) {
+            if (label.offsetParent === null) return;
+            includeRect(label.getBoundingClientRect(), 8);
+        });
+        return Math.ceil(Math.max(0, maxBottom));
+    }
+
+    function chartExportRenderScale(width, height) {
+        var desired = Math.max(2, window.devicePixelRatio || 1);
+        var maxDimension = 16000;
+        var maxPixels = 64000000;
+        var dimensionScale = maxDimension / Math.max(width || 1, height || 1);
+        var areaScale = Math.sqrt(maxPixels / Math.max(1, (width || 1) * (height || 1)));
+        return Math.max(1, Math.min(desired, dimensionScale, areaScale));
+    }
+
+	    function exportCssText() {
+	        var css = Array.prototype.slice.call(document.querySelectorAll('style')).map(function(style) {
+	            return style.textContent || '';
+	        }).join('\\n');
+	        css += '\\n.wolfbench-export-root { display: flex !important; flex-direction: column !important; }';
+	        css += '\\n.wolfbench-export-root .header { width: 100% !important; box-sizing: border-box !important; margin: 0 !important; padding: 22px 56px 12px !important; grid-template-columns: 72px auto max-content !important; justify-content: center !important; }';
+	        css += '\\n.wolfbench-export-root .header h1 { white-space: nowrap !important; line-height: 1.05 !important; }';
+	        css += '\\n.wolfbench-export-root .header-logo { object-fit: contain !important; }';
+	        css += '\\n.wolfbench-export-root .header-logo-wandb { width: auto !important; height: 58px !important; max-height: 58px !important; margin-left: -11px !important; }';
+	        css += '\\n.wolfbench-export-root .chart-wrapper { margin-bottom: 0 !important; }';
+	        css += '\\n.wolfbench-export-root .chart-export-footer { display: flex !important; align-items: flex-start !important; justify-content: center !important; box-sizing: border-box !important; height: 48px !important; padding-top: 4px !important; color: #FFCC33 !important; font-weight: 800 !important; font-size: 22px !important; line-height: 1 !important; letter-spacing: 0 !important; }';
+	        css += '\\n.wolfbench-export-root .chart-scroll { overflow: visible !important; padding-bottom: 0 !important; scrollbar-width: none !important; }';
+	        css += '\\n.wolfbench-export-root .model-highlight-box { background: transparent !important; box-shadow: none !important; }';
+        css += '\\n.wolfbench-export-root .agent-badge { display: inline-flex !important; align-items: center !important; justify-content: center !important; width: 40px !important; min-width: 40px !important; height: 40px !important; line-height: 0 !important; padding: 3px !important; border-radius: 999px !important; box-shadow: none !important; text-shadow: none !important; overflow: hidden !important; }';
+        css += '\\n.wolfbench-export-root .agent-logo, .wolfbench-export-root .agent-logo svg, .wolfbench-export-root .agent-logo img { width: 32px !important; height: 32px !important; }';
+        css += '\\n.wolfbench-export-root .three-bars-depth-label-layer { z-index: 12 !important; }';
+        css += '\\n.wolfbench-export-root .chart-scroll::-webkit-scrollbar { display: none !important; }';
+        css += '\\n.wolfbench-export-root * { animation: none !important; transition: none !important; }';
+        return css.replace(/<\\/style/gi, '<\\\\/style');
+	    }
+
+	    function prepareExportAgentLogos(sourceRoot, cloneRoot) {
+	        var sourceLogos = Array.prototype.slice.call(sourceRoot.querySelectorAll('.agent-logo'));
+	        var cloneLogos = Array.prototype.slice.call(cloneRoot.querySelectorAll('.agent-logo'));
+	        cloneLogos.forEach(function(cloneLogo, index) {
+	            var sourceLogo = sourceLogos[index];
+	            var sourceStyle = sourceLogo ? getComputedStyle(sourceLogo) : null;
+	            var color = sourceStyle && sourceStyle.color ? sourceStyle.color : 'currentColor';
+	            cloneLogo.style.color = color;
+	            var img = cloneLogo.querySelector('img');
+	            if (img) {
+	                img.loading = 'eager';
+	                img.decoding = 'sync';
+	                img.style.display = 'block';
+	                img.style.width = '100%';
+	                img.style.height = '100%';
+	                img.style.objectFit = 'contain';
+	                return;
+	            }
+	            var svg = cloneLogo.querySelector('svg');
+	            if (!svg) return;
+	            var svgClone = svg.cloneNode(true);
+	            svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+	            svgClone.setAttribute('width', '32');
+	            svgClone.setAttribute('height', '32');
+	            svgClone.style.width = '32px';
+	            svgClone.style.height = '32px';
+	            svgClone.style.display = 'block';
+	            svgClone.style.color = color;
+	            if (!cloneLogo.classList.contains('agent-logo-branded')) {
+	                svgClone.setAttribute('fill', color);
+	                Array.prototype.forEach.call(svgClone.querySelectorAll('*'), function(node) {
+	                    node.setAttribute('fill', color);
+	                    if (node.getAttribute('stroke') === 'currentColor') node.setAttribute('stroke', color);
+	                    if (node.style) {
+	                        node.style.fill = color;
+	                        if (node.style.stroke === 'currentColor') node.style.stroke = color;
+	                    }
+	                });
+	            }
+	            var serialized = new XMLSerializer().serializeToString(svgClone);
+	            var exportImg = document.createElement('img');
+	            exportImg.alt = '';
+	            exportImg.loading = 'eager';
+	            exportImg.decoding = 'sync';
+	            exportImg.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
+	            exportImg.style.display = 'block';
+	            exportImg.style.width = '100%';
+	            exportImg.style.height = '100%';
+	            exportImg.style.objectFit = 'contain';
+	            svg.replaceWith(exportImg);
+	        });
+	    }
+
+	    function waitForExportImages(root) {
+	        var images = Array.prototype.slice.call(root.querySelectorAll('img'));
+	        if (!images.length) return Promise.resolve();
+	        return Promise.all(images.map(function(img) {
+	            if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+	            return new Promise(function(resolve) {
+	                var done = function() {
+	                    img.removeEventListener('load', done);
+	                    img.removeEventListener('error', done);
+	                    resolve();
+	                };
+	                img.addEventListener('load', done, {once: true});
+	                img.addEventListener('error', done, {once: true});
+	                setTimeout(done, 1500);
+	            });
+	        }));
+	    }
+
+	    function exportImageLoad(src) {
+	        return new Promise(function(resolve) {
+	            if (!src) {
+	                resolve(null);
+	                return;
+	            }
+	            var img = new Image();
+	            var settled = false;
+	            var finish = function(value) {
+	                if (settled) return;
+	                settled = true;
+	                clearTimeout(timer);
+	                resolve(value);
+	            };
+	            var timer = setTimeout(function() { finish(null); }, 1500);
+	            img.onload = function() { finish(img); };
+	            img.onerror = function() { finish(null); };
+	            img.src = src;
+	        });
+	    }
+
+	    function exportLogoImageSrc(sourceLogo) {
+	        if (!sourceLogo) return '';
+	        var existingImg = sourceLogo.querySelector('img');
+	        if (existingImg && (existingImg.currentSrc || existingImg.src)) {
+	            return existingImg.currentSrc || existingImg.src;
+	        }
+	        var svg = sourceLogo.querySelector('svg');
+	        if (!svg) return '';
+	        var color = getComputedStyle(sourceLogo).color || 'currentColor';
+	        var svgClone = svg.cloneNode(true);
+	        svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+	        svgClone.setAttribute('width', '32');
+	        svgClone.setAttribute('height', '32');
+	        svgClone.style.width = '32px';
+	        svgClone.style.height = '32px';
+	        svgClone.style.display = 'block';
+	        svgClone.style.color = color;
+	        if (!sourceLogo.classList.contains('agent-logo-branded')) {
+	            svgClone.setAttribute('fill', color);
+	            Array.prototype.forEach.call(svgClone.querySelectorAll('*'), function(node) {
+	                node.setAttribute('fill', color);
+	                if (node.getAttribute('stroke') === 'currentColor') node.setAttribute('stroke', color);
+	                if (node.style) {
+	                    node.style.fill = color;
+	                    if (node.style.stroke === 'currentColor') node.style.stroke = color;
+	                }
+	            });
+	        }
+	        return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svgClone));
+	    }
+
+	    async function rasterizeExportAgentBadges(sourceRoot, cloneRoot) {
+	        if (!sourceRoot || !cloneRoot) return;
+	        var sourceBadges = Array.prototype.slice.call(sourceRoot.querySelectorAll('.agent-badge'));
+	        var cloneBadges = Array.prototype.slice.call(cloneRoot.querySelectorAll('.agent-badge'));
+	        for (var i = 0; i < cloneBadges.length; i++) {
+	            var sourceBadge = sourceBadges[i];
+	            var cloneBadge = cloneBadges[i];
+	            if (!sourceBadge || !cloneBadge) continue;
+	            var sourceGroup = sourceBadge.closest('.model-group');
+	            var sourceWrapper = sourceBadge.closest('.bar-wrapper');
+	            if (sourceGroup && !elementVisible(sourceGroup)) continue;
+	            if (sourceWrapper && (sourceWrapper.offsetParent === null || sourceWrapper.classList.contains('agent-hidden') || sourceWrapper.classList.contains('bar-dismissed'))) continue;
+	            var sourceLogo = sourceBadge.querySelector('.agent-logo');
+	            var badgeStyle = getComputedStyle(sourceBadge);
+	            var logoImage = await exportImageLoad(exportLogoImageSrc(sourceLogo));
+	            var size = Math.max(32, Math.round(sourceBadge.getBoundingClientRect().width || 40));
+	            var scale = 3;
+	            var canvas = document.createElement('canvas');
+	            canvas.width = size * scale;
+	            canvas.height = size * scale;
+	            var ctx = canvas.getContext('2d');
+	            if (!ctx) continue;
+	            ctx.scale(scale, scale);
+	            var center = size / 2;
+	            var radius = size / 2 - 0.5;
+	            ctx.clearRect(0, 0, size, size);
+	            ctx.beginPath();
+	            ctx.arc(center, center, radius, 0, Math.PI * 2);
+	            ctx.closePath();
+	            ctx.fillStyle = badgeStyle.backgroundColor || 'rgba(5,8,10,0.72)';
+	            ctx.fill();
+	            ctx.save();
+	            ctx.beginPath();
+	            ctx.arc(center, center, radius - 1, 0, Math.PI * 2);
+	            ctx.clip();
+	            if (logoImage) {
+	                var logoSize = Math.max(1, size - 8);
+	                ctx.drawImage(logoImage, (size - logoSize) / 2, (size - logoSize) / 2, logoSize, logoSize);
+	            }
+	            ctx.restore();
+	            ctx.lineWidth = 1;
+	            ctx.strokeStyle = badgeStyle.borderColor || 'rgba(255,255,255,0.16)';
+	            ctx.beginPath();
+	            ctx.arc(center, center, radius, 0, Math.PI * 2);
+	            ctx.stroke();
+	            var badgeImg = document.createElement('img');
+	            badgeImg.alt = '';
+	            badgeImg.loading = 'eager';
+	            badgeImg.decoding = 'sync';
+	            badgeImg.src = canvas.toDataURL('image/png');
+	            badgeImg.style.display = 'block';
+	            badgeImg.style.width = size + 'px';
+	            badgeImg.style.height = size + 'px';
+	            badgeImg.style.pointerEvents = 'none';
+	            cloneBadge.replaceChildren(badgeImg);
+	            cloneBadge.style.width = size + 'px';
+	            cloneBadge.style.minWidth = size + 'px';
+	            cloneBadge.style.height = size + 'px';
+	            cloneBadge.style.padding = '0';
+	            cloneBadge.style.border = '0';
+	            cloneBadge.style.background = 'transparent';
+	            cloneBadge.style.overflow = 'visible';
+	        }
+	    }
+
+    function clampExportByte(value) {
+        return Math.max(0, Math.min(255, Math.round(value)));
+    }
+
+    function exportHexToRgb(hex) {
+        var raw = (hex || '').replace('#', '').trim();
+        if (raw.length === 3) raw = raw.replace(/(.)/g, '$1$1');
+        if (!/^[0-9a-f]{6}$/i.test(raw)) return null;
+        return {
+            r: parseInt(raw.slice(0, 2), 16),
+            g: parseInt(raw.slice(2, 4), 16),
+            b: parseInt(raw.slice(4, 6), 16)
+        };
+    }
+
+    function exportRgbToHex(rgb) {
+        function part(value) {
+            return clampExportByte(value).toString(16).padStart(2, '0');
+        }
+        return '#' + part(rgb.r) + part(rgb.g) + part(rgb.b);
+    }
+
+    function exportEnhanceRgb(rgb) {
+        var avg = (rgb.r + rgb.g + rgb.b) / 3;
+        var saturation = 1.36;
+        var contrast = 1.14;
+        var brightness = 1.035;
+        return {
+            r: clampExportByte((avg + (rgb.r - avg) * saturation - 128) * contrast + 128 * brightness),
+            g: clampExportByte((avg + (rgb.g - avg) * saturation - 128) * contrast + 128 * brightness),
+            b: clampExportByte((avg + (rgb.b - avg) * saturation - 128) * contrast + 128 * brightness)
+        };
+    }
+
+    function exportEnhanceGradient(value) {
+        return (value || '').replace(/#([0-9a-f]{3}|[0-9a-f]{6})\\b/gi, function(match) {
+            var rgb = exportHexToRgb(match);
+            return rgb ? exportRgbToHex(exportEnhanceRgb(rgb)) : match;
+        });
+    }
+
+    function exportGradientStops(value) {
+        var matches = [];
+        var regex = /(#[0-9a-f]{3}\\b|#[0-9a-f]{6}\\b|rgba?\\([^)]*\\))\\s*(\\d+(?:\\.\\d+)?)?%?/gi;
+        var match;
+        while ((match = regex.exec(value || ''))) {
+            matches.push({
+                color: match[1],
+                stop: match[2] == null ? null : Math.max(0, Math.min(100, parseFloat(match[2]))) / 100
+            });
+        }
+        if (!matches.length) return null;
+        if (matches.length === 1) matches[0].stop = 0;
+        for (var i = 0; i < matches.length; i++) {
+            if (matches[i].stop == null) matches[i].stop = matches.length === 1 ? 0 : i / (matches.length - 1);
+        }
+        return matches;
+    }
+
+    function exportUsableColor(value, fallback) {
+        var color = (value || '').trim();
+        if (!color || color === 'transparent' || /^rgba?\\(\\s*0\\s*,\\s*0\\s*,\\s*0\\s*,\\s*0\\s*\\)$/i.test(color)) {
+            return fallback || '#27ae60';
+        }
+        return color;
+    }
+
+    function exportFirstRgba(value) {
+        var match = String(value || '').match(/rgba?\\(\\s*([\\d.]+)\\s*,\\s*([\\d.]+)\\s*,\\s*([\\d.]+)(?:\\s*,\\s*([\\d.]+))?\\s*\\)/i);
+        if (!match) return null;
+        return {
+            r: clampExportByte(parseFloat(match[1])),
+            g: clampExportByte(parseFloat(match[2])),
+            b: clampExportByte(parseFloat(match[3])),
+            a: match[4] == null ? 1 : Math.max(0, Math.min(1, parseFloat(match[4])))
+        };
+    }
+
+    function exportRgbaString(color, alphaScale) {
+        if (!color) return 'rgba(255,255,255,0)';
+        var alpha = Math.max(0, Math.min(1, color.a * alphaScale));
+        return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + alpha.toFixed(3) + ')';
+    }
+
+    function exportRoundedRectPath(ctx, x, y, width, height, tl, tr, br, bl) {
+        tl = Math.max(0, Math.min(tl || 0, width / 2, height / 2));
+        tr = Math.max(0, Math.min(tr || 0, width / 2, height / 2));
+        br = Math.max(0, Math.min(br || 0, width / 2, height / 2));
+        bl = Math.max(0, Math.min(bl || 0, width / 2, height / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + tl, y);
+        ctx.lineTo(x + width - tr, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + tr);
+        ctx.lineTo(x + width, y + height - br);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - br, y + height);
+        ctx.lineTo(x + bl, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - bl);
+        ctx.lineTo(x, y + tl);
+        ctx.quadraticCurveTo(x, y, x + tl, y);
+        ctx.closePath();
+    }
+
+    function drawExportSegmentPolish(ctx, x, y, width, height, segment) {
+        var segmentStyle = segment && segment.style ? segment.style : {};
+        var glowColor = exportFirstRgba(segmentStyle.boxShadow);
+        if (glowColor) {
+            var glow = ctx.createRadialGradient(
+                x + width * 0.58, y + height * 0.40, 0,
+                x + width * 0.58, y + height * 0.40, Math.max(width, height) * 0.78
+            );
+            glow.addColorStop(0, exportRgbaString(glowColor, 0.17));
+            glow.addColorStop(0.58, exportRgbaString(glowColor, 0.07));
+            glow.addColorStop(1, exportRgbaString(glowColor, 0));
+            ctx.fillStyle = glow;
+            ctx.fillRect(x, y, width, height);
+        }
+
+        var shine = ctx.createLinearGradient(x + width * 0.12, y, x + width * 0.40, y);
+        shine.addColorStop(0, 'rgba(255,255,255,0)');
+        shine.addColorStop(0.52, 'rgba(255,255,255,0.13)');
+        shine.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = shine;
+        ctx.fillRect(x + width * 0.12, y, width * 0.28, height);
+
+        var edge = ctx.createLinearGradient(x, y, x + width, y);
+        edge.addColorStop(0, 'rgba(255,255,255,0.045)');
+        edge.addColorStop(0.12, 'rgba(255,255,255,0.010)');
+        edge.addColorStop(0.74, 'rgba(0,0,0,0.000)');
+        edge.addColorStop(1, 'rgba(0,0,0,0.115)');
+        ctx.fillStyle = edge;
+        ctx.fillRect(x, y, width, height);
+
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(x, y, width, 1);
+        ctx.fillStyle = 'rgba(0,0,0,0.20)';
+        ctx.fillRect(x, y + height - 1, width, 1);
+    }
+
+    function exportActiveMetricFilter(chartArea) {
+        var candidates = ['solid', 'worst', 'average', 'best', 'ceiling'];
+        var metric = window._filterMetric || '';
+        if (chartArea && chartArea.classList) {
+            candidates.forEach(function(key) {
+                if (!metric && chartArea.classList.contains('metric-filter-' + key)) metric = key;
+            });
+        }
+        return candidates.indexOf(metric) >= 0 ? metric : null;
+    }
+
+    function exportMetricHeight(inner, metric) {
+        var attr = metric ? 'data-h-' + metric : 'data-h-pct';
+        var height = parseFloat(inner.getAttribute(attr) || '0');
+        if (!height) height = parseFloat(inner.style.height || inner.getAttribute('data-h-pct') || '0');
+        return height;
+    }
+
+    function exportMetricPaintSegment(segments, metric) {
+        if (!metric) return null;
+        if (metric === 'worst') {
+            return segments.querySelector('.segment-solid') ||
+                segments.querySelector('.segment-worst') ||
+                segments.querySelector('.segment');
+        }
+        return segments.querySelector('.segment-' + metric) ||
+            segments.querySelector('.segment-solid') ||
+            segments.querySelector('.segment');
+    }
+
+    function paintExportSegment(ctx, x, y, width, height, segment) {
+        var segmentStyle = segment && segment.style ? segment.style : {};
+        var background = segmentStyle.background || segmentStyle.backgroundImage || '';
+        var stops = exportGradientStops(background);
+        if (stops && stops.length) {
+            var gradient = ctx.createLinearGradient(0, y, width, y + height);
+            stops.forEach(function(stop) {
+                gradient.addColorStop(stop.stop, stop.color);
+            });
+            ctx.fillStyle = gradient;
+        } else {
+            ctx.fillStyle = exportUsableColor(segmentStyle.backgroundColor, '#27ae60');
+        }
+        ctx.fillRect(x, y, width, height);
+        drawExportSegmentPolish(ctx, x, y, width, height, segment);
+    }
+
+    function rasterizeExportBarSegments(cloneRoot) {
+        var chartArea = cloneRoot.querySelector('.chart-area');
+        if (chartArea && chartArea.classList.contains('token-depth-3d')) return false;
+        var activeMetric = exportActiveMetricFilter(chartArea);
+        var replaced = false;
+        Array.prototype.forEach.call(cloneRoot.querySelectorAll('.bar-segments'), function(segments) {
+            var inner = segments.closest('.bar-inner');
+            var bar = segments.closest('.bar');
+            if (!inner || !bar) return;
+            var cssWidth = parseFloat(bar.style.width || bar.getAttribute('data-width') || '0');
+            var cssHeight = activeMetric ?
+                exportMetricHeight(inner, activeMetric) :
+                parseFloat(inner.style.height || inner.getAttribute('data-h-pct') || '0');
+            if (!cssWidth || !cssHeight) return;
+
+            var scale = 3;
+            var canvas = document.createElement('canvas');
+            canvas.width = Math.ceil(cssWidth * scale);
+            canvas.height = Math.ceil(cssHeight * scale);
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.scale(scale, scale);
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+            exportRoundedRectPath(ctx, 0, 0, cssWidth, cssHeight, 8, 8, 4, 4);
+            ctx.clip();
+
+            if (activeMetric) {
+                paintExportSegment(ctx, 0, 0, cssWidth, cssHeight, exportMetricPaintSegment(segments, activeMetric));
+            } else {
+            var y = 0;
+            var items = Array.prototype.slice.call(segments.querySelectorAll('.segment'));
+            items.forEach(function(segment, index) {
+                var segmentHeight = parseFloat(segment.style.height || segment.getAttribute('data-h-pct') || '0');
+                if (!segmentHeight) return;
+                if (index === items.length - 1) {
+                    segmentHeight = Math.max(0, cssHeight - y);
+                }
+                paintExportSegment(ctx, 0, y, cssWidth, segmentHeight, segment);
+
+                if (index < items.length - 1) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                    ctx.fillRect(0, y + segmentHeight - 1, cssWidth, 1);
+                }
+                y += segmentHeight;
+            });
+            }
+
+            var img = document.createElement('img');
+            img.className = 'bar-segments-raster';
+            img.src = canvas.toDataURL('image/png');
+            img.width = canvas.width;
+            img.height = canvas.height;
+            img.style.display = 'block';
+            img.style.width = '100%';
+            img.style.height = activeMetric ? cssHeight + 'px' : '100%';
+            if (activeMetric) {
+                img.style.position = 'absolute';
+                img.style.left = '0';
+                img.style.right = '0';
+                img.style.bottom = '0';
+            }
+            img.style.borderRadius = '8px 8px 4px 4px';
+            img.style.pointerEvents = 'none';
+            segments.replaceWith(img);
+            replaced = true;
+        });
+        return replaced;
+    }
+
+    function prepareExportBarPaint(cloneRoot) {
+        var chartArea = cloneRoot.querySelector('.chart-area');
+        if (chartArea && chartArea.classList.contains('token-depth-3d')) {
+            Array.prototype.forEach.call(cloneRoot.querySelectorAll('.bar-segments'), function(segments) {
+                segments.style.opacity = '0';
+                segments.style.background = 'transparent';
+                segments.style.boxShadow = 'none';
+            });
+            return;
+        }
+        if (rasterizeExportBarSegments(cloneRoot)) return;
+        Array.prototype.forEach.call(cloneRoot.querySelectorAll('.bar-segments'), function(segments) {
+            segments.style.opacity = '1';
+            segments.style.filter = 'none';
+        });
+        Array.prototype.forEach.call(cloneRoot.querySelectorAll('.segment'), function(segment) {
+            var background = segment.style.background || segment.style.backgroundImage || '';
+            var enhanced = exportEnhanceGradient(background);
+            if (enhanced && enhanced !== background) segment.style.background = enhanced;
+        });
+        Array.prototype.forEach.call(cloneRoot.querySelectorAll('.segment-shine'), function(shine) {
+            shine.remove();
+        });
+    }
+
+    function replaceCanvasPixels(sourceRoot, cloneRoot) {
+        var sourceCanvases = sourceRoot.querySelectorAll('canvas');
+        var cloneCanvases = cloneRoot.querySelectorAll('canvas');
+        Array.prototype.forEach.call(cloneCanvases, function(cloneCanvas, index) {
+            var sourceCanvas = sourceCanvases[index];
+            if (!sourceCanvas) return;
+            try {
+                var rect = sourceCanvas.getBoundingClientRect();
+                var img = document.createElement('img');
+                img.className = sourceCanvas.className;
+                img.src = sourceCanvas.toDataURL('image/png');
+                img.style.cssText = sourceCanvas.getAttribute('style') || '';
+                img.style.position = 'absolute';
+                img.style.left = sourceCanvas.style.left || '0px';
+                img.style.top = sourceCanvas.style.top || '0px';
+                img.style.width = (sourceCanvas.style.width || Math.ceil(rect.width) + 'px');
+                img.style.height = (sourceCanvas.style.height || Math.ceil(rect.height) + 'px');
+                img.style.pointerEvents = 'none';
+                cloneCanvas.replaceWith(img);
+            } catch (err) {
+                cloneCanvas.remove();
+            }
+        });
+    }
+
+    function buildFullChartExportNode() {
+        var wrapper = document.querySelector('.chart-wrapper');
+        if (!wrapper) throw new Error('Chart not found.');
+        var yAxis = wrapper.querySelector('.y-axis');
+        var chartScroll = wrapper.querySelector('.chart-scroll');
+        var chartArea = wrapper.querySelector('.chart-area');
+        if (!yAxis || !chartScroll || !chartArea) throw new Error('Chart layout not found.');
+
+        var yAxisWidth = Math.ceil(yAxis.getBoundingClientRect().width);
+        var pageHeader = document.querySelector('.header');
+        var headerHeight = pageHeader ? Math.ceil(pageHeader.getBoundingClientRect().height) + 34 : 0;
+        var footerHeight = 48;
+        var chartAreaStyle = getComputedStyle(chartArea);
+        var chartScrollStyle = getComputedStyle(chartScroll);
+        var modelsRow = chartArea.querySelector('.models-row');
+        var contentWidth = visibleChartContentWidth(chartArea, modelsRow);
+        var contentBottom = visibleChartContentBottom(chartArea, modelsRow);
+        var fallbackAreaWidth = Math.ceil(Math.max(
+            modelsRow ? modelsRow.scrollWidth : 0,
+            numericPx(chartAreaStyle.minWidth),
+            chartArea.scrollWidth || 0
+        ));
+        var areaWidth = Math.ceil(Math.max(
+            contentWidth || fallbackAreaWidth,
+            320
+        ));
+        var areaHeight = Math.ceil(Math.max(chartArea.scrollHeight, chartArea.getBoundingClientRect().height));
+        var padTop = numericPx(chartScrollStyle.paddingTop);
+        var padBottom = numericPx(chartScrollStyle.paddingBottom);
+        var chartWidth = yAxisWidth + areaWidth;
+        var exportWidth = Math.max(chartWidth, headerMinExportWidth(pageHeader));
+        var chartBottomGap = Math.max(8, Math.min(20, padBottom ? padBottom * 0.28 : 10));
+        var chartHeight = Math.ceil(padTop + Math.max(areaHeight, contentBottom) + chartBottomGap);
+        var exportHeight = headerHeight + chartHeight + footerHeight;
+
+        var exportRoot = document.createElement('div');
+        exportRoot.className = 'wolfbench-export-root';
+        exportRoot.style.width = exportWidth + 'px';
+        exportRoot.style.height = exportHeight + 'px';
+        exportRoot.style.background = '#1A1C1F';
+        exportRoot.style.color = '#e6edf3';
+        exportRoot.style.overflow = 'hidden';
+
+        if (pageHeader) {
+            var cloneHeader = pageHeader.cloneNode(true);
+            exportRoot.appendChild(cloneHeader);
+        }
+
+	        var cloneWrapper = wrapper.cloneNode(true);
+	        exportRoot.appendChild(cloneWrapper);
+	        replaceCanvasPixels(wrapper, cloneWrapper);
+	        prepareExportAgentLogos(wrapper, cloneWrapper);
+	        prepareExportBarPaint(cloneWrapper);
+
+        var cloneYAxis = cloneWrapper.querySelector('.y-axis');
+        var cloneScroll = cloneWrapper.querySelector('.chart-scroll');
+        var cloneArea = cloneWrapper.querySelector('.chart-area');
+        cloneWrapper.style.width = chartWidth + 'px';
+        cloneWrapper.style.height = chartHeight + 'px';
+        cloneWrapper.style.marginBottom = '0';
+        cloneWrapper.style.alignSelf = 'center';
+        cloneWrapper.style.alignItems = 'flex-start';
+        if (cloneYAxis) {
+            cloneYAxis.style.width = yAxisWidth + 'px';
+            cloneYAxis.style.flex = '0 0 ' + yAxisWidth + 'px';
+        }
+        if (cloneScroll) {
+            cloneScroll.scrollLeft = 0;
+            cloneScroll.style.flex = '0 0 ' + areaWidth + 'px';
+            cloneScroll.style.width = areaWidth + 'px';
+            cloneScroll.style.minWidth = areaWidth + 'px';
+            cloneScroll.style.overflow = 'visible';
+            cloneScroll.style.paddingBottom = '0';
+        }
+        if (cloneArea) {
+            cloneArea.style.width = areaWidth + 'px';
+            cloneArea.style.minWidth = areaWidth + 'px';
+        }
+
+        var exportFooter = document.createElement('div');
+        exportFooter.className = 'chart-export-footer';
+        exportFooter.textContent = 'wolfbench.ai';
+        exportRoot.appendChild(exportFooter);
+
+        exportRoot.insertAdjacentHTML('afterbegin', '<style>' + exportCssText() + '</style>');
+        return {node: exportRoot, width: exportWidth, height: exportHeight};
+    }
+
+    async function refreshThreeBarsForExport() {
+        if (!(window.WolfBenchThreeBars && window._tokenDepthEnabled)) return;
+        var chartArea = document.querySelector('.chart-area');
+        if (window.WolfBenchThreeBars.renderNow) {
+            window.WolfBenchThreeBars.renderNow();
+        } else {
+            window.WolfBenchThreeBars.render();
+        }
+        for (var i = 0; i < 12; i++) {
+            await nextFrame();
+            if (!chartArea || chartArea.classList.contains('three-bars-ready')) return;
+        }
+    }
+
+    async function renderFullChartPngBlob() {
+        await refreshThreeBarsForExport();
+        if (document.fonts && document.fonts.ready) {
+            try { await document.fonts.ready; } catch (err) {}
+        }
+        await nextFrame();
+        await nextFrame();
+        var renderChart = await loadHtml2Canvas();
+        var exported = buildFullChartExportNode();
+        var renderScale = chartExportRenderScale(exported.width, exported.height);
+        window.WolfBenchLastChartExport = {width: exported.width, height: exported.height, scale: renderScale};
+        var host = document.createElement('div');
+        host.style.position = 'absolute';
+        host.style.left = '-' + (exported.width + 10000) + 'px';
+        host.style.top = '0';
+        host.style.width = exported.width + 'px';
+        host.style.height = exported.height + 'px';
+        host.style.overflow = 'hidden';
+        host.style.pointerEvents = 'none';
+        host.style.zIndex = '-1';
+	        host.appendChild(exported.node);
+	        document.body.appendChild(host);
+	        try {
+	            await rasterizeExportAgentBadges(document.querySelector('.chart-wrapper'), exported.node.querySelector('.chart-wrapper'));
+	            await waitForExportImages(exported.node);
+	            await nextFrame();
+	            var canvas = await renderChart(exported.node, {
+                backgroundColor: '#1A1C1F',
+                scale: renderScale,
+                useCORS: true,
+                logging: false,
+                width: exported.width,
+                height: exported.height,
+                windowWidth: exported.width,
+                windowHeight: exported.height,
+                scrollX: 0,
+                scrollY: 0
+            });
+            return canvasToBlob(canvas);
+        } finally {
+            host.remove();
+        }
+    }
+
+    function clipboardPngSupported() {
+        if (!navigator.clipboard || !navigator.clipboard.write || !window.ClipboardItem) return false;
+        if (typeof window.ClipboardItem.supports === 'function') return window.ClipboardItem.supports('image/png');
+        return true;
+    }
+
+    async function copyChartScreenshotToClipboard(blob) {
+        if (!clipboardPngSupported()) {
+            throw new Error('Clipboard image copy is not available in this browser context.');
+        }
+        await navigator.clipboard.write([
+            new ClipboardItem({'image/png': blob})
+        ]);
+    }
+
+    function downloadChartScreenshot(blob) {
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = chartExportFilename();
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(function() { URL.revokeObjectURL(url); }, 5000);
+    }
+
+    async function saveAndCopyChartScreenshot() {
+        var blob = await renderFullChartPngBlob();
+        var clipboardError = null;
+        try {
+            await copyChartScreenshotToClipboard(blob);
+        } catch (err) {
+            clipboardError = err;
+        }
+        downloadChartScreenshot(blob);
+        return {copied: !clipboardError, clipboardError: clipboardError};
+    }
+
+    async function handleSave(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        setButtonState(saveButton, 'copying', '...', 'Saving and copying full chart PNG...');
+        try {
+            var result = await saveAndCopyChartScreenshot();
+            if (result.copied) {
+                setButtonState(saveButton, 'saved', '\\u2713', 'Saved full chart PNG and copied it to clipboard');
+            } else {
+                var msg = result.clipboardError && result.clipboardError.message
+                    ? result.clipboardError.message
+                    : 'Clipboard copy failed.';
+                setButtonState(saveButton, 'partial', '\\u2193', 'Saved PNG, but did not copy it: ' + msg);
+            }
+        } catch (err) {
+            console.error(err);
+            setButtonState(saveButton, 'failed', '!', err && err.message ? err.message : 'Could not save or copy chart PNG');
+        }
+    }
+
+    function addActivation(button, handler) {
+        if (!button) return;
+        rememberButtonDefaults(button);
+        button.addEventListener('click', handler);
+        button.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+                handler(event);
+            }
+        });
+    }
+
+    addActivation(saveButton, handleSave);
+})();"""
+
     table_sort_js = """(function() {
     var table = document.querySelector('.runs-table');
     if (!table) return;
@@ -2049,8 +3298,15 @@ AGENT_VERSIONS_PLACEHOLDER
         if (window.WolfBenchUrlState) window.WolfBenchUrlState.notifyChange();
     }
 
-    function parseVal(text) {
-        var s = text.replace(/^\\$/, '').replace(/[%s]$/, '').trim();
+    function parseVal(text, cell) {
+        var explicit = cell ? cell.getAttribute('data-sort-value') : null;
+        if (explicit !== null && explicit !== '') {
+            var explicitNumber = Number(explicit);
+            if (Number.isFinite(explicitNumber)) return explicitNumber;
+        }
+        var s = text.replace(/\\u00a0/g, ' ').trim();
+        if (!s || s === '-' || s === '?') return null;
+        s = s.replace(/^\\$/, '').replace(/,/g, '').replace(/\\s+/g, '').replace(/[%s]$/, '');
         var m = s.match(/^([\\d.]+)([KMB])$/i);
         if (m) {
             var n = parseFloat(m[1]);
@@ -2068,9 +3324,13 @@ AGENT_VERSIONS_PLACEHOLDER
     function cmp(a, b, col) {
         var at = a.cells[col].textContent.trim();
         var bt = b.cells[col].textContent.trim();
-        var an = parseVal(at);
-        var bn = parseVal(bt);
-        if (an !== null && bn !== null) return an - bn;
+        var an = parseVal(at, a.cells[col]);
+        var bn = parseVal(bt, b.cells[col]);
+        if (an !== null || bn !== null) {
+            if (an === null) return sortAsc ? 1 : -1;
+            if (bn === null) return sortAsc ? -1 : 1;
+            return an - bn;
+        }
         return at.toLowerCase().localeCompare(bt.toLowerCase());
     }
 
@@ -2206,10 +3466,11 @@ AGENT_VERSIONS_PLACEHOLDER
             var m = btn.getAttribute('data-model');
             btn.classList.toggle('dimmed', !allActive && !activeModels[m]);
         });
-        modelGroups.forEach(function(g) {
-            g.classList.toggle('model-hidden-user', !allActive && !activeModels[g.getAttribute('data-model')]);
-        });
-        syncVisToggle();
+	        modelGroups.forEach(function(g) {
+	            g.classList.toggle('model-hidden-user', !allActive && !activeModels[g.getAttribute('data-model')]);
+	        });
+	        if (window.WolfBenchClearHiddenModelHighlights) window.WolfBenchClearHiddenModelHighlights();
+	        syncVisToggle();
         if (window.applyAgentFilter) {
             window.applyAgentFilter();
         } else {
@@ -2307,6 +3568,7 @@ AGENT_VERSIONS_PLACEHOLDER
                 var group = modelsRow.querySelector('.model-group[data-model="' + b.getAttribute('data-model') + '"]');
                 if (group) modelsRow.appendChild(group);
             });
+            if (window.WolfBenchRefreshModelHighlights) window.WolfBenchRefreshModelHighlights();
             modelOrderUserSet = true;
             notifyUrlChange();
         });
@@ -2333,6 +3595,188 @@ AGENT_VERSIONS_PLACEHOLDER
         });
     }
     applyModelFilter();
+})();"""
+
+    model_highlight_js = """(function() {
+    function isGroupHidden(group) {
+        return group.classList.contains('model-hidden') ||
+            group.classList.contains('model-hidden-user') ||
+            group.classList.contains('metric-hidden');
+    }
+
+    function setHighlight(group, active) {
+        var label = group.querySelector('.model-label');
+        group.classList.toggle('model-highlighted', active);
+        if (label) label.setAttribute('aria-pressed', active ? 'true' : 'false');
+        if (window.adjustLabelPadding) {
+            window.requestAnimationFrame(window.adjustLabelPadding);
+        }
+    }
+
+    function refreshHighlightBounds(group) {
+        var label = group.querySelector('.model-label');
+        if (!label) return;
+        var labelWidth = label.offsetWidth || 0;
+        var labelHeight = label.offsetHeight || 24;
+        var groupWidth = group.offsetWidth || 0;
+        var xPad = Math.max(28, Math.ceil(Math.max(0, labelWidth - groupWidth) / 2 + 28));
+        var leftPad = xPad;
+        var rightPad = xPad;
+        var chartArea = group.closest('.chart-area');
+        if (chartArea && chartArea.classList.contains('token-depth-3d')) {
+            var groupRectForDepth = group.getBoundingClientRect();
+            var maxRight = groupRectForDepth.right;
+            group.querySelectorAll('.bar-wrapper:not(.agent-hidden):not(.bar-dismissed)').forEach(function(wrapper) {
+                if (wrapper.offsetParent === null) return;
+                var inner = wrapper.querySelector('.bar-inner') || wrapper.querySelector('.bar');
+                if (!inner) return;
+                var rect = inner.getBoundingClientRect();
+                var visualDepth = parseFloat(getComputedStyle(wrapper).getPropertyValue('--iso-visual-depth')) ||
+                    parseFloat(wrapper.getAttribute('data-token-depth')) || 0;
+                maxRight = Math.max(maxRight, rect.right + visualDepth + 12);
+            });
+            rightPad = Math.max(rightPad, Math.ceil(maxRight - groupRectForDepth.right + 28));
+        }
+        if (chartArea) {
+            var contentEdges = chartContentEdges(chartArea);
+            var groupRect = group.getBoundingClientRect();
+            leftPad = Math.min(leftPad, Math.max(0, Math.floor(groupRect.left - contentEdges.left)));
+            rightPad = Math.min(rightPad, Math.max(0, Math.floor(contentEdges.right - groupRect.right + 16)));
+        }
+        setHighlightPx(group, '--model-highlight-xpad', xPad);
+        setHighlightPx(group, '--model-highlight-left-pad', leftPad);
+        setHighlightPx(group, '--model-highlight-right-pad', rightPad);
+        setHighlightPx(group, '--model-label-height', Math.ceil(labelHeight));
+    }
+
+    function chartContentEdges(chartArea) {
+        var chartRect = chartArea.getBoundingClientRect();
+        var left = chartRect.left;
+        var right = chartRect.left + Math.max(
+            chartRect.width || 0,
+            chartArea.clientWidth || 0,
+            chartArea.offsetWidth || 0,
+            chartArea.scrollWidth || 0
+        );
+        var modelsRow = chartArea.querySelector('.models-row');
+        if (modelsRow) {
+            var rowRect = modelsRow.getBoundingClientRect();
+            left = Math.min(left, rowRect.left);
+            right = Math.max(right, rowRect.left + Math.max(
+                rowRect.width || 0,
+                modelsRow.clientWidth || 0,
+                modelsRow.offsetWidth || 0,
+                modelsRow.scrollWidth || 0
+            ));
+        }
+        return {left: left, right: right};
+    }
+
+    function cssPx(group, name, fallback) {
+        var value = getComputedStyle(group).getPropertyValue(name);
+        var parsed = parseFloat(value);
+        return isFinite(parsed) ? parsed : fallback;
+    }
+
+    function setHighlightPx(group, name, value) {
+        var next = Math.max(0, Math.floor(value)) + 'px';
+        if (group.style.getPropertyValue(name) !== next) {
+            group.style.setProperty(name, next);
+        }
+    }
+
+    function setSidePad(group, side, value) {
+        setHighlightPx(group, '--model-highlight-' + side + '-pad', value);
+    }
+
+    function resolveHighlightCollisions(groups) {
+        var cluster = [];
+        function flushCluster() {
+            if (cluster.length > 1) balanceHighlightCluster(cluster);
+            cluster = [];
+        }
+        groups.forEach(function(group) {
+            if (group.classList.contains('model-highlighted')) {
+                cluster.push(group);
+            } else {
+                flushCluster();
+            }
+        });
+        flushCluster();
+    }
+
+    function balanceHighlightCluster(cluster) {
+        var minGap = 10;
+        var target = Infinity;
+        var collided = false;
+        for (var i = 0; i < cluster.length; i++) {
+            target = Math.min(target, cssPx(cluster[i], '--model-highlight-left-pad', 28));
+            target = Math.min(target, cssPx(cluster[i], '--model-highlight-right-pad', 28));
+        }
+        for (var j = 0; j < cluster.length - 1; j++) {
+            var left = cluster[j];
+            var right = cluster[j + 1];
+            var leftRect = left.getBoundingClientRect();
+            var rightRect = right.getBoundingClientRect();
+            var gap = Math.floor(rightRect.left - leftRect.right);
+            var available = Math.max(0, gap - minGap);
+            var leftPad = cssPx(left, '--model-highlight-right-pad', 28);
+            var rightPad = cssPx(right, '--model-highlight-left-pad', 28);
+            if (leftPad + rightPad > available) collided = true;
+            target = Math.min(target, Math.floor(available / 2));
+        }
+        if (!collided || !isFinite(target)) return;
+        target = Math.max(0, Math.floor(target));
+        cluster.forEach(function(group) {
+            setSidePad(group, 'left', target);
+            setSidePad(group, 'right', target);
+        });
+    }
+
+    window.WolfBenchRefreshModelHighlights = function() {
+        var groups = Array.prototype.slice.call(document.querySelectorAll('.model-group'));
+        groups.forEach(refreshHighlightBounds);
+        resolveHighlightCollisions(groups.filter(function(group) {
+            return !isGroupHidden(group);
+        }));
+    };
+
+    window.WolfBenchClearHiddenModelHighlights = function() {
+        document.querySelectorAll('.model-group.model-highlighted').forEach(function(group) {
+            if (isGroupHidden(group)) setHighlight(group, false);
+        });
+    };
+
+    document.querySelectorAll('.model-group').forEach(function(group) {
+        var label = group.querySelector('.model-label');
+        if (!label) return;
+        refreshHighlightBounds(group);
+        label.setAttribute('role', 'button');
+        label.setAttribute('tabindex', '0');
+        label.setAttribute('aria-pressed', group.classList.contains('model-highlighted') ? 'true' : 'false');
+        label.setAttribute('title', 'Highlight this model');
+
+        function toggleHighlight(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            refreshHighlightBounds(group);
+            setHighlight(group, !group.classList.contains('model-highlighted'));
+            window.WolfBenchRefreshModelHighlights();
+        }
+
+        label.addEventListener('click', toggleHighlight);
+        label.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar') {
+                toggleHighlight(event);
+            }
+        });
+    });
+    window.addEventListener('resize', window.WolfBenchRefreshModelHighlights);
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(window.WolfBenchRefreshModelHighlights);
+    }
 })();"""
 
     bar_drag_js = """(function() {
@@ -2441,6 +3885,67 @@ AGENT_VERSIONS_PLACEHOLDER
     var defaultSummary = summary ? summary.textContent : '';
     if (!tbody) return;
 
+    function toNumber(value) {
+        var n = Number.parseFloat(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function stripZeros(text) {
+        return text.replace(/\\.0+$/, '').replace(/(\\.\\d*[1-9])0+$/, '$1');
+    }
+
+    function compactTokenValue(value) {
+        if (!value || value <= 0) return 'n/a';
+        if (value >= 1e9) return stripZeros((value / 1e9).toFixed(value >= 10e9 ? 1 : 2)) + 'B';
+        if (value >= 1e6) return stripZeros((value / 1e6).toFixed(1)) + 'M';
+        if (value >= 1e3) return stripZeros((value / 1e3).toFixed(value >= 100e3 ? 0 : 1)) + 'K';
+        return String(Math.round(value));
+    }
+
+    function formatDurationTotal(seconds) {
+        var total = Math.round(seconds || 0);
+        if (total <= 0) return 'n/a';
+        var days = Math.floor(total / 86400);
+        total -= days * 86400;
+        var hours = Math.floor(total / 3600);
+        total -= hours * 3600;
+        var minutes = Math.floor(total / 60);
+        var parts = [];
+        if (days) parts.push(days + 'd');
+        if (hours || days) parts.push(hours + 'h');
+        parts.push(minutes + 'm');
+        return parts.join(' ');
+    }
+
+    function formatCost(value) {
+        if (!value || value <= 0) return 'n/a';
+        return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function resourceStatsText(nRuns, durationTotal, durationRuns, tokenInTotal, tokenOutTotal, tokenRuns, costTotal, costRuns) {
+        var durationLabel = formatDurationTotal(durationTotal);
+        if (durationRuns && durationRuns !== nRuns) {
+            durationLabel += ' (timing data for ' + durationRuns + '/' + nRuns + ' runs)';
+        }
+
+        var tokenTotal = tokenInTotal + tokenOutTotal;
+        var tokenLabel = tokenTotal > 0
+            ? compactTokenValue(tokenTotal) + ' (' + compactTokenValue(tokenInTotal) + ' in, ' + compactTokenValue(tokenOutTotal) + ' out)'
+            : 'n/a';
+        if (tokenTotal > 0 && tokenRuns !== nRuns) {
+            tokenLabel += ' (token data for ' + tokenRuns + '/' + nRuns + ' runs)';
+        }
+
+        var costLabel = formatCost(costTotal);
+        if (costRuns && costRuns !== nRuns) {
+            costLabel += ' (cost data for ' + costRuns + '/' + nRuns + ' runs)';
+        }
+
+        return 'Total runtime: ' + durationLabel
+            + ' · Total tokens: ' + tokenLabel
+            + ' · Total cost: ' + costLabel + '.';
+    }
+
     window.filterRunsTable = function() {
         // Collect visible (agent, model) pairs from chart
         var visible = {};
@@ -2457,6 +3962,13 @@ AGENT_VERSIONS_PLACEHOLDER
         var total = 0, shown = 0;
         var taskCounts = {};
         var nVisibleRuns = 0;
+        var durationTotal = 0;
+        var durationRuns = 0;
+        var tokenInTotal = 0;
+        var tokenOutTotal = 0;
+        var tokenRuns = 0;
+        var costTotal = 0;
+        var costRuns = 0;
         Array.prototype.slice.call(tbody.rows).forEach(function(row) {
             total++;
             var key = row.getAttribute('data-agent') + '|' + row.getAttribute('data-model');
@@ -2469,6 +3981,23 @@ AGENT_VERSIONS_PLACEHOLDER
                     var passed = JSON.parse(row.getAttribute('data-passed') || '[]');
                     passed.forEach(function(t) { taskCounts[t] = (taskCounts[t] || 0) + 1; });
                 } catch(e) {}
+                var duration = toNumber(row.getAttribute('data-duration-sec'));
+                if (duration > 0) {
+                    durationTotal += duration;
+                    durationRuns++;
+                }
+                var tokenIn = toNumber(row.getAttribute('data-token-input'));
+                var tokenOut = toNumber(row.getAttribute('data-token-output'));
+                if (tokenIn + tokenOut > 0) {
+                    tokenInTotal += tokenIn;
+                    tokenOutTotal += tokenOut;
+                    tokenRuns++;
+                }
+                var cost = toNumber(row.getAttribute('data-cost-usd'));
+                if (cost > 0) {
+                    costTotal += cost;
+                    costRuns++;
+                }
             }
         });
 
@@ -2480,9 +4009,9 @@ AGENT_VERSIONS_PLACEHOLDER
             }
         }
 
-        // Update task stats
+        // Update task stats and resource totals
         var statsEl = document.getElementById('taskStats');
-        if (statsEl && nVisibleRuns > 0) {
+        if (statsEl) {
             var totalTasks = parseInt(statsEl.getAttribute('data-total-tasks')) || 89;
             var solvedOnce = Object.keys(taskCounts).length;
             var solvedAlways = 0;
@@ -2494,6 +4023,19 @@ AGENT_VERSIONS_PLACEHOLDER
                 + solvedAlways + ' (' + pct(solvedAlways) + '%) were solved every time, '
                 + 'and ' + neverSolved + ' (' + pct(neverSolved) + '%) were never solved.';
         }
+        var resourcesEl = document.getElementById('runResourceStats');
+        if (resourcesEl) {
+            resourcesEl.textContent = resourceStatsText(
+                nVisibleRuns,
+                durationTotal,
+                durationRuns,
+                tokenInTotal,
+                tokenOutTotal,
+                tokenRuns,
+                costTotal,
+                costRuns
+            );
+        }
     };
 })();"""
 
@@ -2501,11 +4043,14 @@ AGENT_VERSIONS_PLACEHOLDER
     var chartScroll = document.querySelector('.chart-scroll');
     if (!chartScroll) return;
     var basePad = 24; // space between tallest label and scrollbar
+    var highlightPad = 48; // extra room for the 4px model highlight border
 
     window.adjustLabelPadding = function() {
         var maxH = 0;
+        var hasHighlight = false;
         document.querySelectorAll('.model-group').forEach(function(g) {
             if (g.classList.contains('model-hidden') || g.classList.contains('model-hidden-user') || g.classList.contains('metric-hidden')) return;
+            if (g.classList.contains('model-highlighted')) hasHighlight = true;
             var lbl = g.querySelector('.model-label');
             if (lbl) {
                 var h = lbl.offsetHeight;
@@ -2513,7 +4058,8 @@ AGENT_VERSIONS_PLACEHOLDER
             }
         });
         // margin-top on .model-label (6px) + label height + base padding
-        chartScroll.style.paddingBottom = (6 + maxH + basePad) + 'px';
+        chartScroll.style.paddingBottom = (6 + maxH + (hasHighlight ? highlightPad : basePad)) + 'px';
+        if (window.WolfBenchRefreshModelHighlights) window.WolfBenchRefreshModelHighlights();
     };
 
     window.adjustLabelPadding();
@@ -2525,7 +4071,7 @@ AGENT_VERSIONS_PLACEHOLDER
     var chartArea = document.querySelector('.chart-area');
     if (!chartArea) return;
     var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
-    var tokenDepthModes = ['flat', 'spaced'];
+    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both'];
     var tokenDepthMode = normalizeTokenDepthMode(urlState && urlState.tokenDepth);
     window._tokenDepthMode = tokenDepthMode;
     window._tokenDepthEnabled = tokenDepthMode !== 'flat';
@@ -2535,7 +4081,10 @@ AGENT_VERSIONS_PLACEHOLDER
     }
 
     function normalizeTokenDepthMode(mode) {
-        if (mode === 'overlap' || mode === 'spaced' || mode === 'on' || mode === '3d') return 'spaced';
+        if (mode === 'overlap' || mode === 'spaced' || mode === 'on' || mode === '3d') return 'tokens';
+        if (mode === 'tokens' || mode === 'token') return 'tokens';
+        if (mode === 'cost' || mode === 'costs' || mode === 'usd') return 'cost';
+        if (mode === 'both' || mode === 'tokens+cost' || mode === 'tokens-cost' || mode === 'token+cost' || mode === 'token-cost' || mode === 'tokens_cost' || mode === 'combined') return 'both';
         return 'flat';
     }
 
@@ -2556,14 +4105,34 @@ AGENT_VERSIONS_PLACEHOLDER
         return String(Math.round(value));
     }
 
+    function formatCost(value, fallback) {
+        if (!value || value <= 0) return fallback || '-';
+        return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function depthScaleLabelForMode(mode) {
+        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · 100 px = 1B tokens';
+        if (mode === 'cost') return '3D depth scale: 1 px = $5 run cost · 100 px = $500';
+        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M · Cost shadow 1 px = $5';
+        return '';
+    }
+
+    function updateDepthScaleLine(mode) {
+        var line = document.getElementById('depthScaleLine');
+        if (!line) return;
+        var label = depthScaleLabelForMode(mode);
+        line.hidden = !label;
+        line.textContent = label;
+    }
+
     function toNumber(value) {
         var n = Number.parseFloat(value);
         return Number.isFinite(n) ? n : 0;
     }
 
     var tokensPerDepthPixel = 1e7;
+    var costPerDepthPixel = 5;
     var missingDepth = 0;
-    var maxDepth = 400;
     var items = [];
 
     document.querySelectorAll('.bar-wrapper').forEach(function(wrapper, index) {
@@ -2573,8 +4142,10 @@ AGENT_VERSIONS_PLACEHOLDER
         var output = toNumber(wrapper.getAttribute('data-token-output'));
         var total = toNumber(wrapper.getAttribute('data-token-total')) || input + output;
         var runs = toNumber(wrapper.getAttribute('data-token-runs')) || toNumber(wrapper.getAttribute('data-runs'));
+        var cost = toNumber(wrapper.getAttribute('data-cost-total'));
+        var costRuns = toNumber(wrapper.getAttribute('data-cost-runs'));
         var missing = total <= 0;
-        var data = {input: input, output: output, total: total, runs: runs};
+        var data = {input: input, output: output, total: total, runs: runs, cost: cost, costRuns: costRuns};
         wrapper.setAttribute('data-token-index', String(index));
         wrapper.classList.toggle('token-missing', missing);
         items.push({wrapper: wrapper, bar: bar, data: data, missing: missing});
@@ -2584,22 +4155,43 @@ AGENT_VERSIONS_PLACEHOLDER
     var totals = items.map(function(item) { return item.data.total; }).filter(function(value) { return value > 0; });
     var min = totals.length ? Math.min.apply(Math, totals) : 0;
     var max = totals.length ? Math.max.apply(Math, totals) : 0;
+    var costs = items.map(function(item) { return item.data.cost; }).filter(function(value) { return value > 0; });
+    var minCost = costs.length ? Math.min.apply(Math, costs) : 0;
+    var maxCost = costs.length ? Math.max.apply(Math, costs) : 0;
 
     chartArea.classList.add('svg-iso', 'three-bars');
-    var tokenDepthToggle = addLegend(min, max);
+    var tokenDepthToggle = addLegend(min, max, minCost, maxCost);
     setTokenDepthMode(tokenDepthMode, true);
 
     items.forEach(function(item) {
-        var depth = item.missing ? missingDepth : depthFor(item.data.total);
-        item.wrapper.setAttribute('data-token-depth', depth.toFixed(1));
-        item.wrapper.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
-        item.bar.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
+        updateDepthVars(item);
         appendTokenTitle(item);
     });
 
-    function depthFor(total) {
+    function depthForTokens(total) {
         if (!total || total <= 0) return 0;
-        return Math.min(maxDepth, total / tokensPerDepthPixel);
+        return total / tokensPerDepthPixel;
+    }
+
+    function depthForCost(cost) {
+        if (!cost || cost <= 0) return 0;
+        return cost / costPerDepthPixel;
+    }
+
+    function depthForMode(item, mode) {
+        if (mode === 'cost') return depthForCost(item.data.cost);
+        return item.missing ? missingDepth : depthForTokens(item.data.total);
+    }
+
+    function updateDepthVars(item) {
+        var depth = depthForMode(item, tokenDepthMode);
+        item.wrapper.setAttribute('data-token-depth', depth.toFixed(1));
+        item.wrapper.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
+        item.bar.style.setProperty('--iso-depth', depth.toFixed(1) + 'px');
+    }
+
+    function updateAllDepthVars() {
+        items.forEach(updateDepthVars);
     }
 
     function appendTokenTitle(item) {
@@ -2607,20 +4199,33 @@ AGENT_VERSIONS_PLACEHOLDER
         if (!link) return;
         var base = link.getAttribute('data-base-title') || link.getAttribute('title') || '';
         link.setAttribute('data-base-title', base);
+        var agentName = item.wrapper.getAttribute('data-agent-name') || item.wrapper.getAttribute('data-agent') || '';
+        var agentVersion = item.wrapper.getAttribute('data-agent-version') || '';
+        var agentLine = agentName ? '\\nAgent: ' + agentName + (agentVersion ? ' ' + agentVersion : '') : '';
+        var unknownValueLabel = 'n/a';
+        var costLabel = formatCost(item.data.cost, unknownValueLabel);
+        var costSuffix = item.data.costRuns && item.data.costRuns !== item.data.runs
+            ? ' (' + item.data.costRuns + ' costed runs)'
+            : '';
         if (item.missing) {
-            link.setAttribute('title', base + '\\nTokens: unavailable (' + item.data.runs + ' runs)');
+            link.setAttribute('title', base
+                + agentLine
+                + '\\nTokens: ' + unknownValueLabel
+                + '\\nCost: ' + costLabel + costSuffix
+                + '\\nRuns: ' + item.data.runs);
             return;
         }
         var inputShare = item.data.total ? Math.round(item.data.input / item.data.total * 1000) / 10 : 0;
         var outputShare = item.data.total ? Math.round(item.data.output / item.data.total * 1000) / 10 : 0;
-        link.setAttribute('title', base + '\\nTokens:'
+        link.setAttribute('title', base + agentLine + '\\nTokens:'
             + '\\n  In: ' + compactTokenValue(item.data.input) + ' (' + inputShare + '%)'
             + '\\n  Out: ' + compactTokenValue(item.data.output) + ' (' + outputShare + '%)'
             + '\\n  Total: ' + compactTokenValue(item.data.total)
+            + '\\nCost: ' + costLabel + costSuffix
             + '\\nRuns: ' + item.data.runs);
     }
 
-    function addLegend(minValue, maxValue) {
+    function addLegend(minValue, maxValue, minCostValue, maxCostValue) {
         var legend = document.querySelector('.legend');
         var existing = document.getElementById('svgIsoLegend');
         if (!legend || existing) return existing;
@@ -2630,10 +4235,12 @@ AGENT_VERSIONS_PLACEHOLDER
         el.setAttribute('role', 'button');
         el.setAttribute('tabindex', '0');
         el.setAttribute('aria-pressed', 'true');
-        el.title = 'Bars are in 2D. Click for 3D token depth.';
+        el.title = 'Bars are in 2D. Click for 3D: Tokens.';
         el.innerHTML = '<span class="svg-iso-swatch"><span class="svg-iso-split"></span></span><span class="svg-iso-label">Bars: 2D</span>';
         el.setAttribute('data-token-range', compactTokenValue(minValue) + '-' + compactTokenValue(maxValue));
-        el.setAttribute('data-token-scale', 'linear;10M=1px;1B=100px;max=400px');
+        el.setAttribute('data-token-scale', 'linear;10M=1px;1B=100px;uncapped');
+        el.setAttribute('data-cost-range', formatCost(minCostValue) + '-' + formatCost(maxCostValue));
+        el.setAttribute('data-cost-scale', 'absolute-linear;$5=1px;$500=100px;uncapped');
         el.addEventListener('click', function(event) {
             event.stopPropagation();
             setTokenDepthMode(nextTokenDepthMode(tokenDepthMode), false);
@@ -2643,9 +4250,14 @@ AGENT_VERSIONS_PLACEHOLDER
             event.preventDefault();
             setTokenDepthMode(nextTokenDepthMode(tokenDepthMode), false);
         });
-        legend.appendChild(el);
-        return el;
-    }
+	        var exportSep = document.getElementById('chartExportSep');
+	        if (exportSep && exportSep.parentNode === legend) {
+	            legend.insertBefore(el, exportSep);
+	        } else {
+	            legend.appendChild(el);
+	        }
+	        return el;
+	    }
 
     function setTokenDepthMode(mode, initializing) {
         tokenDepthMode = normalizeTokenDepthMode(mode);
@@ -2653,23 +4265,34 @@ AGENT_VERSIONS_PLACEHOLDER
         window._tokenDepthMode = tokenDepthMode;
         window._tokenDepthEnabled = enabled;
         chartArea.classList.toggle('token-depth-flat', tokenDepthMode === 'flat');
-        chartArea.classList.toggle('token-depth-spaced', tokenDepthMode === 'spaced');
+        chartArea.classList.toggle('token-depth-3d', enabled);
+        chartArea.classList.toggle('token-depth-tokens', tokenDepthMode === 'tokens');
+        chartArea.classList.toggle('token-depth-cost', tokenDepthMode === 'cost');
+        chartArea.classList.toggle('token-depth-both', tokenDepthMode === 'both');
         chartArea.classList.toggle('token-depth-off', !enabled);
+        updateAllDepthVars();
         if (tokenDepthToggle) {
             var label = tokenDepthToggle.querySelector('.svg-iso-label');
             tokenDepthToggle.classList.toggle('active', enabled);
             tokenDepthToggle.classList.toggle('dimmed', !enabled);
             tokenDepthToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
             tokenDepthToggle.setAttribute('data-token-depth', tokenDepthMode);
-            tokenDepthToggle.setAttribute('aria-label', 'Token depth mode: ' + tokenDepthMode);
+            tokenDepthToggle.setAttribute('aria-label', 'Bar depth mode: ' + tokenDepthMode);
             if (tokenDepthMode === 'flat') {
                 if (label) label.textContent = 'Bars: 2D';
-                tokenDepthToggle.title = 'Bars are in 2D. Click for 3D token depth.';
+                tokenDepthToggle.title = 'Bars are in 2D. Click for 3D: Tokens.';
+            } else if (tokenDepthMode === 'tokens') {
+                if (label) label.textContent = 'Bars: 3D Tokens';
+                tokenDepthToggle.title = '3D bars use uncapped absolute linear total token volume: 1px = 10M tokens. Front depth is input, rear depth is output. Click for 3D Cost.';
+            } else if (tokenDepthMode === 'cost') {
+                if (label) label.textContent = 'Bars: 3D Cost';
+                tokenDepthToggle.title = '3D bars use uncapped absolute linear run cost: 1px = $5. No log scale, no per-chart normalization. Click for 3D Tokens + Cost.';
             } else {
-                if (label) label.textContent = 'Bars: 3D';
-                tokenDepthToggle.title = '3D bars use absolute linear total token volume: 1px = 10M tokens, capped at 400px. Front depth is input, rear depth is output. Click for 2D bars.';
+                if (label) label.textContent = 'Bars: 3D Tokens + Cost';
+                tokenDepthToggle.title = 'Main bar uses token depth; the neutral gray shadow uses run cost. Click for 2D bars.';
             }
         }
+        updateDepthScaleLine(tokenDepthMode);
         if (initializing) return;
         if (window.updateChartWidth) window.updateChartWidth();
         if (window.adjustLabelPadding) window.adjustLabelPadding();
@@ -2682,7 +4305,7 @@ AGENT_VERSIONS_PLACEHOLDER
     url_finish_js = """if (window.WolfBenchUrlState) window.WolfBenchUrlState.finishBoot();"""
 
     all_js = (url_state_js + "\n" + longpress_js + "\n" + agent_toggle_js + "\n" + metric_filter_js + "\n"
-              + unit_toggle_js + "\n" + model_toggle_js + "\n"
+              + unit_toggle_js + "\n" + chart_screenshot_js + "\n" + model_toggle_js + "\n" + model_highlight_js + "\n"
               + bar_drag_js + "\n" + runs_filter_js + "\n"
               + label_padding_js + "\n" + table_sort_js + "\n"
               + token_depth_js + "\n" + url_finish_js)
@@ -2715,23 +4338,58 @@ body {{
 
 /* Header */
 .header {{
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(72px, 1fr) auto minmax(180px, 1fr);
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 24px;
     margin-bottom: 8px;
 }}
 
 .header-logo {{
     flex-shrink: 0;
+    object-fit: contain;
+}}
+.header-logo-wolfbench {{
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    justify-self: end;
+}}
+.header-logo-wandb {{
+    width: auto;
+    height: 58px;
+    max-height: 58px;
+    justify-self: start;
+    margin-left: -11px;
 }}
 
 h1 {{
     font-family: 'Source Serif 4', Georgia, serif;
     font-size: 2.4rem;
     font-weight: 800;
-    letter-spacing: -0.02em;
+    letter-spacing: 0;
     color: #FFCC33;
+}}
+
+@media (max-width: 720px) {{
+    .header {{
+        grid-template-columns: 48px minmax(0, auto) 132px;
+        gap: 12px;
+    }}
+    .header-logo-wolfbench {{
+        width: 44px;
+        height: 44px;
+    }}
+    .header-logo-wandb {{
+        width: auto;
+        height: 44px;
+        max-height: 44px;
+        margin-left: -8px;
+    }}
+    h1 {{
+        font-size: 1.8rem;
+    }}
 }}
 
 .subtitle {{
@@ -2800,7 +4458,8 @@ h1 {{
 .legend-agent {{
     display: inline-flex;
     align-items: center;
-    padding: 7px 14px 6px;
+    gap: 8px;
+    padding: 7px 13px 6px 10px;
     border-radius: 6px;
     font-weight: 600;
     font-size: 0.95rem;
@@ -2824,6 +4483,36 @@ h1 {{
 .legend-agent-cline-cli    {{ background: rgba(142,68,173,0.2); color: #bb8fce; border: 1px solid rgba(142,68,173,0.3); }}
 .legend-agent-cursor-cli   {{ background: rgba(52,152,219,0.2); color: #85c1e9; border: 1px solid rgba(52,152,219,0.3); }}
 .legend-agent-codex        {{ background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }}
+.legend-agent-name {{
+    white-space: nowrap;
+}}
+.agent-logo {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    color: currentColor;
+}}
+.agent-logo svg {{
+    display: block;
+    width: 100%;
+    height: 100%;
+}}
+.agent-logo:not(.agent-logo-branded) svg {{
+    fill: currentColor;
+}}
+.agent-logo img {{
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}}
+.agent-logo:not(.agent-logo-branded) svg * {{
+    fill: currentColor;
+}}
 
 .legend-toggle {{
     display: inline-flex;
@@ -2845,6 +4534,25 @@ h1 {{
 .legend-toggle:hover {{ transform: translateY(-1px); border-color: #FFCC33; background: rgba(255,204,51,0.1); }}
 .legend-toggle.active {{ border-color: #FFCC33; background: rgba(255,204,51,0.1); }}
 .legend-toggle[data-sort-mode="2"] {{ background: rgba(255,204,51,0.28); color: #FFE680; }}
+#chartSaveToggle.copying {{
+    opacity: 0.65;
+    pointer-events: none;
+}}
+#chartSaveToggle.saved {{
+    border-color: #58d68d;
+    color: #58d68d;
+    background: rgba(39,174,96,0.12);
+}}
+#chartSaveToggle.partial {{
+    border-color: #f1c40f;
+    color: #f4d03f;
+    background: rgba(241,196,15,0.12);
+}}
+#chartSaveToggle.failed {{
+    border-color: #e74c3c;
+    color: #f1948a;
+    background: rgba(231,76,60,0.12);
+}}
 
 .legend-sep {{
     width: 1px;
@@ -2870,6 +4578,15 @@ h1 {{
 .legend-metric.active {{ border-color: #FFCC33; background: rgba(255,204,51,0.1); }}
 .legend-metric.dimmed {{ opacity: 0.3; }}
 .legend-metric small {{ color: #6B7280; }}
+
+.depth-scale-line {{
+    display: block;
+    color: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    margin-top: 0;
+}}
+.depth-scale-line[hidden] {{ display: none; }}
 
 /* Model bar — toggle visibility and drag to reorder */
 .model-bar {{
@@ -3005,7 +4722,7 @@ h1 {{
     display: flex;
     justify-content: flex-start;
     gap: 64px;
-    padding: 0 24px;
+    padding: 0 48px;
 }}
 .models-row.agent-filtered {{
     gap: 64px;
@@ -3016,6 +4733,10 @@ h1 {{
     flex-direction: column;
     align-items: center;
     position: relative;
+    --model-highlight-xpad: 28px;
+    --model-highlight-left-pad: 28px;
+    --model-highlight-right-pad: 28px;
+    --model-label-height: 24px;
 }}
 .model-group.model-hidden, .model-group.metric-hidden {{
     display: none;
@@ -3047,6 +4768,46 @@ h1 {{
     max-width: calc(100% + 40px);
     overflow-wrap: break-word;
     line-height: 1.2;
+    cursor: pointer;
+    user-select: none;
+    z-index: 8;
+    padding: 2px 6px;
+    border-radius: 6px;
+    transition: color 0.2s ease;
+}}
+.model-label:hover {{
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(255,204,51,0.35);
+}}
+.model-label:focus-visible {{
+    outline: 2px solid #FFCC33;
+    outline-offset: 3px;
+}}
+.model-highlight-box {{
+    display: none;
+    position: absolute;
+    box-sizing: border-box;
+    left: calc(-1 * var(--model-highlight-left-pad, var(--model-highlight-xpad, 28px)));
+    right: calc(-1 * var(--model-highlight-right-pad, var(--model-highlight-xpad, 28px)));
+    top: -12px;
+    bottom: calc(-1 * (var(--model-label-height, 24px) + 28px));
+    background: transparent;
+    border: 4px solid #e74c3c;
+    border-radius: 10px;
+    box-shadow: none;
+    pointer-events: none;
+    z-index: 7;
+}}
+.model-group.model-highlighted .model-highlight-box {{
+    display: block;
+}}
+.model-group.model-highlighted .model-label {{
+    color: #FFCC33;
+    text-shadow: none;
+}}
+.model-group.model-highlighted .bars-row {{
+    position: relative;
+    z-index: 6;
 }}
 
 /* Bar */
@@ -3078,16 +4839,6 @@ h1 {{
     white-space: nowrap;
     transition: transform 0.3s ease;
 }}
-.chart-area.single-agent .agent-label {{
-    display: none;
-}}
-.bar-wrapper[data-agent="terminus-2"] .bar-top-label {{ color: #58d68d; }}
-.bar-wrapper[data-agent="claude-code"] .bar-top-label {{ color: #f0b27a; }}
-.bar-wrapper[data-agent="hermes"] .bar-top-label {{ color: #f4d03f; }}
-.bar-wrapper[data-agent="openclaw"] .bar-top-label {{ color: #f1948a; }}
-.bar-wrapper[data-agent="cline-cli"] .bar-top-label {{ color: #bb8fce; }}
-.bar-wrapper[data-agent="cursor-cli"] .bar-top-label {{ color: #85c1e9; }}
-.bar-wrapper[data-agent="codex"] .bar-top-label {{ color: #a5b4fc; }}
 .version-label {{
     font-size: 0.75rem;
     font-weight: 500;
@@ -3100,24 +4851,80 @@ h1 {{
 }}
 .bar-bottom-label {{
     position: absolute;
-    bottom: 3px;
+    bottom: 7px;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     white-space: nowrap;
-    z-index: 2;
+    z-index: 8;
+    pointer-events: none;
 }}
-.run-count {{
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: rgba(255,255,255,0.65);
-    text-shadow:
-        -1px -1px 0 rgba(0,0,0,0.8),
-         1px -1px 0 rgba(0,0,0,0.8),
-        -1px  1px 0 rgba(0,0,0,0.8),
-         1px  1px 0 rgba(0,0,0,0.8),
-         0 0 4px rgba(0,0,0,0.5);
+.agent-badge {{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    padding: 3px;
+    color: currentColor;
+    background-color: rgba(5,8,10,0.72);
+    background-clip: padding-box;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 50%;
+    box-shadow: none;
+    text-shadow: none;
+    line-height: 0;
+    overflow: hidden;
 }}
+.agent-badge .agent-logo {{
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    line-height: 0;
+}}
+.legend-agent-hermes .agent-badge,
+.legend-agent-codex .agent-badge,
+.bar-wrapper[data-agent="hermes"] .agent-badge,
+.bar-wrapper[data-agent="codex"] .agent-badge {{
+    color: #050810;
+    background-color: #ffffff;
+    border: 1px solid rgba(5,8,16,0.22);
+}}
+.legend-agent-claude-code .agent-badge,
+.bar-wrapper[data-agent="claude-code"] .agent-badge {{
+    color: #d97757;
+    background-color: rgba(5,8,10,0.72);
+    border: 1px solid rgba(240,178,122,0.32);
+}}
+.legend-agent-cline-cli .agent-badge,
+.legend-agent-cursor-cli .agent-badge,
+.bar-wrapper[data-agent="cline-cli"] .agent-badge,
+.bar-wrapper[data-agent="cursor-cli"] .agent-badge {{
+    color: #ffffff;
+    background-color: #050810;
+    border: 1px solid rgba(255,255,255,0.22);
+}}
+.legend-agent-terminus-2 .agent-badge,
+.bar-wrapper[data-agent="terminus-2"] .agent-badge {{
+    background-color: #050810;
+    border-color: rgba(39,174,96,0.3);
+}}
+.legend-agent-claude-code .agent-badge,
+.bar-wrapper[data-agent="claude-code"] .agent-badge {{ border-color: rgba(230,126,34,0.3); }}
+.legend-agent-hermes .agent-badge,
+.bar-wrapper[data-agent="hermes"] .agent-badge {{ border-color: rgba(241,196,15,0.3); }}
+.legend-agent-openclaw .agent-badge,
+.bar-wrapper[data-agent="openclaw"] .agent-badge {{ border-color: rgba(231,76,60,0.3); }}
+.legend-agent-cline-cli .agent-badge,
+.bar-wrapper[data-agent="cline-cli"] .agent-badge {{ border-color: rgba(142,68,173,0.3); }}
+.legend-agent-cursor-cli .agent-badge,
+.bar-wrapper[data-agent="cursor-cli"] .agent-badge {{ border-color: rgba(52,152,219,0.3); }}
+.legend-agent-codex .agent-badge,
+.bar-wrapper[data-agent="codex"] .agent-badge {{ border-color: rgba(99,102,241,0.3); }}
 .bar-link {{
     text-decoration: none;
     display: block;
@@ -3238,8 +5045,9 @@ h1 {{
 .footer {{
     text-align: center;
     margin-top: 16px;
-    color: #4B5563;
+    color: #9BA1A6;
     font-size: 0.8rem;
+    line-height: 1.45;
 }}
 
 /* About section */
@@ -3357,11 +5165,12 @@ h1 {{
 </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <img class="header-logo" src="data:image/png;base64,{logo_b64}" alt="Weights &amp; Biases by CoreWeave" height="48">
-        <h1>WolfBench ({chart_date or date.today().isoformat()})</h1>
-    </div>
+	<div class="container">
+	    <div class="header">
+	        <img class="header-logo header-logo-wolfbench" src="data:image/png;base64,{wolfbench_logo_b64}" alt="WolfBench" width="58" height="58">
+	        <h1>WolfBench ({chart_date or date.today().isoformat()})</h1>
+	        <img class="header-logo header-logo-wandb" src="data:image/png;base64,{wandb_cw_logo_b64}" alt="Weights &amp; Biases by CoreWeave" height="58">
+	    </div>
     <p class="subtitle">Wolfram Ravenwolf&rsquo;s Five-Metric Framework &middot; based on Terminal-Bench 2.0{' &middot; min ' + str(min_runs) + ' runs' if min_runs > 1 else ''}</p>
 
     <div class="hook">
@@ -3369,11 +5178,13 @@ h1 {{
         <p>Most benchmarks report a single average. <strong>WolfBench</strong> shows five metrics that tell the full story&nbsp;&ndash; from the <strong>rock-solid base</strong> of tasks solved every time, through the <strong>average</strong>, up to the <strong>ceiling</strong> of everything ever solved&nbsp;&ndash; plus the <strong>best</strong> and <strong>worst</strong> single runs that frame the spread. Together, they reveal what no single number can: how consistent an AI agent truly is.<br><a href="#about" style="color:#FFCC33; text-decoration:none; border-bottom:1px solid rgba(255,204,51,0.3);">Learn&nbsp;more&nbsp;&darr;</a></p>
     </div>
 
-    <div class="legend">
-        <span class="legend-toggle" id="unitToggle" data-mode="pct">%</span>
-        <div class="legend-sep"></div>
-        {"".join(legend_metrics)}
-    </div>
+	    <div class="legend">
+	        <span class="legend-toggle" id="unitToggle" data-mode="pct">%</span>
+	        <div class="legend-sep"></div>
+		        {"".join(legend_metrics)}
+		        <div class="legend-sep" id="chartExportSep"></div>
+		        <span class="legend-toggle" id="chartSaveToggle" role="button" tabindex="0" title="Save and copy full chart as PNG" aria-label="Save and copy full chart as PNG">&#x1F4F8;</span>
+		    </div>
 
     <div class="model-bar">
         <span class="legend-toggle" id="modelVisToggle" title="Show/hide all models">&#x1F441;</span>
@@ -3402,7 +5213,7 @@ h1 {{
         </div>
     </div>
 
-    <p class="footer">Terminal-Bench 2.0 &middot; {DEFAULT_RUNS} runs @ {DEFAULT_TIMEOUT_H}h timeout &middot; 4 CPUs, 8 GB RAM, 10 GB Storage per task<br><span id="agentVersionLine">{agent_version_line}</span></p>
+    <p class="footer">Terminal-Bench 2.0 &middot; {DEFAULT_RUNS} runs @ {DEFAULT_TIMEOUT_H}h timeout &middot; 4 CPUs, 8 GB RAM, 10 GB Storage per task<br><span id="agentVersionLine">{agent_version_line}</span><span id="depthScaleLine" class="depth-scale-line" hidden></span></p>
 
     {runs_table_html}
 
@@ -3473,7 +5284,7 @@ h1 {{
         </div>
 
         <h3>Reading the Chart</h3>
-	        <p>The five metrics are shown for each model/configuration as stacked bar segments from the rock-solid base up to the ceiling. Optional 3D mode adds token volume as depth: input tokens in front, output tokens behind. The <em>spread</em> between the segments tells you as much as the numbers themselves:</p>
+	        <p>The five metrics are shown for each model/configuration as stacked bar segments from the rock-solid base up to the ceiling. Optional 3D modes add token volume, run cost, or both as depth: token mode splits input tokens in front and output tokens behind, cost mode uses the total cost for depth, and the combined mode adds a neutral gray cost shadow behind the token-depth bar. The <em>spread</em> between the segments tells you as much as the numbers themselves:</p>
         <ul class="spread-list">
             <li><strong>Tight spread</strong> (metrics close together) = consistent, predictable AI agent</li>
             <li><strong>Wide spread</strong> (big gap between solid and ceiling) = high variance, unreliable</li>
@@ -3502,6 +5313,7 @@ h1 {{
 </body>
 </html>'''
 
+    html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
     out = output_path.with_suffix(".html")
     out.write_text(html)
     print(f"Saved: {out}")
@@ -3559,11 +5371,13 @@ def main():
                   f"best={m['best']}%  ceil={m['ceiling_abs']:>2}")
 
     weave_urls = None
+    weave_run_urls = None
     if args.weave_manifest and args.weave_manifest.exists():
         try:
             import importlib
             _ww = importlib.import_module("wolfbench_weave")
             weave_urls = _ww.get_evaluation_urls(args.weave_manifest)
+            weave_run_urls = _ww.get_run_urls(args.weave_manifest)
         except Exception as e:
             print(f"Warning: could not load weave manifest: {e}")
 
@@ -3571,7 +5385,8 @@ def main():
                   agent_versions=dict(agent_versions),
                   chart_date=args.chart_date,
                   runs=data["runs"],
-                  weave_urls=weave_urls)
+                  weave_urls=weave_urls,
+                  weave_run_urls=weave_run_urls)
 
 
 if __name__ == "__main__":

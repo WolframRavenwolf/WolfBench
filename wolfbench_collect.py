@@ -30,6 +30,166 @@ from datetime import datetime
 from pathlib import Path
 
 
+COST_PER_MILLION_SCALE = 1_000_000
+
+
+# W&B Inference prices, USD per 1M tokens, checked against the public
+# pricing page (https://wandb.ai/site/inference/) on 2026-06-24.
+WANDB_INFERENCE_PRICING_PER_1M = {
+    "glm-5.2": {"input": 1.39, "output": 4.40, "cache_read": 0.26},
+    "deepseek-v4-pro": {"input": 1.74, "output": 3.46, "cache_read": 0.14},
+    "deepseek-v4-flash": {"input": 0.14, "output": 0.28, "cache_read": 0.07},
+    "kimi-k2.6": {"input": 0.95, "output": 4.00, "cache_read": 0.16},
+    "kimi-k2.5": {"input": 0.60, "output": 3.00, "cache_read": 0.10},
+    "glm-5.1": {"input": 1.40, "output": 4.40, "cache_read": 0.26},
+    "glm-5": {"input": 1.00, "output": 3.20, "cache_read": None},
+    "minimax-m2.5": {"input": 0.30, "output": 1.20, "cache_read": None},
+    "gemma-4-31b": {"input": 0.30, "output": 1.25, "cache_read": None},
+    "nemotron-3-ultra": {"input": 0.75, "output": 2.75, "cache_read": 0.15},
+    "nemotron-3-super-120b": {"input": 0.20, "output": 0.80, "cache_read": None},
+}
+
+
+WANDB_PRICING_ALIASES = {
+    "DeepSeek-V4-Pro [W&B]": "deepseek-v4-pro",
+    "wandb/deepseek-ai/DeepSeek-V4-Pro": "deepseek-v4-pro",
+    "DeepSeek-V4-Flash [W&B]": "deepseek-v4-flash",
+    "wandb/deepseek-ai/DeepSeek-V4-Flash": "deepseek-v4-flash",
+    "Kimi K2.6 [W&B]": "kimi-k2.6",
+    "wandb/moonshotai/Kimi-K2.6": "kimi-k2.6",
+    "Kimi K2.5 (int4) [W&B]": "kimi-k2.5",
+    "Kimi K2.5 (nvfp4) [W&B]": "kimi-k2.5",
+    "wandb/moonshotai/Kimi-K2.5": "kimi-k2.5",
+    "GLM-5.2 [W&B]": "glm-5.2",
+    "wandb/zai-org/GLM-5.2": "glm-5.2",
+    "GLM-5.1 [W&B]": "glm-5.1",
+    "wandb/zai-org/GLM-5.1": "glm-5.1",
+    "GLM-5-FP8 [W&B]": "glm-5",
+    "wandb/zai-org/GLM-5-FP8": "glm-5",
+    "MiniMax M2.5 [W&B]": "minimax-m2.5",
+    "wandb/MiniMaxAI/MiniMax-M2.5": "minimax-m2.5",
+    "Gemma 4 31B [W&B]": "gemma-4-31b",
+    "wandb/google/gemma-4-31B-it": "gemma-4-31b",
+    "NVIDIA-Nemotron-3-Ultra-550B-A55B [W&B]": "nemotron-3-ultra",
+    "wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B": "nemotron-3-ultra",
+    "NVIDIA-Nemotron-3-Super-120B-A12B-FP8 [W&B]": "nemotron-3-super-120b",
+    "wandb/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8": "nemotron-3-super-120b",
+}
+WANDB_PRICING_ALIASES = {
+    alias.lower(): pricing_key
+    for alias, pricing_key in WANDB_PRICING_ALIASES.items()
+}
+
+
+# Fallback list prices, USD per 1M tokens, for agents that record tokens but do
+# not emit per-task costs. These keep historical WolfBench snapshots complete
+# without rerunning benchmarks.
+TOKEN_PRICING_PER_1M = {
+    "anthropic-claude-opus-4-6": {
+        "input": 5.00,
+        "cache_read": 0.50,
+        "cache_creation": 6.25,
+        "output": 25.00,
+    },
+    "anthropic-claude-opus-4-7": {
+        "input": 5.00,
+        "cache_read": 0.50,
+        "cache_creation": 6.25,
+        "output": 25.00,
+    },
+    "anthropic-claude-sonnet-4-6": {
+        "input": 3.00,
+        "cache_read": 0.30,
+        "cache_creation": 3.75,
+        "output": 15.00,
+    },
+    "google-gemini-3-5-flash": {
+        "input": 1.50,
+        "cache_read": 0.15,
+        "output": 9.00,
+    },
+    "openai-gpt-5-3-codex": {
+        "input": 1.75,
+        "cache_read": 0.175,
+        "output": 14.00,
+    },
+    "openai-gpt-5-4": {
+        "input": 2.50,
+        "cache_read": 0.25,
+        "output": 15.00,
+    },
+    "openai-gpt-5-4-mini": {
+        "input": 0.75,
+        "cache_read": 0.075,
+        "output": 4.50,
+    },
+    "openai-gpt-5-4-nano": {
+        "input": 0.20,
+        "cache_read": 0.02,
+        "output": 1.25,
+    },
+    "openai-gpt-5-5": {
+        "input": 5.00,
+        "cache_read": 0.50,
+        "output": 30.00,
+    },
+    "openrouter-glm-5-turbo": {
+        "input": 1.20,
+        "cache_read": 0.24,
+        "output": 4.00,
+    },
+    "openrouter-kimi-k2-6": {
+        "input": 0.95,
+        "cache_read": 0.16,
+        "output": 4.00,
+    },
+    "openrouter-minimax-m2-7": {
+        "input": 0.30,
+        "cache_read": 0.06,
+        "output": 1.20,
+    },
+    "mistral-small-2603": {
+        "input": 0.15,
+        "cache_read": 0.015,
+        "output": 0.60,
+    },
+}
+
+
+TOKEN_PRICING_ALIASES = {
+    "anthropic/claude-opus-4-6": "anthropic-claude-opus-4-6",
+    "claude opus 4.6": "anthropic-claude-opus-4-6",
+    "cursor/claude-4.6-opus-high-thinking": "anthropic-claude-opus-4-6",
+    "anthropic/claude-opus-4-7": "anthropic-claude-opus-4-7",
+    "claude opus 4.7": "anthropic-claude-opus-4-7",
+    "anthropic/claude-sonnet-4-6": "anthropic-claude-sonnet-4-6",
+    "claude sonnet 4.6": "anthropic-claude-sonnet-4-6",
+    "google/gemini-3.5-flash": "google-gemini-3-5-flash",
+    "gemini 3.5 flash": "google-gemini-3-5-flash",
+    "openai/gpt-5.3-codex": "openai-gpt-5-3-codex",
+    "gpt-5.3-codex": "openai-gpt-5-3-codex",
+    "openai/gpt-5.4": "openai-gpt-5-4",
+    "gpt-5.4": "openai-gpt-5-4",
+    "openai/gpt-5.4-mini": "openai-gpt-5-4-mini",
+    "gpt‑5.4 mini": "openai-gpt-5-4-mini",
+    "gpt-5.4 mini": "openai-gpt-5-4-mini",
+    "openai/gpt-5.4-nano": "openai-gpt-5-4-nano",
+    "gpt‑5.4 nano": "openai-gpt-5-4-nano",
+    "gpt-5.4 nano": "openai-gpt-5-4-nano",
+    "openai/gpt-5.5": "openai-gpt-5-5",
+    "cursor/gpt-5.5-high": "openai-gpt-5-5",
+    "gpt-5.5": "openai-gpt-5-5",
+    "openrouter/z-ai/glm-5-turbo": "openrouter-glm-5-turbo",
+    "glm-5-turbo": "openrouter-glm-5-turbo",
+    "openrouter/moonshotai/kimi-k2.6": "openrouter-kimi-k2-6",
+    "kimi k2.6 [moonshot ai]": "openrouter-kimi-k2-6",
+    "openrouter/minimax/minimax-m2.7": "openrouter-minimax-m2-7",
+    "minimax m2.7": "openrouter-minimax-m2-7",
+    "mistral/mistral-small-2603": "mistral-small-2603",
+    "mistral small 4 119b a6b": "mistral-small-2603",
+}
+
+
 SSH_OPTS = [
     "-o", "ConnectTimeout=10",
     "-o", "BatchMode=yes",
@@ -108,9 +268,11 @@ def find_runs_on_vm(vm: str) -> list[str]:
     command = r"""
 for base in ~/harbor-evals ~/harbor ~/harbor-5; do
   [ -d "$base" ] || continue
-  find "$base" -maxdepth 4 -type d \
-    -regex '.*/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]__[0-9][0-9]-[0-9][0-9]-[0-9][0-9]' \
-    2>/dev/null | while read dir; do
+  jobs_dir="$base/jobs"
+  [ -d "$jobs_dir" ] || continue
+  find "$jobs_dir" -mindepth 3 -maxdepth 3 -type f -name result.json \
+    2>/dev/null | sort | while read -r result; do
+    dir="${result%/result.json}"
     [ -f "$dir/result.json" ] && [ -f "$dir/config.json" ] && echo "$dir"
   done
 done
@@ -183,6 +345,177 @@ def read_run_data(vm: str, run_dir: str) -> dict | None:
             pass
 
     return {"result": result, "config": config, "tokens": tokens}
+
+
+def _model_info_has_per_million_costs(config: dict) -> bool:
+    """Detect configs where per-million prices were stored in per-token fields."""
+    agent_cfg = config.get("agents", [{}])[0]
+    model_info = (agent_cfg.get("kwargs") or {}).get("model_info") or {}
+    cost_keys = (
+        "input_cost_per_token",
+        "output_cost_per_token",
+        "cache_creation_input_token_cost",
+        "cache_read_input_token_cost",
+    )
+    for key in cost_keys:
+        try:
+            value = float(model_info.get(key) or 0)
+        except (TypeError, ValueError):
+            continue
+        if value >= 0.001:
+            return True
+    return False
+
+
+def _normalize_cost_usd(cost, config: dict):
+    try:
+        value = float(cost)
+    except (TypeError, ValueError):
+        return cost
+    if value > 10_000 and _model_info_has_per_million_costs(config):
+        return round(value / COST_PER_MILLION_SCALE, 2)
+    return cost
+
+
+def _positive_cost_usd(cost) -> bool:
+    try:
+        return float(cost) > 0
+    except (TypeError, ValueError):
+        return False
+
+
+def _rate_per_1m(cost) -> float | None:
+    try:
+        value = float(cost)
+    except (TypeError, ValueError):
+        return None
+    if value <= 0:
+        return None
+    if value < 0.001:
+        return value * COST_PER_MILLION_SCALE
+    return value
+
+
+def _pricing_from_model_info(config: dict) -> dict | None:
+    agent_cfg = config.get("agents", [{}])[0]
+    model_info = (agent_cfg.get("kwargs") or {}).get("model_info") or {}
+    input_rate = _rate_per_1m(model_info.get("input_cost_per_token"))
+    output_rate = _rate_per_1m(model_info.get("output_cost_per_token"))
+    if input_rate is None or output_rate is None:
+        return None
+
+    pricing = {"input": input_rate, "output": output_rate}
+    cache_read = _rate_per_1m(model_info.get("cache_read_input_token_cost"))
+    cache_creation = _rate_per_1m(
+        model_info.get("cache_creation_input_token_cost")
+    )
+    if cache_read is not None:
+        pricing["cache_read"] = cache_read
+    if cache_creation is not None:
+        pricing["cache_creation"] = cache_creation
+    return pricing
+
+
+def _fallback_pricing_for_model(model_name: str, model_display: str) -> dict | None:
+    candidates = []
+    for value in (model_name, model_display):
+        if value:
+            candidates.append(str(value).strip().lower())
+
+    for candidate in candidates:
+        pricing_key = TOKEN_PRICING_ALIASES.get(candidate)
+        if pricing_key:
+            return TOKEN_PRICING_PER_1M[pricing_key]
+    return None
+
+
+def _split_uncached_and_cached_input(input_tokens, cache_tokens) -> tuple[float, float]:
+    input_tokens = input_tokens or 0
+    cache_tokens = cache_tokens or 0
+    if cache_tokens and input_tokens >= cache_tokens:
+        return input_tokens - cache_tokens, cache_tokens
+    return input_tokens, cache_tokens
+
+
+def _calculate_token_cost_usd(tokens: dict | None, pricing: dict | None):
+    if not tokens or not pricing:
+        return None
+
+    input_tokens = tokens.get("in") or 0
+    cache_tokens = tokens.get("cache") or 0
+    cache_write_tokens = tokens.get("cache_write") or 0
+    output_tokens = tokens.get("out") or 0
+    if not input_tokens and not cache_tokens and not cache_write_tokens and not output_tokens:
+        return None
+
+    input_rate = pricing["input"]
+    cache_rate = pricing.get("cache_read")
+    if cache_rate is None:
+        cache_rate = input_rate
+    cache_creation_rate = pricing.get("cache_creation")
+    if cache_creation_rate is None:
+        cache_creation_rate = input_rate
+
+    if cache_write_tokens:
+        uncached_input_tokens = input_tokens
+        cached_input_tokens = cache_tokens
+        cache_creation_tokens = cache_write_tokens
+        uncached_input_rate = input_rate
+    else:
+        uncached_input_tokens, cached_input_tokens = _split_uncached_and_cached_input(
+            input_tokens, cache_tokens
+        )
+        cache_creation_tokens = 0
+        uncached_input_rate = (
+            cache_creation_rate
+            if cached_input_tokens and pricing.get("cache_creation") is not None
+            else input_rate
+        )
+
+    cost = (
+        uncached_input_tokens * uncached_input_rate
+        + cache_creation_tokens * cache_creation_rate
+        + cached_input_tokens * cache_rate
+        + output_tokens * pricing["output"]
+    ) / COST_PER_MILLION_SCALE
+    return round(cost, 2)
+
+
+def _calculate_fallback_cost_usd(tokens: dict | None, config: dict,
+                                 model_name: str, model_display: str):
+    pricing = (
+        _pricing_from_model_info(config)
+        or _fallback_pricing_for_model(model_name, model_display)
+    )
+    return _calculate_token_cost_usd(tokens, pricing)
+
+
+def _wandb_pricing_for_model(model_name: str, model_display: str) -> dict | None:
+    model_name = str(model_name or "").strip()
+    model_display = str(model_display or "").strip()
+    if not model_name.lower().startswith("wandb/") and "[W&B]" not in model_display:
+        return None
+
+    candidates = []
+    for value in (model_name, model_display):
+        if not value:
+            continue
+        text = str(value).strip()
+        candidates.append(text)
+        if "wandb/" in text:
+            candidates.append("wandb/" + text.split("wandb/", 1)[1])
+
+    for candidate in candidates:
+        pricing_key = WANDB_PRICING_ALIASES.get(candidate.lower())
+        if pricing_key:
+            return WANDB_INFERENCE_PRICING_PER_1M[pricing_key]
+    return None
+
+
+def _calculate_wandb_cost_usd(tokens: dict | None, model_name: str,
+                              model_display: str):
+    pricing = _wandb_pricing_for_model(model_name, model_display)
+    return _calculate_token_cost_usd(tokens, pricing)
 
 
 def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
@@ -275,6 +608,16 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
 
     # Jobs dir from config for run identification
     jobs_dir = config.get("jobs_dir", "")
+    cost_usd = _normalize_cost_usd(tokens.get("cost"), config) if tokens else None
+    wandb_cost_usd = _calculate_wandb_cost_usd(tokens, model_name, model_display)
+    if wandb_cost_usd is not None:
+        cost_usd = wandb_cost_usd
+    elif not _positive_cost_usd(cost_usd):
+        fallback_cost_usd = _calculate_fallback_cost_usd(
+            tokens, config, model_name, model_display
+        )
+        if fallback_cost_usd is not None:
+            cost_usd = fallback_cost_usd
 
     return {
         "vm": vm,
@@ -318,11 +661,14 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
         "tokens_in": tokens.get("in") if tokens else None,
         "tokens_out": tokens.get("out") if tokens else None,
         "tokens_cache": tokens.get("cache") if tokens else None,
+        "tokens_cache_write": tokens.get("cache_write") if tokens else None,
         "tokens_total": (
-            (tokens.get("in") or 0) + (tokens.get("cache") or 0) + (tokens.get("out") or 0)
+            (tokens.get("in") or 0)
+            + (tokens.get("cache_write") or 0)
+            + (tokens.get("out") or 0)
             if tokens else None
         ),
-        "cost_usd": tokens.get("cost") if tokens else None,
+        "cost_usd": cost_usd,
     }
 
 
@@ -413,13 +759,42 @@ def find_local_runs(local_dir) -> list[str]:
     return sorted(runs)
 
 
+def _read_session_usage(session_path: Path) -> dict | None:
+    if not session_path.exists():
+        return None
+    try:
+        first_line = session_path.read_text().splitlines()[0]
+        session = json.loads(first_line)
+    except (IndexError, json.JSONDecodeError, OSError):
+        return None
+
+    input_tokens = session.get("input_tokens") or 0
+    output_tokens = session.get("output_tokens") or 0
+    cache_read_tokens = session.get("cache_read_tokens") or 0
+    cache_write_tokens = session.get("cache_write_tokens") or 0
+    actual_cost = session.get("actual_cost_usd")
+    estimated_cost = session.get("estimated_cost_usd")
+    cost = actual_cost if actual_cost is not None else estimated_cost
+    cost = cost or 0
+    if not input_tokens and not output_tokens and not cache_read_tokens and not cache_write_tokens and not cost:
+        return None
+
+    return {
+        "in": input_tokens,
+        "out": output_tokens,
+        "cache": cache_read_tokens,
+        "cache_write": cache_write_tokens,
+        "cost": cost,
+    }
+
+
 def _aggregate_local_tokens(run_path) -> dict | None:
     """Aggregate token metrics from per-task result.json files on disk.
 
     Mirrors the inline Python script in read_run_data() but runs locally.
     """
     run_path = Path(run_path)
-    tin = tout = tcache = 0
+    tin = tout = tcache = tcache_write = 0
     cost = 0.0
     ver = None
 
@@ -435,10 +810,30 @@ def _aggregate_local_tokens(run_path) -> dict | None:
         try:
             d = json.loads(f.read_text())
             ar = d.get("agent_result") or {}
-            tin += ar.get("n_input_tokens", 0) or 0
-            tout += ar.get("n_output_tokens", 0) or 0
-            tcache += ar.get("n_cache_tokens", 0) or 0
-            cost += ar.get("cost_usd", 0) or 0
+            task_in = ar.get("n_input_tokens", 0) or 0
+            task_out = ar.get("n_output_tokens", 0) or 0
+            task_cache = ar.get("n_cache_tokens", 0) or 0
+            task_cost = ar.get("cost_usd", 0) or 0
+            if not task_in and not task_out and not task_cache and not task_cost:
+                session_usage = _read_session_usage(
+                    f.parent / "agent" / "hermes-session.jsonl"
+                )
+                if session_usage:
+                    tin += session_usage["in"]
+                    tout += session_usage["out"]
+                    tcache += session_usage["cache"]
+                    tcache_write += session_usage["cache_write"]
+                    cost += session_usage["cost"]
+                else:
+                    tin += task_in
+                    tout += task_out
+                    tcache += task_cache
+                    cost += task_cost
+            else:
+                tin += task_in
+                tout += task_out
+                tcache += task_cache
+                cost += task_cost
             if ver is None:
                 ai = d.get("agent_info") or {}
                 v = ai.get("version", "")
@@ -455,7 +850,14 @@ def _aggregate_local_tokens(run_path) -> dict | None:
         except (json.JSONDecodeError, OSError):
             pass
 
-    return {"in": tin, "out": tout, "cache": tcache, "cost": round(cost, 2), "ver": ver}
+    return {
+        "in": tin,
+        "out": tout,
+        "cache": tcache,
+        "cache_write": tcache_write,
+        "cost": round(cost, 2),
+        "ver": ver,
+    }
 
 
 def read_local_run_data(run_dir: str) -> dict | None:
@@ -506,19 +908,42 @@ def collect_local(local_dir) -> list[dict]:
     return results
 
 
+def local_trajectory_counts(run_dir: str | Path) -> tuple[int, int]:
+    """Return (trajectory_count, expected_task_count) for a local run cache."""
+    run_path = Path(run_dir)
+    trajectory_count = sum(1 for _ in run_path.glob("*/agent/trajectory.json"))
+    per_task_count = sum(1 for _ in run_path.glob("*/result.json"))
+    root_expected = 0
+    try:
+        result = json.loads((run_path / "result.json").read_text())
+        root_expected = (
+            result.get("n_total_trials")
+            or result.get("stats", {}).get("n_trials")
+            or 0
+        )
+    except (json.JSONDecodeError, OSError):
+        pass
+    expected_task_count = max(per_task_count, root_expected)
+    return trajectory_count, expected_task_count
+
+
+def local_trajectories_complete(run_dir: str | Path) -> bool:
+    """Return True if a local run has a trajectory for every known task."""
+    trajectory_count, expected_task_count = local_trajectory_counts(run_dir)
+    return expected_task_count > 0 and trajectory_count >= expected_task_count
+
+
 def download_run(
     vm: str,
     run_dir: str,
     local_base,
     include_trajectories: bool = True,
 ) -> dict:
-    """Download a run directory from a VM to local storage via SSH tar+base64.
+    """Download a run directory from a VM to local storage via rsync.
 
     Returns {"local_path": str|None, "status": "ok"|"skipped"|"error"}.
     """
-    import base64
-    import io
-    import tarfile
+    import shlex
 
     local_base = Path(local_base)
     parts = run_dir.rstrip("/").split("/")
@@ -530,38 +955,57 @@ def download_run(
     if local_run.exists() and (local_run / "result.json").exists():
         if not include_trajectories:
             return {"local_path": str(local_run), "status": "skipped"}
-        # Only skip if trajectories are actually present on disk
-        if any(local_run.glob("*/agent/trajectory.json")):
+        # Only skip if trajectories are complete, not merely partially present.
+        if local_trajectories_complete(local_run):
             return {"local_path": str(local_run), "status": "skipped"}
 
-    # SSH tar+base64
+    local_run.mkdir(parents=True, exist_ok=True)
+    remote_shell = "ssh " + " ".join(shlex.quote(opt) for opt in SSH_OPTS)
+    source = f"{vm}:{shlex.quote(run_dir.rstrip('/') + '/')}"
+    rsync_cmd = [
+        "rsync",
+        "-az",
+        "--partial",
+        "--delete-after",
+        "--delete-excluded",
+        "-e",
+        remote_shell,
+    ]
+    # Keep the local cache to the benchmark evidence WolfBench actually needs.
+    # Raw agent workdirs can include gigabytes of temporary binaries per run.
+    include_patterns = [
+        "*/",
+        "result.json",
+        "config.json",
+        "job.log",
+        "exception.txt",
+    ]
     if include_trajectories:
-        command = f'cd "{run_dir}" && tar -czf - . 2>/dev/null | base64'
-    else:
-        # Tier 1 only: result.json + config.json files (run-level + per-task)
-        command = (
-            f'cd "{run_dir}" && '
-            f'find . \\( -name "result.json" -o -name "config.json" \\) -print0 | '
-            f'tar -czf - --null -T - 2>/dev/null | base64'
-        )
-
+        include_patterns.append("trajectory.json")
+    for pattern in include_patterns:
+        rsync_cmd.append(f"--include={pattern}")
+    rsync_cmd.append("--exclude=*")
+    rsync_cmd.extend([source, str(local_run) + "/"])
     try:
-        stdout, stderr, rc = ssh_run(vm, command, timeout=300)
+        proc = subprocess.run(
+            rsync_cmd,
+            capture_output=True,
+            text=True,
+            timeout=3600 if include_trajectories else 300,
+        )
     except Exception as e:
         print(f"  [{vm}] Download error for {run_dir}: {e}", file=sys.stderr)
         return {"local_path": None, "status": "error"}
 
-    if rc != 0 or not stdout.strip():
-        print(f"  [{vm}] Download failed for {run_dir}: {stderr.strip()}", file=sys.stderr)
+    if proc.returncode != 0:
+        print(
+            f"  [{vm}] Download failed for {run_dir}: {proc.stderr.strip()}",
+            file=sys.stderr,
+        )
         return {"local_path": None, "status": "error"}
 
-    try:
-        tar_bytes = base64.b64decode(stdout.strip())
-        local_run.mkdir(parents=True, exist_ok=True)
-        with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:gz") as tar:
-            tar.extractall(path=str(local_run))
-    except Exception as e:
-        print(f"  [{vm}] Extract error for {run_dir}: {e}", file=sys.stderr)
+    if include_trajectories and not any(local_run.glob("*/agent/trajectory.json")):
+        print(f"  [{vm}] Download missing trajectories for {run_dir}", file=sys.stderr)
         return {"local_path": None, "status": "error"}
 
     # Write provenance metadata
