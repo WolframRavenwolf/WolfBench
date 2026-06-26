@@ -208,6 +208,10 @@ __marimo__/
 
 # WolfBench data (generated, not source)
 runs/
+wolfbench-runs/
+release-assets/
 harbor_results*.json
 *-manifest.json
 wolfbench*.html
+*.tar.zst
+SHA256SUMS

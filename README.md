@@ -34,11 +34,11 @@ The spread between them tells you as much as the numbers themselves:
 
 ## What This Repo Contains
 
-This repository is the open-source engine behind [wolfbench.ai](https://wolfbench.ai/) — the methodology, the tooling pipeline, all run data, and complete instructions for running and reproducing the benchmarks. It contains the dashboard, chart generator, data collector, and Weave uploader that turn raw benchmark runs into the interactive leaderboard on the website.
+This repository is the open-source engine behind [wolfbench.ai](https://wolfbench.ai/) - the methodology, tooling pipeline, curated snapshots, and complete instructions for running and reproducing the benchmarks. It contains the dashboard, chart generator, data collector, Weave uploader, and release-export tooling that turn raw benchmark runs into the interactive leaderboard on the website.
 
 The benchmark tasks themselves come from [Terminal-Bench 2.0](https://www.tbench.ai/), orchestrated by the [Harbor](https://github.com/harbor-framework/harbor) framework (or [this fork](https://github.com/WolframRavenwolf/harbor/tree/openclaw-agent) which adds the OpenClaw agent). Harbor runs the tasks in [Daytona](https://www.daytona.io/) sandboxes on ephemeral VMs — this repo picks up the results from there.
 
-All run data (configs and results) lives in `wolfbench-runs/`, organized by configuration and timestamp. Full trajectories, evaluations, and traces are uploaded to [W&B Weave](https://wandb.ai/wolfram-evals/wolfbench).
+Complete run-data snapshots are published as GitHub Release assets so the code repo stays small and clone-friendly. Local working copies may use `wolfbench-runs/`, organized by configuration and timestamp, but that directory is generated data and is not tracked in Git. Full trajectories, evaluations, and traces are uploaded to [W&B Weave](https://wandb.ai/wolfram-evals/wolfbench).
 
 ### Core Scripts
 
@@ -46,6 +46,7 @@ All run data (configs and results) lives in `wolfbench-runs/`, organized by conf
 | ------------------------ | ----------- | ---------------------------------------------------------------------------------------------------------------- |
 | `wolfbench-dashboard.py` | Entry point | Marimo reactive notebook. Orchestrates scanning, filtering, downloading, saving, uploading, and chart generation |
 | `wolfbench-chart.py`     | Entry point | Generates standalone interactive HTML charts from `wolfbench_results.json`                                       |
+| `wolfbench-export-release.sh` | Utility | Builds complete GitHub Release data snapshots (`wolfbench-runs-full-*.tar.zst`, manifest, checksums)       |
 | `wolfbench_collect.py`   | Library     | SSH scanner. Discovers VMs (exe.dev, Hetzner), reads results, deduplicates, classifies runs                      |
 | `wolfbench_weave.py`     | Library     | W&B Weave integration. Two-tier upload (evaluations + full traces), manifest management                          |
 
@@ -308,9 +309,22 @@ Step 6: Generate Chart (interactive HTML, opens in browser)
 Step 7: Upload Chart (scp to wolfbench.ai server)
 ```
 
+### Full Data Snapshots
+
+Complete public run-data snapshots are attached to [GitHub Releases](https://github.com/wandb/WolfBench/releases). Each `data-YYYY-MM-DD_HHMMSS` release is a frozen evidence snapshot and includes:
+
+- `wolfbench_results_YYYY-MM-DD_HHMMSS.json`
+- `wolfbench_results_excluded_YYYY-MM-DD_HHMMSS.json`
+- `wolfbench_YYYY-MM-DD_HHMMSS.html`
+- `wolfbench-runs-full-YYYY-MM-DD_HHMMSS.tar.zst`
+- `manifest-YYYY-MM-DD_HHMMSS.json`
+- `SHA256SUMS`
+
+Each data release is complete, not incremental. Download one release to reproduce that data state.
+
 ### Local Storage
 
-Downloaded run data lives in `wolfbench-runs/`, mirroring the VM directory structure:
+Downloaded or extracted run data lives in `wolfbench-runs/`, mirroring the VM directory structure:
 
 ```
 wolfbench-runs/
@@ -326,7 +340,7 @@ wolfbench-runs/
               trajectory.json  # full conversation trace (ATIF v1.6)
 ```
 
-Local storage is scanned first. Deduplication (first-wins) means local copies automatically shadow VM originals. Once downloaded, VMs can be torn down — all data persists locally.
+Local storage is scanned first. Deduplication (first-wins) means local copies automatically shadow VM originals. Once downloaded, VMs can be torn down - all data persists locally. This directory is generated data and is intentionally ignored by Git; publish it through release assets, not commits.
 
 ### W&B Weave Integration
 
@@ -341,6 +355,9 @@ All evaluations and full agent traces are uploaded to [W&B Weave](https://wandb.
 | `wolfbench-overrides.json`          | Manual display overrides (model names, thinking labels, etc.) |
 | `wolfbench_*.html`                  | Interactive charts for wolfbench.ai                           |
 | `*-manifest.json`                   | Weave upload tracking per project                             |
+| `wolfbench-runs-full-*.tar.zst`     | Complete public run-data archive for GitHub Releases          |
+| `manifest-*.json`                   | Release asset manifest                                        |
+| `SHA256SUMS`                        | Release asset checksums                                       |
 
 ## Dependencies
 
