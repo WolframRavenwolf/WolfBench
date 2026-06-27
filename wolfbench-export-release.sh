@@ -32,7 +32,6 @@ Options:
 Output:
   release-assets/data-YYYY-MM-DD_HHMMSS/
     wolfbench_results_YYYY-MM-DD_HHMMSS.json
-    wolfbench_results_excluded_YYYY-MM-DD_HHMMSS.json
     wolfbench-overrides.json
     wolfbench_YYYY-MM-DD_HHMMSS.html
     wolfbench-runs-full-YYYY-MM-DD_HHMMSS.tar.zst
@@ -83,7 +82,6 @@ if [[ -z "$SUFFIX" ]]; then
 fi
 
 RESULTS="${SCRIPT_DIR}/wolfbench_results_${SUFFIX}.json"
-EXCLUDED="${SCRIPT_DIR}/wolfbench_results_excluded_${SUFFIX}.json"
 OVERRIDES="${SCRIPT_DIR}/wolfbench-overrides.json"
 HTML="${SCRIPT_DIR}/wolfbench_${SUFFIX}.html"
 RELEASE_DIR="${OUT_ROOT}/data-${SUFFIX}"
@@ -103,9 +101,6 @@ require_file() {
 require_file "$RESULTS" "results snapshot"
 require_file "$OVERRIDES" "display overrides"
 require_file "$HTML" "interactive HTML"
-if [[ ! -f "$EXCLUDED" ]]; then
-    echo "WARNING: Excluded-runs snapshot not found: ${EXCLUDED}"
-fi
 if [[ ! -d "$RUNS_DIR" ]]; then
     echo "ERROR: Missing run-data directory: ${RUNS_DIR}" >&2
     exit 1
@@ -136,6 +131,7 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
 fi
 
 mkdir -p "$RELEASE_DIR"
+rm -f "$RELEASE_DIR"/wolfbench_results_excluded_*.json
 STAGE="$(mktemp -d "${TMPDIR:-/tmp}/wolfbench-release.XXXXXX")"
 cleanup() {
     if [[ "$KEEP_STAGE" -eq 1 ]]; then
@@ -151,9 +147,6 @@ STAGED_RUNS="${STAGE}/wolfbench-runs"
 echo ""
 echo "=== Copying release metadata ==="
 cp -p "$RESULTS" "$RELEASE_DIR/"
-if [[ -f "$EXCLUDED" ]]; then
-    cp -p "$EXCLUDED" "$RELEASE_DIR/"
-fi
 cp -p "$OVERRIDES" "$RELEASE_DIR/"
 cp -p "$HTML" "$RELEASE_DIR/"
 
@@ -201,7 +194,7 @@ rm -f "$ARCHIVE"
 
 echo ""
 echo "=== Writing manifest ==="
-python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$EXCLUDED" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$SECRET_FILES" <<'PY'
+python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$SECRET_FILES" <<'PY'
 import hashlib
 import json
 import os
@@ -209,7 +202,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-manifest_path, suffix, source_dir, release_dir, archive, results, excluded, overrides, html, config_count, result_count, secret_files = sys.argv[1:]
+manifest_path, suffix, source_dir, release_dir, archive, results, overrides, html, config_count, result_count, secret_files = sys.argv[1:]
 
 def file_info(path):
     p = Path(path)
@@ -226,7 +219,7 @@ def file_info(path):
     }
 
 files = []
-for path in (results, excluded, overrides, html, archive):
+for path in (results, overrides, html, archive):
     info = file_info(path)
     if info:
         files.append(info)
@@ -254,7 +247,7 @@ echo "=== Writing checksums ==="
 (
     cd "$RELEASE_DIR"
     rm -f "$CHECKSUMS"
-    for f in wolfbench_results_"${SUFFIX}".json wolfbench_results_excluded_"${SUFFIX}".json wolfbench-overrides.json wolfbench_"${SUFFIX}".html wolfbench-runs-full-"${SUFFIX}".tar.zst manifest-"${SUFFIX}".json; do
+    for f in wolfbench_results_"${SUFFIX}".json wolfbench-overrides.json wolfbench_"${SUFFIX}".html wolfbench-runs-full-"${SUFFIX}".tar.zst manifest-"${SUFFIX}".json; do
         [[ -f "$f" ]] || continue
         shasum -a 256 "$f" >> SHA256SUMS
     done

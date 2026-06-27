@@ -304,7 +304,7 @@ Step 1: Select VMs → Scan (local first + VMs, deduplicated)
 Step 2: Review / Filter / Select (classify valid vs. excluded runs)
 Step 3: Download to Local Storage
 Step 4: Upload to W&B Weave
-Step 5: Save Results (wolfbench_results.json + wolfbench_results_excluded.json)
+Step 5: Save Results (wolfbench_results.json + local-only wolfbench_results_excluded.json)
 Step 6: Generate Chart (interactive HTML, opens in browser)
 Step 7: Upload Chart (scp to wolfbench.ai server)
 ```
@@ -314,7 +314,6 @@ Step 7: Upload Chart (scp to wolfbench.ai server)
 Complete public run-data snapshots are attached to [GitHub Releases](https://github.com/wandb/WolfBench/releases). Each `data-YYYY-MM-DD_HHMMSS` release is a frozen evidence snapshot and includes:
 
 - `wolfbench_results_YYYY-MM-DD_HHMMSS.json`
-- `wolfbench_results_excluded_YYYY-MM-DD_HHMMSS.json`
 - `wolfbench-overrides.json`
 - `wolfbench_YYYY-MM-DD_HHMMSS.html`
 - `wolfbench-runs-full-YYYY-MM-DD_HHMMSS.tar.zst`
@@ -352,7 +351,7 @@ All evaluations and full agent traces are uploaded to [W&B Weave](https://wandb.
 | File                                | Description                                                   |
 | ----------------------------------- | ------------------------------------------------------------- |
 | `wolfbench_results_*.json`          | Curated result snapshot (valid runs only)                     |
-| `wolfbench_results_excluded_*.json` | Excluded runs (infra failures, invalid configs, etc.)         |
+| `wolfbench_results_excluded_*.json` | Local-only excluded runs audit (ignored; not synced or released) |
 | `wolfbench-overrides.json`          | Manual display overrides (model names, thinking labels, etc.) |
 | `wolfbench_*.html`                  | Interactive charts for wolfbench.ai                           |
 | `*-manifest.json`                   | Weave upload tracking per project                             |
