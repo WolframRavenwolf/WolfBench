@@ -374,8 +374,8 @@ All evaluations and full agent traces are uploaded to [W&B Weave](https://wandb.
 
 ---
 
-Inference sponsored by [CoreWeave](https://www.coreweave.com/): The Essential Cloud for AI.  \
-Sandbox compute by [Daytona](https://www.daytona.io/) – Secure Infrastructure for Running AI-Generated Code.  \
+Inference and sandbox compute sponsored by [CoreWeave](https://www.coreweave.com/): The Essential Cloud for AI.  \
+Additional sandbox compute by [Daytona](https://www.daytona.io/) – Secure Infrastructure for Running AI-Generated Code.  \
 Built with [Harbor](https://harborframework.com/) for orchestration, [Terminal-Bench 2.0](https://www.tbench.ai/) for tasks, and [W&B Weave](https://wandb.ai/) for tracking.  \
 Charts and dashboards generated with [marimo](https://marimo.io/) notebooks.  \
-Explore the interactive chart and model/agent leaderboard on the [WolfBench website](https://wolfbench.ai/).
+Explore the complete data and tooling suite on our [WolfBench GitHub](https://github.com/wandb/WolfBench).
