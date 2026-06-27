@@ -211,6 +211,7 @@ runs/
 wolfbench-runs/
 release-assets/
 harbor_results*.json
+wolfbench_results_excluded*.json
 *-manifest.json
 wolfbench*.html
 *.tar.zst
