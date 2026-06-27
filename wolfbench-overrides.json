@@ -1,0 +1,409 @@
+{
+  "cc-claude-opus-4-6-max|claude-code|2.1.75|anthropic/claude-opus-4-6|-": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "max"
+  },
+  "cc-gpt-5.4-max|claude-code|2.1.63|openrouter/openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4",
+    "thinking_display": "xhigh"
+  },
+  "oc-Kimi-K2.5-int4|openclaw|2026.3.1|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (int4) [W&B]"
+  },
+  "oc-Kimi-K2.5-nvfp4|openclaw|2026.3.1|custom/unknown|-": {
+    "model_display": "Kimi K2.5 (nvfp4) [W&B]"
+  },
+  "oc-claude-opus-4-6-max|openclaw|2026.3.11|anthropic/claude-opus-4-6|xhigh": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "max"
+  },
+  "t2-Kimi-K2.5-int4|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (int4) [W&B]"
+  },
+  "t2-Kimi-K2.5-nvfp4|terminus-2|2.0.0|openai/unknown|-": {
+    "model_display": "Kimi K2.5 (nvfp4) [W&B]"
+  },
+  "oc-Kimi-K2.5-2h|openclaw|2026.2.17|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (2h)"
+  },
+  "t2-Kimi-K2.5|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (2h)"
+  },
+  "wb-t2-kimi-k2.5-dev-vllm0.17.1|terminus-2|2.0.0|wandb/nvidia/Kimi-K2.5-NVFP4|-": {
+    "model_display": "kimi-k2.5-dev-vllm0.17.1"
+  },
+  "wb-t2-kimi-k2.5-dev-vllm0.18.0-sd-trtllm|terminus-2|2.0.0|wandb/nvidia/Kimi-K2.5-NVFP4|-": {
+    "model_display": "kimi-k2.5-dev-vllm0.18.0-sd-trtllm"
+  },
+  "wb-t2-kimi-k2.5-dev|terminus-2|2.0.0|wandb/nvidia/Kimi-K2.5-NVFP4|-": {
+    "model_display": "Kimi K2.5 (dev)"
+  },
+  "ha-wandb-kimi-k2.5|hermes|v2026.3.30|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (nvfp4) [W&B]"
+  },
+  "cc-claude-opus-4-6|claude-code|2.1.63|anthropic/claude-opus-4-6|-": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "high"
+  },
+  "cc-claude-sonnet-4-6|claude-code|2.1.63|anthropic/claude-sonnet-4-6|-": {
+    "model_display": "Claude Sonnet 4.6"
+  },
+  "cc-gpt-5.3-codex|claude-code|2.1.63|openrouter/openai/gpt-5.3-codex|-": {
+    "model_display": "GPT-5.3-Codex"
+  },
+  "cc-gpt-5.4|claude-code|2.1.63|openrouter/openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4"
+  },
+  "ha-claude-opus-4-6|hermes|v2026.3.30|anthropic/claude-opus-4-6|-": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "off"
+  },
+  "ha-gpt-5.4|hermes|v2026.3.30|openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4",
+    "thinking_display": "medium"
+  },
+  "oc-MiniMax-M2.5-2h|openclaw|2026.2.17|wandb/MiniMaxAI/MiniMax-M2.5|-": {
+    "model_display": "MiniMax M2.5"
+  },
+  "oc-MiniMax-M2.5-2h|openclaw|2026.2.17|wandbqa/MiniMaxAI/MiniMax-M2.5|-": {
+    "model_display": "MiniMax M2.5"
+  },
+  "oc-claude-opus-4-6|openclaw|2026.3.1|anthropic/claude-opus-4-6|-": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "medium"
+  },
+  "oc-claude-sonnet-4-6|openclaw|2026.3.1|anthropic/claude-sonnet-4-6|-": {
+    "model_display": "Claude Sonnet 4.6"
+  },
+  "oc-gemini-3.1-pro|openclaw|2026.3.11|google/gemini-3.1-pro-preview|-": {
+    "model_display": "Gemini 3.1 Pro Preview"
+  },
+  "oc-glm-5-turbo|openclaw|2026.3.11|openrouter/z-ai/glm-5-turbo|-": {
+    "model_display": "GLM-5-Turbo"
+  },
+  "oc-gpt-5.3-codex|openclaw|2026.3.1|openai/gpt-5.3-codex|-": {
+    "model_display": "GPT-5.3-Codex"
+  },
+  "oc-gpt-5.4-mini|openclaw|2026.3.11|openai/gpt-5.4-mini|-": {
+    "model_display": "GPT\u20115.4 mini"
+  },
+  "oc-gpt-5.4-nano|openclaw|2026.3.11|openai/gpt-5.4-nano|-": {
+    "model_display": "GPT\u20115.4 nano"
+  },
+  "oc-gpt-5.4-old|openclaw|2026.3.1|openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4",
+    "thinking_display": "off"
+  },
+  "oc-gpt-5.4-xhigh|openclaw|2026.3.11|openai/gpt-5.4|xhigh": {
+    "model_display": "GPT-5.4"
+  },
+  "oc-gpt-5.4|openclaw|2026.3.11|openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4",
+    "thinking_display": "low"
+  },
+  "oc-minimax-m2.7|openclaw|2026.3.11|openrouter/minimax/minimax-m2.7|-": {
+    "model_display": "MiniMax M2.7"
+  },
+  "oc-mistral-small-2603|openclaw|2026.3.11|mistral/mistral-small-2603|-": {
+    "model_display": "Mistral Small 4 119B A6B"
+  },
+  "t2-MiniMax-M2.5-2h|terminus-2|2.0.0|wandb/MiniMaxAI/MiniMax-M2.5|-": {
+    "model_display": "MiniMax M2.5"
+  },
+  "t2-claude-opus-4-6-max|terminus-2|2.0.0|anthropic/claude-opus-4-6|max": {
+    "model_display": "Claude Opus 4.6"
+  },
+  "t2-claude-opus-4-6|terminus-2|2.0.0|anthropic/claude-opus-4-6|-": {
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "off"
+  },
+  "t2-claude-sonnet-4-6|terminus-2|2.0.0|anthropic/claude-sonnet-4-6|-": {
+    "model_display": "Claude Sonnet 4.6"
+  },
+  "t2-gemini-3.1-pro|terminus-2|2.0.0|gemini/gemini-3.1-pro-preview|-": {
+    "model_display": "Gemini 3.1 Pro Preview"
+  },
+  "t2-glm-5-turbo|terminus-2|2.0.0|openrouter/z-ai/glm-5-turbo|-": {
+    "model_display": "GLM-5-Turbo"
+  },
+  "t2-gpt-5.3-codex|terminus-2|2.0.0|openai/gpt-5.3-codex|-": {
+    "model_display": "GPT-5.3-Codex"
+  },
+  "t2-gpt-5.4-mini|terminus-2|2.0.0|openai/gpt-5.4-mini|-": {
+    "model_display": "GPT\u20115.4 mini"
+  },
+  "t2-gpt-5.4-nano|terminus-2|2.0.0|openai/gpt-5.4-nano|-": {
+    "model_display": "GPT\u20115.4 nano"
+  },
+  "t2-gpt-5.4-old|terminus-2|2.0.0|openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4"
+  },
+  "t2-gpt-5.4-xhigh-rapi|terminus-2|2.0.0|openai/gpt-5.4|xhigh": {
+    "model_display": "GPT-5.4"
+  },
+  "t2-minimax-m2.7|terminus-2|2.0.0|openrouter/minimax/minimax-m2.7|-": {
+    "model_display": "MiniMax M2.7"
+  },
+  "t2-mistral-small-2603|terminus-2|2.0.0|mistral/mistral-small-2603|-": {
+    "model_display": "Mistral Small 4 119B A6B"
+  },
+  "wb-oc-minimax-m2.5|openclaw|2026.3.11|wandb/MiniMaxAI/MiniMax-M2.5|-": {
+    "model_display": "MiniMax M2.5 [W&B]"
+  },
+  "wb-t2-kimi-k2.5|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 (nvfp4) [W&B]"
+  },
+  "wb-t2-minimax-m2.5|terminus-2|2.0.0|wandb/MiniMaxAI/MiniMax-M2.5|-": {
+    "model_display": "MiniMax M2.5 [W&B]"
+  },
+  "oc-gemini-3-flash|openclaw|2026.3.11|google/gemini-3-flash-preview|-": {
+    "model_display": "Gemini 3 Flash Preview"
+  },
+  "t2-gemini-3-flash|terminus-2|2.0.0|gemini/gemini-3-flash-preview|-": {
+    "model_display": "Gemini 3 Flash Preview"
+  },
+  "oc-gemini-3.1-flash-lite|openclaw|2026.3.11|google/gemini-3.1-flash-lite-preview|-": {
+    "model_display": "Gemini 3.1 Flash Lite Preview"
+  },
+  "t2-gemini-3.1-flash-lite|terminus-2|2.0.0|gemini/gemini-3.1-flash-lite-preview|-": {
+    "model_display": "Gemini 3.1 Flash Lite Preview"
+  },
+  "oc-gemma-4-31b-it|openclaw|2026.3.11|wandb/google/gemma-4-31B-it|-": {
+    "model_display": "Gemma 4 31B [W&B]"
+  },
+  "t2-gemma-4-31b-it-Parasail|terminus-2|2.0.0|openrouter/google/gemma-4-31b-it|-": {
+    "model_display": "Gemma 4 31B (Parasail)"
+  },
+  "oc-GLM-5.1-old|openclaw|2026.3.11|wandb/zai-org/GLM-5.1|-": {
+    "model_display": "GLM-5.1 (old)"
+  },
+  "t2-GLM-5.1-old|terminus-2|2.0.0|wandb/zai-org/GLM-5.1|-": {
+    "model_display": "GLM-5.1 (old)"
+  },
+  "cc-claude-opus-4-7|claude-code|2.1.112|anthropic/claude-opus-4-7|-": {
+    "model_display": "Claude Opus 4.7",
+    "thinking_display": "xhigh"
+  },
+  "oc-claude-opus-4-7|openclaw|2026.3.11|anthropic/claude-opus-4-7|-": {
+    "model_display": "Claude Opus 4.7",
+    "thinking_display": "off"
+  },
+  "oc-kimi-k2.5|openclaw|2026.2.17|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 [W&B]"
+  },
+  "oc-kimi-k2.6|openclaw|2026.3.11|openrouter/moonshotai/kimi-k2.6|-": {
+    "model_display": "Kimi K2.6 [Moonshot AI]"
+  },
+  "t2-claude-opus-4-7|terminus-2|2.0.0|anthropic/claude-opus-4-7|-": {
+    "model_display": "Claude Opus 4.7",
+    "thinking_display": "off"
+  },
+  "t2-gemma-4-31b-it|terminus-2|2.0.0|wandb/google/gemma-4-31B-it|-": {
+    "model_display": "Gemma 4 31B [W&B]"
+  },
+  "t2-kimi-k2.5|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.5|-": {
+    "model_display": "Kimi K2.5 [W&B]"
+  },
+  "oc-GLM-5.1|openclaw|2026.3.11|wandb/zai-org/GLM-5.1|-": {
+    "model_display": "GLM-5.1 [W&B]"
+  },
+  "oc-NVIDIA-Nemotron-3-Super-120B-A12B-FP8|openclaw|2026.3.1|wandb/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8|-": {
+    "model_display": "NVIDIA-Nemotron-3-Super-120B-A12B-FP8 [W&B]"
+  },
+  "t2-GLM-5.1|terminus-2|2.0.0|wandb/zai-org/GLM-5.1|-": {
+    "model_display": "GLM-5.1 [W&B]"
+  },
+  "t2-NVIDIA-Nemotron-3-Super-120B-A12B-FP8|terminus-2|2.0.0|wandb/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-FP8|-": {
+    "model_display": "NVIDIA-Nemotron-3-Super-120B-A12B-FP8 [W&B]"
+  },
+  "t2-glm-5-fp8|terminus-2|2.0.0|wandb/zai-org/GLM-5-FP8|-": {
+    "model_display": "GLM-5-FP8 [W&B]"
+  },
+  "wb-oc-glm-5-fp8|openclaw|2026.3.11|wandb/zai-org/GLM-5-FP8|-": {
+    "model_display": "GLM-5-FP8 [W&B]"
+  },
+  "ha-claude-opus-4-7|hermes|v2026.3.30|anthropic/claude-opus-4-7|-": {
+    "model_display": "Claude Opus 4.7",
+    "thinking_display": "off"
+  },
+  "oc-kimi-k2.6-old|openclaw|2026.3.11|openrouter/moonshotai/kimi-k2.6|-": {
+    "model_display": "Kimi K2.6"
+  },
+  "t2-kimi-k2.6|terminus-2|2.0.0|openrouter/moonshotai/kimi-k2.6|-": {
+    "model_display": "Kimi K2.6 [Moonshot AI]"
+  },
+  "wb-ca-opus|cursor-cli|2026.04.16-2d20146|cursor/claude-4.6-opus-high-thinking|-": {
+    "version_display": "2026.04.16",
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "high"
+  },
+  "wb-ca-opus|cursor-cli|2026.04.17-479fd04|cursor/claude-4.6-opus-high-thinking|-": {
+    "version_display": "2026.04.16",
+    "model_display": "Claude Opus 4.6",
+    "thinking_display": "high"
+  },
+  "t2-gpt-5.4|terminus-2|2.0.0|openai/gpt-5.4|-": {
+    "model_display": "GPT-5.4",
+    "thinking_display": "off"
+  },
+  "ha-kimi-k2.6|hermes|v2026.3.30|moonshotai/kimi-k2.6|-": {
+    "model_display": "Kimi K2.6 [Moonshot AI]"
+  },
+  "wb-ha-t2-GLM-5.1|hermes|v2026.3.30|wandb/zai-org/GLM-5.1|-": {
+    "model_display": "GLM-5.1 [W&B]"
+  },
+  "oc-GPT-5.5|openclaw|2026.4.23|openai/gpt-5.5|-": {
+    "model_display": "GPT-5.5",
+    "thinking_display": "off"
+  },
+  "t2-GPT-5.5|terminus-2|2.0.0|openai/gpt-5.5|-": {
+    "model_display": "GPT-5.5",
+    "thinking_display": "medium"
+  },
+  "t2-gpt-5.5-xhigh|terminus-2|2.0.0|openai/gpt-5.5|xhigh": {
+    "model_display": "GPT-5.5"
+  },
+  "ca-gpt-5.5-high|cursor-cli|2026.04.17-787b533|cursor/gpt-5.5-high|-": {
+    "version_display": "2026.04.17",
+    "model_display": "GPT-5.5",
+    "thinking_display": "high"
+  },
+  "ha-gpt-5.5|hermes|v2026.4.23|openai/gpt-5.5|-": {
+    "model_display": "GPT-5.5",
+    "thinking_display": "medium"
+  },
+  "ha-gpt-5.5|hermes|v2026.4.23|openai/gpt-5.5|xhigh": {
+    "model_display": "GPT-5.5"
+  },
+  "ha-wb-kimi-k2.6|hermes|v2026.3.30|wandbqa/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [Moonshot AI]"
+  },
+  "cw-cx-gpt-5.5-high.yaml|codex|0.125.0|openai/gpt-5.5|high": {
+    "model_display": "GPT-5.5"
+  },
+  "oc-wb-kimi-k2.6|openclaw|2026.3.11|wandb/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "oc-wb-kimi-k2.6|openclaw|2026.4.23|wandb/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "t2-wb-kimi-k2.6|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "cline-kimi-k2.6|cline-cli|-|openai:moonshotai/Kimi-K2.6|32000": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "cw-ha-wb-deepseek-v4-flash|hermes|v2026.3.30|wandb/deepseek-ai/DeepSeek-V4-Flash|-": {
+    "model_display": "DeepSeek-V4-Flash [W&B]"
+  },
+  "cw-t2-wb-deepseek-v4-flash|terminus-2|2.0.0|wandb/deepseek-ai/DeepSeek-V4-Flash|-": {
+    "model_display": "DeepSeek-V4-Flash [W&B]"
+  },
+  "cw-ha-wb-deepseek-v4-pro|hermes|v2026.3.30|wandb/deepseek-ai/DeepSeek-V4-Pro|-": {
+    "model_display": "DeepSeek-V4-Pro [W&B]"
+  },
+  "cw-t2-wb-deepseek-v4-pro|terminus-2|2.0.0|wandb/deepseek-ai/DeepSeek-V4-Pro|-": {
+    "model_display": "DeepSeek-V4-Pro [W&B]"
+  },
+  "cw-ha-wb-kimi-k26-v2|hermes|v2026.3.30|wandb/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "cw-t2-wb-kimi-k26-v2|terminus-2|2.0.0|wandb/moonshotai/Kimi-K2.6|-": {
+    "model_display": "Kimi K2.6 [W&B]"
+  },
+  "cw-t2-gemini-3.5-flash|terminus-2|2.0.0|gemini/gemini-3.5-flash|-": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "medium"
+  },
+  "cw-ha-gemini-3.5-flash-n8|hermes|v2026.5.16|google/gemini-3.5-flash|-": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "medium"
+  },
+  "cw-ha-gemini-3.5-flash-high-n8|hermes|v2026.5.16|google/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "high"
+  },
+  "cw-t2-gemini-3.5-flash-high|terminus-2|2.0.0|gemini/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "oc-gemini-3.5-flash-daytona|openclaw|2026.4.23|google/gemini-3.5-flash|medium": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "medium"
+  },
+  "cw-ha-gemini-3.5-flash-high-n8-valid|hermes|v2026.5.16|google/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "high"
+  },
+  "cw-ha-gemini-3.5-flash-n8-valid|hermes|v2026.5.16|google/gemini-3.5-flash|-": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "cw-t2-gemini-3.5-flash-high-valid|terminus-2|2.0.0|gemini/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "high"
+  },
+  "oc-gemini-3.5-flash-daytona-defect-corrected|openclaw|2026.4.23|google/gemini-3.5-flash|medium": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "medium"
+  },
+  "cw-ha-gemini-3.5-flash-high|hermes|v2026.5.16|google/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "cw-ha-gemini-3.5-flash-low|hermes|v2026.5.16|google/gemini-3.5-flash|low": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "cw-ha-gemini-3.5-flash|hermes|v2026.5.16|google/gemini-3.5-flash|-": {
+    "model_display": "Gemini 3.5 Flash",
+    "thinking_display": "medium"
+  },
+  "cw-t2-gemini-3.5-flash-low|terminus-2|2.0.0|gemini/gemini-3.5-flash|low": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "oc-gemini-3.5-flash-high|openclaw|2026.4.23|google/gemini-3.5-flash|high": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "oc-gemini-3.5-flash-low|openclaw|2026.4.23|google/gemini-3.5-flash|low": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "oc-gemini-3.5-flash|openclaw|2026.4.23|google/gemini-3.5-flash|medium": {
+    "model_display": "Gemini 3.5 Flash"
+  },
+  "cw-ha-nemotron-ultra|hermes|v2026.5.16|wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B|-": {
+    "model_display": "NVIDIA-Nemotron-3-Ultra-550B-A55B [W&B]"
+  },
+  "cw-t2-nemotron-ultra|terminus-2|2.0.0|wandb/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B|-": {
+    "model_display": "NVIDIA-Nemotron-3-Ultra-550B-A55B [W&B]"
+  },
+  "t2-claude-fable-5-effort-high|terminus-2|2.0.0|anthropic/claude-fable-5|-": {
+    "model_display": "Claude Fable 5 \u2013 13 refusals",
+    "thinking_display": "high"
+  },
+  "t2-claude-fable-5-max|terminus-2|2.0.0|anthropic/claude-fable-5|max": {
+    "model_display": "Claude Fable 5 \u2013 13 refusals",
+    "thinking_display": "high"
+  },
+  "t2-claude-fable-5-off|terminus-2|2.0.0|anthropic/claude-fable-5|-": {
+    "model_display": "Claude Fable 5 \u2013 13 refusals",
+    "thinking_display": "high"
+  },
+  "cw-t2-kimi-k27-code-qa|terminus-2|2.0.0|openai/moonshotai/Kimi-K2.7-Code|off": {
+    "model_display": "Kimi K2.7 Code [W&B]"
+  },
+  "or-t2-glm-52-zai-high|terminus-2|2.0.0|openrouter/z-ai/glm-5.2|-": {
+    "model_display": "GLM-5.2 [Z.ai]",
+    "thinking_display": "high"
+  },
+  "cw-t2-glm-52-prod|terminus-2|2.0.0|wandb/zai-org/GLM-5.2|-": {
+    "model_display": "GLM-5.2 [W&B]"
+  },
+  "or-t2-glm-52-zai-max|terminus-2|2.0.0|openrouter/z-ai/glm-5.2|-": {
+    "model_display": "GLM-5.2 [Z.ai]",
+    "thinking_display": "max"
+  },
+  "cw-ha-glm-52-prod|hermes|v2026.6.19|wandb/zai-org/GLM-5.2|-": {
+    "model_display": "GLM-5.2 [W&B]"
+  },
+  "or-ha-glm-52-zai-max|hermes|v2026.6.19|openrouter/z-ai/glm-5.2|xhigh": {
+    "model_display": "GLM-5.2 [Z.ai]",
+    "thinking_display": "max"
+  }
+}

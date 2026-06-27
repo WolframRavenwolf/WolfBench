@@ -33,6 +33,7 @@ Output:
   release-assets/data-YYYY-MM-DD_HHMMSS/
     wolfbench_results_YYYY-MM-DD_HHMMSS.json
     wolfbench_results_excluded_YYYY-MM-DD_HHMMSS.json
+    wolfbench-overrides.json
     wolfbench_YYYY-MM-DD_HHMMSS.html
     wolfbench-runs-full-YYYY-MM-DD_HHMMSS.tar.zst
     manifest-YYYY-MM-DD_HHMMSS.json
@@ -83,6 +84,7 @@ fi
 
 RESULTS="${SCRIPT_DIR}/wolfbench_results_${SUFFIX}.json"
 EXCLUDED="${SCRIPT_DIR}/wolfbench_results_excluded_${SUFFIX}.json"
+OVERRIDES="${SCRIPT_DIR}/wolfbench-overrides.json"
 HTML="${SCRIPT_DIR}/wolfbench_${SUFFIX}.html"
 RELEASE_DIR="${OUT_ROOT}/data-${SUFFIX}"
 ARCHIVE="${RELEASE_DIR}/wolfbench-runs-full-${SUFFIX}.tar.zst"
@@ -99,6 +101,7 @@ require_file() {
 }
 
 require_file "$RESULTS" "results snapshot"
+require_file "$OVERRIDES" "display overrides"
 require_file "$HTML" "interactive HTML"
 if [[ ! -f "$EXCLUDED" ]]; then
     echo "WARNING: Excluded-runs snapshot not found: ${EXCLUDED}"
@@ -151,6 +154,7 @@ cp -p "$RESULTS" "$RELEASE_DIR/"
 if [[ -f "$EXCLUDED" ]]; then
     cp -p "$EXCLUDED" "$RELEASE_DIR/"
 fi
+cp -p "$OVERRIDES" "$RELEASE_DIR/"
 cp -p "$HTML" "$RELEASE_DIR/"
 
 echo ""
@@ -197,7 +201,7 @@ rm -f "$ARCHIVE"
 
 echo ""
 echo "=== Writing manifest ==="
-python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$EXCLUDED" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$SECRET_FILES" <<'PY'
+python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$EXCLUDED" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$SECRET_FILES" <<'PY'
 import hashlib
 import json
 import os
@@ -205,7 +209,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-manifest_path, suffix, source_dir, release_dir, archive, results, excluded, html, config_count, result_count, secret_files = sys.argv[1:]
+manifest_path, suffix, source_dir, release_dir, archive, results, excluded, overrides, html, config_count, result_count, secret_files = sys.argv[1:]
 
 def file_info(path):
     p = Path(path)
@@ -222,7 +226,7 @@ def file_info(path):
     }
 
 files = []
-for path in (results, excluded, html, archive):
+for path in (results, excluded, overrides, html, archive):
     info = file_info(path)
     if info:
         files.append(info)
@@ -232,7 +236,7 @@ manifest = {
     "created_at": datetime.now(timezone.utc).isoformat(),
     "source_dir": source_dir,
     "release_dir": release_dir,
-    "data_shape": "lightweight public run archive: config.json + result.json",
+        "data_shape": "curated results, display overrides, and lightweight public run archive: config.json + result.json",
     "runs_archive": Path(archive).name,
     "counts": {
         "config_json": int(config_count),
@@ -250,7 +254,7 @@ echo "=== Writing checksums ==="
 (
     cd "$RELEASE_DIR"
     rm -f "$CHECKSUMS"
-    for f in wolfbench_results_"${SUFFIX}".json wolfbench_results_excluded_"${SUFFIX}".json wolfbench_"${SUFFIX}".html wolfbench-runs-full-"${SUFFIX}".tar.zst manifest-"${SUFFIX}".json; do
+    for f in wolfbench_results_"${SUFFIX}".json wolfbench_results_excluded_"${SUFFIX}".json wolfbench-overrides.json wolfbench_"${SUFFIX}".html wolfbench-runs-full-"${SUFFIX}".tar.zst manifest-"${SUFFIX}".json; do
         [[ -f "$f" ]] || continue
         shasum -a 256 "$f" >> SHA256SUMS
     done

@@ -315,6 +315,7 @@ Complete public run-data snapshots are attached to [GitHub Releases](https://git
 
 - `wolfbench_results_YYYY-MM-DD_HHMMSS.json`
 - `wolfbench_results_excluded_YYYY-MM-DD_HHMMSS.json`
+- `wolfbench-overrides.json`
 - `wolfbench_YYYY-MM-DD_HHMMSS.html`
 - `wolfbench-runs-full-YYYY-MM-DD_HHMMSS.tar.zst`
 - `manifest-YYYY-MM-DD_HHMMSS.json`
