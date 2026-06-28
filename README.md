@@ -321,7 +321,7 @@ Complete public run-data snapshots are attached to [GitHub Releases](https://git
 - `SHA256SUMS`
 
 Each data release is complete, not incremental. Download one release to reproduce that data state.
-The run archive contains public `config.json`, `result.json`, and sanitized `agent/hermes-session.jsonl` usage records where available. Raw session messages, system prompts, and full trajectories are not included in release assets; full traces live in W&B Weave.
+The run archive contains public run-level `config.json` / `result.json`, per-task `result.json`, and sanitized `agent/hermes-session.jsonl` usage records where available. Raw session messages, system prompts, per-task config files, and full trajectories are not included in release assets; full traces live in W&B Weave.
 
 ### Local Storage
 

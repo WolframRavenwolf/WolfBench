@@ -157,16 +157,21 @@ FILE_LIST="${STAGE}/release-files.txt"
 (
     cd "$SCRIPT_DIR"
     {
-        find wolfbench-runs -maxdepth 4 -type f \( -name 'config.json' -o -name 'result.json' \)
         shopt -s nullglob
-        printf '%s\n' wolfbench-runs/*/*/*/agent/hermes-session.jsonl
+        printf '%s\n' \
+            wolfbench-runs/*/*/config.json \
+            wolfbench-runs/*/*/result.json \
+            wolfbench-runs/*/*/*/result.json \
+            wolfbench-runs/*/*/*/agent/hermes-session.jsonl
     } | sort -u > "$FILE_LIST"
 )
-CONFIG_COUNT=$(grep -c '/config.json$' "$FILE_LIST" || true)
-RESULT_COUNT=$(grep -c '/result.json$' "$FILE_LIST" || true)
+CONFIG_COUNT=$(grep -Ec '^wolfbench-runs/[^/]+/[^/]+/config\.json$' "$FILE_LIST" || true)
+RUN_RESULT_COUNT=$(grep -Ec '^wolfbench-runs/[^/]+/[^/]+/result\.json$' "$FILE_LIST" || true)
+TASK_RESULT_COUNT=$(grep -Ec '^wolfbench-runs/[^/]+/[^/]+/[^/]+/result\.json$' "$FILE_LIST" || true)
+RESULT_COUNT=$((RUN_RESULT_COUNT + TASK_RESULT_COUNT))
 HERMES_SESSION_COUNT=$(grep -c '/agent/hermes-session.jsonl$' "$FILE_LIST" || true)
-if [[ "$CONFIG_COUNT" -eq 0 || "$RESULT_COUNT" -eq 0 ]]; then
-    echo "ERROR: Expected config.json and result.json files in ${RUNS_DIR}; got config=${CONFIG_COUNT}, result=${RESULT_COUNT}" >&2
+if [[ "$CONFIG_COUNT" -eq 0 || "$RUN_RESULT_COUNT" -eq 0 || "$TASK_RESULT_COUNT" -eq 0 ]]; then
+    echo "ERROR: Expected run config/result and task result files in ${RUNS_DIR}; got run_config=${CONFIG_COUNT}, run_result=${RUN_RESULT_COUNT}, task_result=${TASK_RESULT_COUNT}" >&2
     exit 1
 fi
 mkdir -p "$STAGED_RUNS"
@@ -174,7 +179,7 @@ mkdir -p "$STAGED_RUNS"
     cd "$SCRIPT_DIR"
     tar -cf - -T "$FILE_LIST" | (cd "$STAGE" && tar -xf -)
 )
-echo "Staged ${CONFIG_COUNT} config.json + ${RESULT_COUNT} result.json + ${HERMES_SESSION_COUNT} Hermes session usage files."
+echo "Staged ${CONFIG_COUNT} run config.json + ${RUN_RESULT_COUNT} run result.json + ${TASK_RESULT_COUNT} task result.json + ${HERMES_SESSION_COUNT} Hermes session usage files."
 
 echo ""
 echo "=== Sanitizing Hermes session usage ==="
@@ -237,7 +242,7 @@ rm -f "$ARCHIVE"
 
 echo ""
 echo "=== Writing manifest ==="
-python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$HERMES_SESSION_COUNT" "$SECRET_FILES" <<'PY'
+python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RUN_RESULT_COUNT" "$TASK_RESULT_COUNT" "$RESULT_COUNT" "$HERMES_SESSION_COUNT" "$SECRET_FILES" <<'PY'
 import hashlib
 import json
 import os
@@ -245,7 +250,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-manifest_path, suffix, source_dir, release_dir, archive, results, overrides, html, config_count, result_count, hermes_session_count, secret_files = sys.argv[1:]
+manifest_path, suffix, source_dir, release_dir, archive, results, overrides, html, config_count, run_result_count, task_result_count, result_count, hermes_session_count, secret_files = sys.argv[1:]
 
 def file_info(path):
     p = Path(path)
@@ -272,11 +277,13 @@ manifest = {
     "created_at": datetime.now(timezone.utc).isoformat(),
     "source_dir": source_dir,
     "release_dir": release_dir,
-    "data_shape": "curated results, display overrides, and lightweight public run archive: config.json + result.json + sanitized Hermes usage",
+    "data_shape": "curated results, display overrides, and minimal public run archive: run config.json + run result.json + task result.json + sanitized Hermes usage",
     "runs_archive": Path(archive).name,
     "counts": {
         "config_json": int(config_count),
         "result_json": int(result_count),
+        "run_result_json": int(run_result_count),
+        "task_result_json": int(task_result_count),
         "hermes_session_jsonl": int(hermes_session_count),
         "redacted_files": int(secret_files),
     },
