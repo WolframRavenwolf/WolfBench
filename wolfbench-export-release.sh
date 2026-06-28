@@ -3,8 +3,9 @@
 # Build complete WolfBench data snapshots for GitHub Release assets.
 #
 # The generated archive is redacted and contains lightweight run data
-# (config.json + result.json), matching the public-data shape previously kept in
-# the git tree. Full traces remain available through Weave.
+# (config.json + result.json + sanitized Hermes usage), matching the public-data
+# shape previously kept in the git tree. Full traces remain available through
+# Weave.
 
 set -euo pipefail
 
@@ -125,7 +126,7 @@ echo "  archive:      ${ARCHIVE}"
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
     echo ""
-    echo "DRY RUN: would stage config.json + result.json files, redact secrets, archive them, and write manifest/checksums."
+    echo "DRY RUN: would stage config.json + result.json + sanitized Hermes usage files, redact secrets, archive them, and write manifest/checksums."
     echo "DRY RUN: skipping full run-data file counts to keep this check fast."
     exit 0
 fi
@@ -155,10 +156,15 @@ echo "=== Staging lightweight run data ==="
 FILE_LIST="${STAGE}/release-files.txt"
 (
     cd "$SCRIPT_DIR"
-    find wolfbench-runs -maxdepth 4 -type f \( -name 'config.json' -o -name 'result.json' \) | sort > "$FILE_LIST"
+    {
+        find wolfbench-runs -maxdepth 4 -type f \( -name 'config.json' -o -name 'result.json' \)
+        shopt -s nullglob
+        printf '%s\n' wolfbench-runs/*/*/*/agent/hermes-session.jsonl
+    } | sort -u > "$FILE_LIST"
 )
 CONFIG_COUNT=$(grep -c '/config.json$' "$FILE_LIST" || true)
 RESULT_COUNT=$(grep -c '/result.json$' "$FILE_LIST" || true)
+HERMES_SESSION_COUNT=$(grep -c '/agent/hermes-session.jsonl$' "$FILE_LIST" || true)
 if [[ "$CONFIG_COUNT" -eq 0 || "$RESULT_COUNT" -eq 0 ]]; then
     echo "ERROR: Expected config.json and result.json files in ${RUNS_DIR}; got config=${CONFIG_COUNT}, result=${RESULT_COUNT}" >&2
     exit 1
@@ -168,13 +174,50 @@ mkdir -p "$STAGED_RUNS"
     cd "$SCRIPT_DIR"
     tar -cf - -T "$FILE_LIST" | (cd "$STAGE" && tar -xf -)
 )
-echo "Staged ${CONFIG_COUNT} config.json + ${RESULT_COUNT} result.json files."
+echo "Staged ${CONFIG_COUNT} config.json + ${RESULT_COUNT} result.json + ${HERMES_SESSION_COUNT} Hermes session usage files."
+
+echo ""
+echo "=== Sanitizing Hermes session usage ==="
+python3 - "$STAGED_RUNS" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+allowed = (
+    "input_tokens",
+    "output_tokens",
+    "cache_read_tokens",
+    "cache_write_tokens",
+    "actual_cost_usd",
+    "estimated_cost_usd",
+)
+sanitized = 0
+skipped = 0
+
+for path in root.rglob("hermes-session.jsonl"):
+    try:
+        first_line = path.read_text(errors="replace").splitlines()[0]
+        session = json.loads(first_line)
+    except (IndexError, json.JSONDecodeError, OSError):
+        skipped += 1
+        path.write_text("{}\n")
+        continue
+
+    usage = {key: session.get(key) for key in allowed}
+    path.write_text(json.dumps(usage, sort_keys=True, separators=(",", ":")) + "\n")
+    sanitized += 1
+
+print(f"Sanitized {sanitized} Hermes session usage files.")
+if skipped:
+    print(f"Skipped {skipped} unreadable Hermes session files; wrote empty placeholders.")
+PY
 
 echo ""
 echo "=== Redacting secrets in staged data ==="
 SECRET_LIST="$(mktemp "${TMPDIR:-/tmp}/wolfbench-release-secrets.XXXXXX")"
 grep -rlE '"(sk-|wandb_v1_|key-)[a-zA-Z0-9_-]{20,}"' \
-    "$STAGED_RUNS" --include='*.json' > "$SECRET_LIST" 2>/dev/null || true
+    "$STAGED_RUNS" --include='*.json' --include='*.jsonl' > "$SECRET_LIST" 2>/dev/null || true
 SECRET_FILES=$(wc -l < "$SECRET_LIST" | tr -d ' ')
 if [[ "$SECRET_FILES" -gt 0 ]]; then
     xargs perl -0pi -e 's/"(sk-|wandb_v1_|key-)[a-zA-Z0-9_-]{20,}"/"REDACTED"/g' < "$SECRET_LIST"
@@ -194,7 +237,7 @@ rm -f "$ARCHIVE"
 
 echo ""
 echo "=== Writing manifest ==="
-python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$SECRET_FILES" <<'PY'
+python3 - "$MANIFEST" "$SUFFIX" "$SCRIPT_DIR" "$RELEASE_DIR" "$ARCHIVE" "$RESULTS" "$OVERRIDES" "$HTML" "$CONFIG_COUNT" "$RESULT_COUNT" "$HERMES_SESSION_COUNT" "$SECRET_FILES" <<'PY'
 import hashlib
 import json
 import os
@@ -202,7 +245,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-manifest_path, suffix, source_dir, release_dir, archive, results, overrides, html, config_count, result_count, secret_files = sys.argv[1:]
+manifest_path, suffix, source_dir, release_dir, archive, results, overrides, html, config_count, result_count, hermes_session_count, secret_files = sys.argv[1:]
 
 def file_info(path):
     p = Path(path)
@@ -229,11 +272,12 @@ manifest = {
     "created_at": datetime.now(timezone.utc).isoformat(),
     "source_dir": source_dir,
     "release_dir": release_dir,
-        "data_shape": "curated results, display overrides, and lightweight public run archive: config.json + result.json",
+    "data_shape": "curated results, display overrides, and lightweight public run archive: config.json + result.json + sanitized Hermes usage",
     "runs_archive": Path(archive).name,
     "counts": {
         "config_json": int(config_count),
         "result_json": int(result_count),
+        "hermes_session_jsonl": int(hermes_session_count),
         "redacted_files": int(secret_files),
     },
     "files": files,

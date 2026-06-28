@@ -321,6 +321,7 @@ Complete public run-data snapshots are attached to [GitHub Releases](https://git
 - `SHA256SUMS`
 
 Each data release is complete, not incremental. Download one release to reproduce that data state.
+The run archive contains public `config.json`, `result.json`, and sanitized `agent/hermes-session.jsonl` usage records where available. Raw session messages, system prompts, and full trajectories are not included in release assets; full traces live in W&B Weave.
 
 ### Local Storage
 
@@ -337,7 +338,8 @@ wolfbench-runs/
           <task>__<hash>/
             result.json        # per-task result
             agent/
-              trajectory.json  # full conversation trace (ATIF v1.6)
+              hermes-session.jsonl  # Hermes usage metadata (sanitized in release archives)
+              trajectory.json       # full conversation trace (local/Weave; not in public release archive)
 ```
 
 Local storage is scanned first. Deduplication (first-wins) means local copies automatically shadow VM originals. Once downloaded, VMs can be torn down - all data persists locally. This directory is generated data and is intentionally ignored by Git; publish it through release assets, not commits.
@@ -355,7 +357,7 @@ All evaluations and full agent traces are uploaded to [W&B Weave](https://wandb.
 | `wolfbench-overrides.json`          | Manual display overrides (model names, thinking labels, etc.) |
 | `wolfbench_*.html`                  | Interactive charts for wolfbench.ai                           |
 | `*-manifest.json`                   | Weave upload tracking per project                             |
-| `wolfbench-runs-full-*.tar.zst`     | Complete public run-data archive for GitHub Releases          |
+| `wolfbench-runs-full-*.tar.zst`     | Complete public run-data archive with sanitized Hermes usage   |
 | `manifest-*.json`                   | Release asset manifest                                        |
 | `SHA256SUMS`                        | Release asset checksums                                       |
 
