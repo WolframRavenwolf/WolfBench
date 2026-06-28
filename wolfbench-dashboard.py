@@ -1,3 +1,4 @@
+#!/usr/bin/env -S uvx marimo run --sandbox
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
@@ -511,7 +512,7 @@ def _(all_table_rows, mo, scan_completed):
         )
         row_filter_apply = mo.ui.run_button(label="Apply")
         valid_condition = mo.ui.text(
-            value="job!=*-dev*,agent!=cline-cli,score!=0.0%,tasks=89,timeout=*s,errors<10",
+            value="job!=*-dev*,score!=0.0%,tasks=89,timeout=*s,errors<10",
             label="Valid condition (col op val, comma-separated — same col = OR):",
             full_width=True,
         )

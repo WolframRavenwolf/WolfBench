@@ -294,7 +294,7 @@ export WANDB_API_KEY=$(op item get "WandB API Key" --fields credential --reveal)
 export WANDB_PROJECT=wolfbench
 export UPLOAD_TARGET=wolfbench.exe.xyz:wolfbench
 
-uvx marimo run --sandbox wolfbench-dashboard.py
+./wolfbench-dashboard.py
 ```
 
 Opens at http://localhost:2718. The dashboard walks through the entire pipeline:
