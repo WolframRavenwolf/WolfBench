@@ -1,0 +1,53 @@
+jobs_dir: jobs/t2-cw-glm-52-test
+
+orchestrator:
+  n_concurrent_trials: 16
+  retry:
+    max_retries: 3
+    wait_multiplier: 2.5
+    min_wait_sec: 60
+    max_wait_sec: 300
+    exclude_exceptions:
+      - AgentTimeoutError
+      - NonZeroAgentExitCodeError
+      - RewardFileEmptyError
+      - RewardFileNotFoundError
+      - VerifierOutputParseError
+      - VerifierTimeoutError
+
+environment:
+  type: wandb
+  override_cpus: 4
+  override_memory_mb: 8192
+  override_storage_mb: 10240
+  suppress_override_warnings: true
+  kwargs:
+    request_timeout_seconds: 3700
+    max_lifetime_seconds: 7200
+    max_timeout_seconds: 7200
+
+agents:
+  - name: terminus-2
+    override_timeout_sec: 3600
+    model_name: wandb/zai-org/GLM-5.2
+    kwargs:
+      temperature: 1.0
+      llm_kwargs:
+        #extra_headers:
+        #  OpenAI-Project: wandb/inference-test
+        max_tokens: 131072
+        top_p: 0.95
+      model_info:
+        max_input_tokens: 262144
+        max_output_tokens: 131072
+        input_cost_per_token: 0.00000139
+        cache_read_input_token_cost: 0.00000026
+        output_cost_per_token: 0.0000044
+
+datasets:
+  - name: terminal-bench
+    version: "2.0"
+    registry: {}
+    task_names:
+      - fix-git
+    n_tasks: 1
