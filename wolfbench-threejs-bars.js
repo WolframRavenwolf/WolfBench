@@ -4,7 +4,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     var chartArea = document.querySelector('.chart-area');
     if (!chartArea) return;
 
-    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both'];
+    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both', 'time'];
     var renderer = null;
     var scene = null;
     var camera = null;
@@ -24,6 +24,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     };
     var tokensPerDepthPixel = 1e7;
     var costPerDepthPixel = 5;
+    var timePerDepthPixel = 600;
     var projectX = 0.74;
     var projectY = 0.31;
     var projectZ = 0.28;
@@ -46,6 +47,7 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         if (mode === 'tokens' || mode === 'token') return 'tokens';
         if (mode === 'cost' || mode === 'costs' || mode === 'usd') return 'cost';
         if (mode === 'both' || mode === 'tokens+cost' || mode === 'tokens-cost' || mode === 'token+cost' || mode === 'token-cost' || mode === 'tokens_cost' || mode === 'combined') return 'both';
+        if (mode === 'time' || mode === 'runtime' || mode === 'duration' || mode === 'wallclock' || mode === 'wall-clock') return 'time';
         return 'flat';
     }
 
@@ -66,6 +68,36 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
+    function formatCostRangeLabel(token) {
+        var minimum = token.costMin || token.cost;
+        var maximum = token.costMax || token.cost;
+        if (!minimum || minimum <= 0 || !maximum || maximum <= 0) return '';
+        if (maximum < minimum) {
+            var swap = minimum;
+            minimum = maximum;
+            maximum = swap;
+        }
+        var label = Math.abs(maximum - minimum) < 0.005
+            ? formatCostLabel(minimum)
+            : formatCostLabel(minimum) + '–' + formatCostLabel(maximum);
+        return (token.costEstimatedRuns > 0 ? '~' : '') + label;
+    }
+
+    function formatDurationLabel(seconds) {
+        var total = Math.round(seconds || 0);
+        if (total <= 0) return '';
+        var days = Math.floor(total / 86400);
+        total -= days * 86400;
+        var hours = Math.floor(total / 3600);
+        total -= hours * 3600;
+        var minutes = Math.floor(total / 60);
+        var parts = [];
+        if (days) parts.push(days + 'd');
+        if (hours || days) parts.push(hours + 'h');
+        parts.push(minutes + 'm');
+        return parts.join(' ');
+    }
+
     function stripZeros(text) {
         return text.replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
     }
@@ -80,10 +112,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         return cost / costPerDepthPixel;
     }
 
-	    function depthScaleLabelForMode(mode) {
-	        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · 100 px = 1B tokens';
-	        if (mode === 'cost') return '3D depth scale: 1 px = $5 run cost · 100 px = $500';
-	        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M · Cost shadow 1 px = $5';
+    function depthForTime(duration) {
+        if (!duration || duration <= 0) return 0;
+        return duration / timePerDepthPixel;
+    }
+
+    function depthScaleLabelForMode(mode) {
+        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · non-cached/cache-read/output split by depth';
+        if (mode === 'cost') return '3D depth scale: 1 px = $5 run cost · 100 px = $500';
+        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M with cache translucent · Cost shadow 1 px = $5';
+	        if (mode === 'time') return '3D depth scale: 1 px = 10 min runtime · 6 px = 1 h';
 	        return '';
 	    }
 
@@ -121,10 +159,19 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 
     function readTokenData(wrapper) {
         var input = toNumber(wrapper.getAttribute('data-token-input'));
+        var cache = toNumber(wrapper.getAttribute('data-token-cache'));
         var output = toNumber(wrapper.getAttribute('data-token-output'));
+        if (cache > input) input += cache;
+        cache = Math.min(cache, input);
         var total = toNumber(wrapper.getAttribute('data-token-total')) || input + output;
+        total = Math.max(total, input + output);
         var cost = toNumber(wrapper.getAttribute('data-cost-total'));
-        return {input: input, output: output, total: total, cost: cost};
+        var costMin = toNumber(wrapper.getAttribute('data-cost-min')) || cost;
+        var costMax = toNumber(wrapper.getAttribute('data-cost-max')) || cost;
+        var costRuns = toNumber(wrapper.getAttribute('data-cost-runs'));
+        var costEstimatedRuns = toNumber(wrapper.getAttribute('data-cost-estimated-runs'));
+        var duration = toNumber(wrapper.getAttribute('data-duration-total'));
+        return {input: input, cache: cache, output: output, total: total, cost: cost, costMin: costMin, costMax: costMax, costRuns: costRuns, costEstimatedRuns: costEstimatedRuns, duration: duration};
     }
 
     function readScores(wrapper, inner) {
@@ -377,8 +424,23 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        });
 	    }
 
-	    function vertexGradientColor(point, z, width, height, depth, stops, outputPart, faceKind) {
-	        var px = width ? clamp(point.x / width, 0, 1) : 0;
+    function tokenPartName(tokenPart) {
+        if (tokenPart === true) return 'output';
+        return tokenPart || 'input';
+    }
+
+    function isOutputPart(tokenPart) {
+        return tokenPartName(tokenPart) === 'output';
+    }
+
+    function isCachePart(tokenPart) {
+        return tokenPartName(tokenPart) === 'cache';
+    }
+
+    function vertexGradientColor(point, z, width, height, depth, stops, tokenPart, faceKind) {
+        var outputPart = isOutputPart(tokenPart);
+        var cachePart = isCachePart(tokenPart);
+        var px = width ? clamp(point.x / width, 0, 1) : 0;
 	        var py = height ? clamp(point.y / height, 0, 1) : 0;
 	        var pz = depth ? clamp(z / depth, 0, 1) : 0;
 	        var vertical = 1 - py;
@@ -397,13 +459,18 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	            color.lerp(new THREE.Color(0xffffff), shine * 0.14 + softGloss * 0.025);
 	            color.lerp(new THREE.Color(0x050809), rightShadow * 0.12 + bottomLip * 0.045);
 	        } else {
-	            var depthShade = 0.050 + pz * 0.052 + (outputPart ? 0.022 : 0);
-	            color.multiplyScalar(1 - depthShade);
-	            color.lerp(new THREE.Color(0xffffff), vertical * 0.010);
-	        }
-	        if (outputPart) color.multiplyScalar(0.99);
-	        return color;
-	    }
+            var depthShade = 0.050 + pz * 0.052 + (outputPart ? 0.022 : 0) + (cachePart ? 0.010 : 0);
+            color.multiplyScalar(1 - depthShade);
+            color.lerp(new THREE.Color(0xffffff), vertical * 0.010);
+        }
+        if (outputPart) color.multiplyScalar(0.99);
+        if (cachePart) {
+            color.lerp(new THREE.Color(0xd8fff0), 0.16);
+            var leftBevel = clamp((0.22 - px) / 0.22, 0, 1);
+            color.multiplyScalar(1 - leftBevel * 0.42);
+        }
+        return color;
+    }
 
 	    function frontShineMaterial(opacity) {
 	        var cacheKey = 'front-shine|' + opacity;
@@ -421,7 +488,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        return material;
 	    }
 
-    function shadeColor(base, key, outputPart) {
+    function shadeColor(base, key, tokenPart) {
+        var outputPart = isOutputPart(tokenPart);
+        var cachePart = isCachePart(tokenPart);
         var color = base.clone();
         var hsl = {};
         color.getHSL(hsl);
@@ -432,25 +501,29 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             best: 0.78,
             ceiling: 0.86
         }[key] || 0.74;
-        hsl.s = clamp(hsl.s * (outputPart ? 0.88 : 1.08), 0, 1);
-        hsl.l = clamp(hsl.l * light + (outputPart ? -0.04 : 0), 0.08, 0.82);
+        hsl.s = clamp(hsl.s * (outputPart ? 0.88 : (cachePart ? 0.78 : 1.08)), 0, 1);
+        hsl.l = clamp(hsl.l * light + (outputPart ? -0.04 : (cachePart ? 0.05 : 0)), 0.08, 0.82);
         color.setHSL(hsl.h, hsl.s, hsl.l);
         if (outputPart) color.lerp(new THREE.Color(0x151a20), 0.14);
+        if (cachePart) color.lerp(new THREE.Color(0xd8fff0), 0.14);
         return color;
     }
 
-    function materialFor(color, key, outputPart) {
-        var cacheKey = color.getHexString() + '|' + key + '|' + (outputPart ? 'out' : 'in');
+    function materialFor(color, key, tokenPart) {
+        var partName = tokenPartName(tokenPart);
+        var cachePart = partName === 'cache';
+        var cacheKey = color.getHexString() + '|' + key + '|' + partName;
         if (materials.has(cacheKey)) return materials.get(cacheKey);
-	        var material = new THREE.MeshBasicMaterial({
-	            color: 0xffffff,
-	            vertexColors: true,
-	            transparent: false,
-	            opacity: 1,
-	            side: THREE.DoubleSide,
+        var material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            vertexColors: true,
+            transparent: cachePart,
+            opacity: cachePart ? 0.56 : 1,
+            side: THREE.DoubleSide,
             depthTest: true,
-            depthWrite: true
+            depthWrite: !cachePart
         });
+        material.forceSinglePass = cachePart;
         material.toneMapped = false;
         materials.set(cacheKey, material);
         return material;
@@ -538,29 +611,22 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
     }
 
     function includeDepthEdge(a, b, width, height, radii) {
-        var topRadius = Math.max(radii.tl || 0, radii.tr || 0);
-        var bottomRadius = Math.max(radii.bl || 0, radii.br || 0);
-        var maxY = Math.max(a.y, b.y);
-        var minY = Math.min(a.y, b.y);
-        var topEdge = topRadius > 0 && maxY > height - topRadius - 0.05;
-        var bottomEdge = bottomRadius > 0 && minY < bottomRadius + 0.05;
-        if (topEdge) return true;
-        if (bottomEdge) return true;
-        var leftEdge = Math.max(a.x, b.x) < 0.05;
-        var rightEdge = Math.min(a.x, b.x) > width - 0.05;
-        if (leftEdge || rightEdge) return true;
-        return false;
+        var hasRoundedTop = (radii.tl || 0) > 0 || (radii.tr || 0) > 0;
+        var rightRadius = Math.max(radii.tr || 0, radii.br || 0, 0.05);
+        var topEdge = hasRoundedTop && Math.abs(a.y - height) <= 0.05 && Math.abs(b.y - height) <= 0.05;
+        var rightEdge = Math.min(a.x, b.x) >= width - rightRadius - 0.05;
+        return topEdge || rightEdge;
     }
 
-	    function createSegmentGeometry(width, height, depth, zStart, radii, showFrontCap, gradientStops, outputPart) {
-	        radii = radii || {};
-	        var points = roundedRectPoints(width, height, radii);
+    function createSegmentGeometry(width, height, depth, zStart, radii, showFrontCap, gradientStops, tokenPart) {
+        radii = radii || {};
+        var points = roundedRectPoints(width, height, radii);
         var triangles = THREE.ShapeUtils.triangulateShape(points, []);
         var positions = [];
         var colors = [];
         function vertex(point, z, faceKind) {
             positions.push(point.x, point.y, z);
-            var color = vertexGradientColor(point, z, width, height, depth, gradientStops, outputPart, faceKind);
+            var color = vertexGradientColor(point, z, width, height, depth, gradientStops, tokenPart, faceKind);
             colors.push(color.r, color.g, color.b);
         }
         if (showFrontCap) {
@@ -591,9 +657,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	        return geometry;
 	    }
 
-	    function createFrontStripGeometry(width, height, left, stripWidth) {
-	        var right = left + stripWidth;
-	        var geometry = new THREE.BufferGeometry();
+    function createFrontStripGeometry(width, height, left, stripWidth) {
+        var right = left + stripWidth;
+        var geometry = new THREE.BufferGeometry();
 	        geometry.setAttribute('position', new THREE.Float32BufferAttribute([
 	            left, 0, 0,
 	            right, 0, 0,
@@ -602,9 +668,43 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	            right, height, 0,
 	            left, height, 0
 	        ], 3));
-	        geometry.applyMatrix4(shearMatrix);
-	        return geometry;
-	    }
+        geometry.applyMatrix4(shearMatrix);
+        return geometry;
+    }
+
+    function createDepthSeparatorGeometry(width, height, zStart, radii) {
+        radii = radii || {};
+        var tl = clamp(radii.tl || 0, 0, Math.min(width, height) * 0.5);
+        var tr = clamp(radii.tr || 0, 0, Math.min(width, height) * 0.5);
+        var br = clamp(radii.br || 0, 0, Math.min(width, height) * 0.5);
+        var positions = [
+            tl, height, zStart,
+            width - tr, height, zStart,
+            width - tr, height, zStart,
+            width, height - tr, zStart,
+            width, height - tr, zStart,
+            width, br, zStart
+        ];
+        var geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geometry.applyMatrix4(shearMatrix);
+        return geometry;
+    }
+
+    function depthSeparatorMaterial() {
+        var cacheKey = 'token-depth-separator';
+        if (materials.has(cacheKey)) return materials.get(cacheKey);
+        var material = new THREE.LineBasicMaterial({
+            color: 0xfff0a8,
+            transparent: true,
+            opacity: 0.82,
+            depthTest: true,
+            depthWrite: false
+        });
+        material.toneMapped = false;
+        materials.set(cacheKey, material);
+        return material;
+    }
 
 	    function clearDepthLabels() {
 	        if (!labelLayer) return;
@@ -612,7 +712,8 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 	    }
 
 	    function depthLabelText(token, mode) {
-	        if (mode === 'cost' || mode === 'cost-shadow') return formatCostLabel(token.cost);
+	        if (mode === 'cost' || mode === 'cost-shadow') return formatCostRangeLabel(token);
+	        if (mode === 'time') return formatDurationLabel(token.duration);
 	        if (!token.total || token.total <= 0) return '';
 	        return compactTokenValue(token.total);
 	    }
@@ -757,29 +858,39 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         return [{key: metric, bottom: 0, top: top, filtered: true}];
     }
 
-	    function addSegmentMesh(x, y, width, height, zStart, depth, color, gradientStops, key, outputPart, meta, radii, showFrontCap) {
-	        if (depth <= 0.4 || height <= 0.7) return;
-	        var geometry = createSegmentGeometry(width, height, depth, zStart, radii || {}, !!showFrontCap, gradientStops, outputPart);
-	        var material = materialFor(color, key, outputPart);
+    function addSegmentMesh(x, y, width, height, zStart, depth, color, gradientStops, key, tokenPart, meta, radii, showFrontCap) {
+        if (depth <= 0.4 || height <= 0.7) return;
+        var geometry = createSegmentGeometry(width, height, depth, zStart, radii || {}, !!showFrontCap, gradientStops, tokenPart);
+        var material = materialFor(color, key, tokenPart);
         var mesh = new THREE.Mesh(geometry, material);
         mesh.position.set(x, y, 0);
         mesh.castShadow = false;
-	        mesh.receiveShadow = false;
-	        mesh.userData = meta;
-	        root.add(mesh);
-	        if (showFrontCap && !outputPart) {
-	            [
-	                {left: width * 0.115, stripWidth: width * 0.28, opacity: 0.028},
-	                {left: width * 0.220, stripWidth: width * 0.055, opacity: 0.046}
+        mesh.receiveShadow = false;
+        mesh.userData = meta;
+        root.add(mesh);
+        if (showFrontCap && !isOutputPart(tokenPart)) {
+            [
+                {left: width * 0.115, stripWidth: width * 0.28, opacity: 0.028},
+                {left: width * 0.220, stripWidth: width * 0.055, opacity: 0.046}
 	            ].forEach(function(shine) {
 	                var shineGeometry = createFrontStripGeometry(width, height, shine.left, shine.stripWidth);
 	                var shineMesh = new THREE.Mesh(shineGeometry, frontShineMaterial(shine.opacity));
 	                shineMesh.position.set(x, y, 0);
 	                shineMesh.renderOrder = 30;
 	                root.add(shineMesh);
-	            });
-	        }
-	    }
+            });
+        }
+    }
+
+    function addTokenSeparatorLine(x, y, width, height, zStart, meta, radii) {
+        if (zStart <= 0.4 || height <= 0.7) return;
+        var geometry = createDepthSeparatorGeometry(width, height, zStart, radii || {});
+        var line = new THREE.LineSegments(geometry, depthSeparatorMaterial());
+        line.position.set(x, y, 0);
+        line.renderOrder = 40;
+        line.userData = meta;
+        root.add(line);
+    }
 
 	    function roundedPolygonPoints(vertices, radii) {
 	        var points = [];
@@ -890,13 +1001,16 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             toggle.title = 'Bars are in 2D. Click for 3D: Tokens.';
         } else if (mode === 'tokens') {
             if (label) label.textContent = 'Bars: 3D Tokens';
-            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear token volume: 1px = 10M tokens. Front depth is input, rear depth is output. Click for 3D Cost.';
+            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear token volume: 1px = 10M tokens. Input is split into opaque non-cached and translucent cache-read depth; a separator marks output. Click for 3D Cost.';
         } else if (mode === 'cost') {
             if (label) label.textContent = 'Bars: 3D Cost';
             toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear run cost: 1px = $5. No log scale, no per-chart normalization. Click for 3D Tokens + Cost.';
-        } else {
+        } else if (mode === 'both') {
             if (label) label.textContent = 'Bars: 3D Tokens + Cost';
-            toggle.title = 'Main bar uses token depth; the neutral gray shadow uses run cost. Click for 2D bars.';
+            toggle.title = 'Main bar uses input/cache/output token depth; the neutral gray shadow uses run cost. Click for 3D Time.';
+        } else {
+            if (label) label.textContent = 'Bars: 3D Time';
+            toggle.title = 'Three.js stacked 3D bars with tighter reserved spacing. Depth is uncapped absolute linear total runtime: 1px = 10 minutes. Click for 2D bars.';
         }
         updateDepthScaleLine(mode);
     }
@@ -934,11 +1048,15 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             var token = readTokenData(wrapper);
             var usingCostDepth = mode === 'cost';
             var usingBothDepth = mode === 'both';
+            var usingTimeDepth = mode === 'time';
             var hasTokenData = token.total > 0;
             var hasCostData = token.cost > 0;
+            var hasTimeData = token.duration > 0;
             var depth = usingCostDepth
                 ? (hasCostData ? depthForCost(token.cost) : missingDepth)
-                : (hasTokenData ? depthForTokens(token.total) : missingDepth);
+                : (usingTimeDepth
+                    ? (hasTimeData ? depthForTime(token.duration) : missingDepth)
+                    : (hasTokenData ? depthForTokens(token.total) : missingDepth));
             if (!depth) return;
             var costDepth = usingBothDepth && hasCostData ? depthForCost(token.cost) : 0;
             var visualDepth = Math.max(2, depth * projectX);
@@ -963,9 +1081,13 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
             var fallbackColor = label ? window.getComputedStyle(label).color : 'rgb(255,204,51)';
             syncHtmlFrontSegments(inner, fallbackColor);
             syncLabelsToSegments(inner, segments);
-            var inputShare = !usingCostDepth && hasTokenData ? clamp(token.input / token.total, 0, 1) : 1;
-            var inputDepth = usingCostDepth ? depth : depth * inputShare;
-            var outputDepth = usingCostDepth ? 0 : Math.max(0, depth - inputDepth);
+            var cachedInputTokens = !usingCostDepth && !usingTimeDepth && hasTokenData ? clamp(token.cache || 0, 0, token.input || 0) : 0;
+            var uncachedInputTokens = Math.max(0, (token.input || 0) - cachedInputTokens);
+            var uncachedInputDepth = (usingCostDepth || usingTimeDepth) ? depth : depth * clamp(uncachedInputTokens / token.total, 0, 1);
+            var cachedInputDepth = (usingCostDepth || usingTimeDepth) ? 0 : depth * clamp(cachedInputTokens / token.total, 0, 1);
+            var inputDepth = (usingCostDepth || usingTimeDepth) ? depth : uncachedInputDepth + cachedInputDepth;
+            var outputDepth = (usingCostDepth || usingTimeDepth) ? 0 : Math.max(0, depth - inputDepth);
+            var cacheStart = uncachedInputDepth;
             var outputStart = inputDepth + (outputDepth > 1.5 ? tokenGap : 0);
             var outputActualDepth = Math.max(0, outputDepth - (outputDepth > 1.5 ? tokenGap : 0));
             var x = rect.left - areaRect.left;
@@ -1003,9 +1125,14 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
 		                        metric: 'cost-shadow',
 		                        metricLabel: 'Run cost',
 		                        depthMode: 'cost-shadow',
-		                        costUsd: token.cost,
-		                        inputTokens: token.input,
-		                        outputTokens: token.output,
+			                        costUsd: token.cost,
+			                        costUsdMin: token.costMin,
+			                        costUsdMax: token.costMax,
+			                        costEstimatedRuns: token.costEstimatedRuns,
+			                        durationSec: token.duration,
+                inputTokens: token.input,
+                cacheTokens: token.cache,
+                outputTokens: token.output,
 		                        totalTokens: token.total
 		                    };
 			                    var shadowZStart = depth + 1;
@@ -1041,18 +1168,54 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
                 };
 	                var meta = {
 	                    agent: wrapper.getAttribute('data-agent') || '',
-	                    metric: segment.key,
-	                    metricLabel: metricLabels[segment.key],
-	                    depthMode: usingCostDepth ? 'cost' : 'tokens',
-	                    costUsd: token.cost,
-	                    inputTokens: token.input,
-		                    outputTokens: token.output,
-		                    totalTokens: token.total
-		                };
-		                var inputHasFront = inputDepth > 0.4;
-			                addSegmentMesh(x, y, rect.width, displayHeight, 0, inputDepth, baseColor, gradientStops, segment.key, false, meta, radii, true);
-			                addSegmentMesh(x, y, rect.width, displayHeight, outputStart, outputActualDepth, baseColor, gradientStops, segment.key, true, meta, radii, !inputHasFront);
-		            });
+		                    metric: segment.key,
+		                    metricLabel: metricLabels[segment.key],
+		                    depthMode: usingCostDepth ? 'cost' : (usingTimeDepth ? 'time' : 'tokens'),
+		                    costUsd: token.cost,
+		                    costUsdMin: token.costMin,
+		                    costUsdMax: token.costMax,
+		                    costEstimatedRuns: token.costEstimatedRuns,
+		                    durationSec: token.duration,
+                    inputTokens: token.input,
+                    cacheTokens: token.cache,
+                    outputTokens: token.output,
+                    totalTokens: token.total
+                };
+                var hasUncachedInput = uncachedInputDepth > 0.4;
+                var hasCachedInput = cachedInputDepth > 0.4;
+                var hasAnyInput = inputDepth > 0.4;
+                addSegmentMesh(x, y, rect.width, displayHeight, 0, uncachedInputDepth, baseColor, gradientStops, segment.key, 'input', meta, radii, true);
+                addSegmentMesh(x, y, rect.width, displayHeight, cacheStart, cachedInputDepth, baseColor, gradientStops, segment.key, 'cache', meta, radii, !hasUncachedInput);
+                addSegmentMesh(x, y, rect.width, displayHeight, outputStart, outputActualDepth, baseColor, gradientStops, segment.key, 'output', meta, radii, !hasAnyInput && !hasCachedInput);
+            });
+            if (!usingCostDepth && !usingTimeDepth && inputDepth > 0.4 && outputActualDepth > 0.4) {
+                var stackBottom = segments.reduce(function(min, segment) { return Math.min(min, segment.bottom); }, Number.POSITIVE_INFINITY);
+                var stackTop = segments.reduce(function(max, segment) { return Math.max(max, segment.top); }, 0);
+                if (Number.isFinite(stackBottom) && stackTop - stackBottom > 1.1) {
+                    var stackHeight = stackTop - stackBottom;
+                    var stackRadius = Math.min(7.5, rect.width * 0.18, stackHeight * 0.28);
+                    addTokenSeparatorLine(x, bottomY + stackBottom, rect.width, stackHeight, inputDepth, {
+                        agent: wrapper.getAttribute('data-agent') || '',
+                        metric: 'token-separator',
+                        metricLabel: 'Input/output boundary',
+                        depthMode: 'tokens',
+                        costUsd: token.cost,
+                        costUsdMin: token.costMin,
+                        costUsdMax: token.costMax,
+                        costEstimatedRuns: token.costEstimatedRuns,
+                        durationSec: token.duration,
+                        inputTokens: token.input,
+                        cacheTokens: token.cache,
+                        outputTokens: token.output,
+                        totalTokens: token.total
+                    }, {
+                        tl: stackRadius,
+                        tr: stackRadius,
+                        br: Math.min(4.5, stackRadius),
+                        bl: Math.min(4.5, stackRadius)
+                    });
+                }
+            }
 	        });
 	        var settledWidth = chartLayoutWidth();
 	        var requiredWidth = Math.ceil(Math.max(settledWidth, requiredRight));
@@ -1086,8 +1249,9 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.m
         renderNow: renderThreeBars,
         modes: tokenDepthModes,
 	        scale: {
-		            tokensPerDepthPixel: tokensPerDepthPixel,
-		            costPerDepthPixel: costPerDepthPixel,
+			            tokensPerDepthPixel: tokensPerDepthPixel,
+			            costPerDepthPixel: costPerDepthPixel,
+	            timePerDepthPixel: timePerDepthPixel,
             missingDepth: missingDepth,
             projectX: projectX,
             projectY: projectY

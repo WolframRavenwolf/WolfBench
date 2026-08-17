@@ -430,19 +430,38 @@ def _(all_vms, hcr, mo, raw_results, scan_completed):
             _tok_cache = _run.get("tokens_cache")
             _tok_cache_write = _run.get("tokens_cache_write")
             _cost = _run.get("cost_usd")
+            _cost_min = _run.get("cost_usd_min")
+            _cost_max = _run.get("cost_usd_max")
+            if _cost:
+                _cost_str = f"${float(_cost):.2f}"
+            elif _cost_min and _cost_max:
+                _low = float(_cost_min)
+                _high = float(_cost_max)
+                if _high < _low:
+                    _low, _high = _high, _low
+                _cost_str = (
+                    f"~${_low:.2f}"
+                    if abs(_high - _low) < 0.005
+                    else f"~${_low:.2f}–${_high:.2f}"
+                )
+            else:
+                _cost_str = "-"
 
-            # tokens_cache is a discounted subset of tokens_in, not extra input.
-            _tok_prompt = None
-            if _tok_in is not None or _tok_cache_write is not None:
-                _tok_prompt = (_tok_in or 0) + (_tok_cache_write or 0)
-            _tok_uncached = None
-            if _tok_in is not None:
-                _tok_uncached = max((_tok_in or 0) - (_tok_cache or 0), 0)
+            if (_run.get("token_accounting_version") or 0) >= 2:
+                _tok_prompt = _tok_in if _run.get("token_usage_complete") else None
+                _tok_uncached = _run.get("tokens_input_uncached")
+            else:
+                _tok_prompt = None
+                if _tok_in is not None or _tok_cache_write is not None:
+                    _tok_prompt = (_tok_in or 0) + (_tok_cache_write or 0)
+                _tok_uncached = None
+                if _tok_in is not None:
+                    _tok_uncached = max((_tok_in or 0) - (_tok_cache or 0), 0)
 
             # % cached = cache / total_prompt
             _cached_pct = "-"
-            if _tok_in and _tok_cache:
-                _cached_pct = f"{_tok_cache / _tok_in:.0%}"
+            if _tok_prompt and _tok_cache:
+                _cached_pct = f"{_tok_cache / _tok_prompt:.1%}"
 
             # Jobs folder: immediate parent of the timestamp dir in run_dir
             _run_dir = _run.get("run_dir", "")
@@ -477,7 +496,7 @@ def _(all_vms, hcr, mo, raw_results, scan_completed):
                 "total_in": _fmt_tokens(_tok_prompt),
                 "cached%": _cached_pct,
                 "out": _fmt_tokens(_tok_out),
-                "cost": f"${_cost:.2f}" if _cost else "-",
+                "cost": _cost_str,
                 "_classify": _reason,  # only classify_run (partial/test/total failure)
                 "_infra_detail": _infra_summary or "",  # for enriching fail reasons
                 "status": "",  # computed later by filter cell

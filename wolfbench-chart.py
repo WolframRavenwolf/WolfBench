@@ -338,9 +338,116 @@ def _positive_cost_usd(value) -> float | None:
     return cost if cost > 0 else None
 
 
+def _cost_bounds_usd(run: dict) -> tuple[float, float, bool] | None:
+    """Return exact or bounded run cost as (minimum, maximum, estimated)."""
+    exact = _positive_cost_usd(run.get("cost_usd"))
+    if exact is not None:
+        return exact, exact, bool(run.get("cost_usd_estimated"))
+
+    minimum = _positive_cost_usd(run.get("cost_usd_min"))
+    maximum = _positive_cost_usd(run.get("cost_usd_max"))
+    if minimum is None or maximum is None:
+        return None
+    if maximum < minimum:
+        minimum, maximum = maximum, minimum
+    return minimum, maximum, bool(run.get("cost_usd_estimated", True))
+
+
+def _positive_duration_sec(value) -> float | None:
+    try:
+        duration = float(value)
+    except (TypeError, ValueError):
+        return None
+    return duration if duration > 0 else None
+
+
+def _token_buckets(r: dict) -> dict[str, int | bool | None]:
+    """Normalize usage into non-overlapping uncached input, cached input, and output buckets."""
+    if (r.get("token_accounting_version") or 0) >= 2:
+        input_value = r.get("tokens_in")
+        input_complete = bool(r.get("token_usage_complete")) and input_value is not None
+        if not input_complete:
+            return {
+                "uncached_input": 0,
+                "non_cached_input": 0,
+                "cached_input": 0,
+                "cache_write": None,
+                "input": 0,
+                "output": 0,
+                "total": 0,
+                "input_complete": False,
+            }
+
+        input_total = max(0, input_value or 0)
+        cached_input = min(max(0, r.get("tokens_cache") or 0), input_total)
+        non_cached_input = input_total - cached_input
+        cache_write = (
+            max(0, r.get("tokens_cache_write") or 0)
+            if r.get("cache_write_complete")
+            else None
+        )
+        uncached_input = r.get("tokens_input_uncached")
+        if uncached_input is None and cache_write is not None:
+            uncached_input = max(0, non_cached_input - cache_write)
+        output = max(0, r.get("tokens_out") or 0)
+        return {
+            "uncached_input": int(round(uncached_input or 0)),
+            "non_cached_input": int(round(non_cached_input)),
+            "cached_input": int(round(cached_input)),
+            "cache_write": int(round(cache_write)) if cache_write is not None else None,
+            "input": int(round(input_total)),
+            "output": int(round(output)),
+            "total": int(round(input_total + output)),
+            "input_complete": True,
+        }
+
+    raw_input = (r.get("tokens_in") or 0) + (r.get("tokens_cache_write") or 0)
+    cache_read = r.get("tokens_cache") or 0
+    output = r.get("tokens_out") or 0
+    has_cache_write = bool(r.get("tokens_cache_write") or 0)
+
+    if cache_read and not has_cache_write and cache_read <= raw_input:
+        cached_input = cache_read
+        uncached_input = raw_input - cache_read
+    else:
+        uncached_input = raw_input
+        cached_input = cache_read
+
+    input_total = uncached_input + cached_input
+    return {
+        "uncached_input": int(round(uncached_input)),
+        "non_cached_input": int(round(uncached_input)),
+        "cached_input": int(round(cached_input)),
+        "cache_write": int(round(r.get("tokens_cache_write") or 0)),
+        "input": int(round(input_total)),
+        "output": int(round(output)),
+        "total": int(round(input_total + output)),
+        "input_complete": True,
+    }
+
+
 def _fmt_cost_usd(value) -> str:
     cost = _positive_cost_usd(value)
     return f"${cost:,.2f}" if cost is not None else "-"
+
+
+def _fmt_cost_range_usd(
+    minimum,
+    maximum,
+    estimated: bool = False,
+    missing: str = "-",
+) -> str:
+    low = _positive_cost_usd(minimum)
+    high = _positive_cost_usd(maximum)
+    if low is None or high is None:
+        return missing
+    if high < low:
+        low, high = high, low
+    if abs(high - low) < 0.005:
+        label = f"${low:,.2f}"
+    else:
+        label = f"${low:,.2f}–${high:,.2f}"
+    return ("~" if estimated else "") + label
 
 
 METRIC_LABELS = {
@@ -371,16 +478,39 @@ def compute_metrics(runs: list[dict]) -> dict | None:
     timeout_sec = max(set(timeouts), key=timeouts.count) if timeouts else None
 
     token_input_total = 0
+    token_cache_total = 0
+    token_cache_write_total = 0
     token_output_total = 0
-    cost_total = 0.0
+    token_runs = 0
+    token_cache_write_runs = 0
+    cost_min_total = 0.0
+    cost_max_total = 0.0
     cost_runs = 0
+    cost_estimated_runs = 0
+    duration_total = 0.0
+    duration_runs = 0
     for r in runs:
-        token_input_total += (r.get("tokens_in") or 0) + (r.get("tokens_cache_write") or 0)
-        token_output_total += r.get("tokens_out") or 0
-        cost = _positive_cost_usd(r.get("cost_usd"))
-        if cost is not None:
-            cost_total += cost
+        buckets = _token_buckets(r)
+        token_input_total += buckets["input"]
+        token_cache_total += buckets["cached_input"]
+        token_output_total += buckets["output"]
+        if buckets["total"]:
+            token_runs += 1
+        if buckets["cache_write"] is not None:
+            token_cache_write_total += buckets["cache_write"]
+            token_cache_write_runs += 1
+        cost_bounds = _cost_bounds_usd(r)
+        if cost_bounds is not None:
+            cost_minimum, cost_maximum, cost_estimated = cost_bounds
+            cost_min_total += cost_minimum
+            cost_max_total += cost_maximum
             cost_runs += 1
+            if cost_estimated:
+                cost_estimated_runs += 1
+        duration = _positive_duration_sec(r.get("duration_sec"))
+        if duration is not None:
+            duration_total += duration
+            duration_runs += 1
 
     avg_score = sum(scores) / len(scores)
     return {
@@ -404,11 +534,19 @@ def compute_metrics(runs: list[dict]) -> dict | None:
         "ceiling_raw": float(ceiling),
         "timeout_sec": timeout_sec,
         "tokens_in_total": token_input_total,
+        "tokens_cache_total": token_cache_total,
+        "tokens_cache_write_total": token_cache_write_total,
         "tokens_out_total": token_output_total,
         "tokens_total": token_input_total + token_output_total,
-        "tokens_runs": n_runs,
-        "cost_total_usd": cost_total,
+        "tokens_runs": token_runs,
+        "tokens_cache_write_runs": token_cache_write_runs,
+        "cost_total_usd": (cost_min_total + cost_max_total) / 2,
+        "cost_min_total_usd": cost_min_total,
+        "cost_max_total_usd": cost_max_total,
         "cost_runs": cost_runs,
+        "cost_estimated_runs": cost_estimated_runs,
+        "duration_total_sec": duration_total,
+        "duration_runs": duration_runs,
     }
 
 
@@ -631,10 +769,13 @@ def _build_runs_table_html(
         duration_total = 0.0
         duration_runs = 0
         token_in_total = 0
+        token_cache_total = 0
         token_out_total = 0
         token_runs = 0
-        cost_total = 0.0
+        cost_min_total = 0.0
+        cost_max_total = 0.0
         cost_runs = 0
+        cost_estimated_runs = 0
 
         for _r in visible_runs:
             _duration = _safe_float(_r.get("duration_sec"))
@@ -642,18 +783,25 @@ def _build_runs_table_html(
                 duration_total += _duration
                 duration_runs += 1
 
-            _tok_in = (_r.get("tokens_in") or 0) + (_r.get("tokens_cache_write") or 0)
-            _tok_out = _r.get("tokens_out") or 0
-            _tok_total = _tok_in + _tok_out
+            _buckets = _token_buckets(_r)
+            _tok_in = _buckets["input"]
+            _tok_cache = _buckets["cached_input"]
+            _tok_out = _buckets["output"]
+            _tok_total = _buckets["total"]
             if _tok_total:
                 token_in_total += _tok_in
+                token_cache_total += _tok_cache
                 token_out_total += _tok_out
                 token_runs += 1
 
-            _cost = _positive_cost_usd(_r.get("cost_usd"))
-            if _cost is not None:
-                cost_total += _cost
+            _cost_bounds = _cost_bounds_usd(_r)
+            if _cost_bounds is not None:
+                _cost_minimum, _cost_maximum, _cost_estimated = _cost_bounds
+                cost_min_total += _cost_minimum
+                cost_max_total += _cost_maximum
                 cost_runs += 1
+                if _cost_estimated:
+                    cost_estimated_runs += 1
 
         duration_label = _fmt_duration_total(duration_total)
         if duration_runs and duration_runs != n_visible:
@@ -661,16 +809,33 @@ def _build_runs_table_html(
 
         token_total = token_in_total + token_out_total
         if token_total:
-            token_label = f"{_fmt_tok(token_total)} ({_fmt_tok(token_in_total)} in, {_fmt_tok(token_out_total)} out)"
+            token_label = (
+                f"{_fmt_tok(token_total)} "
+                f"({_fmt_tok(token_in_total)} in, "
+                f"{_fmt_tok(min(token_cache_total, token_in_total))} cached, "
+                f"{_fmt_tok(token_out_total)} out)"
+            )
             if token_runs != n_visible:
                 token_label += f" (token data for {token_runs}/{n_visible} runs)"
         else:
             token_label = "n/a"
 
         if cost_runs:
-            cost_label = _fmt_cost_usd(cost_total)
+            cost_label = _fmt_cost_range_usd(
+                cost_min_total,
+                cost_max_total,
+                estimated=cost_estimated_runs > 0,
+                missing="n/a",
+            )
+            cost_notes = []
+            if cost_estimated_runs:
+                cost_notes.append(
+                    f"{cost_estimated_runs} run{'s' if cost_estimated_runs != 1 else ''} use estimated ranges"
+                )
             if cost_runs != n_visible:
-                cost_label += f" (cost data for {cost_runs}/{n_visible} runs)"
+                cost_notes.append(f"cost data for {cost_runs}/{n_visible} runs")
+            if cost_notes:
+                cost_label += f" ({'; '.join(cost_notes)})"
         else:
             cost_label = "n/a"
 
@@ -735,33 +900,51 @@ def _build_runs_table_html(
             m, _ = divmod(rem, 60)
             dur = f"{h}h{m:02d}m"
 
-        # tokens_cache is a discounted subset of tokens_in, not extra input.
-        tok_in_raw = r.get("tokens_in")
-        tok_cache_write_raw = r.get("tokens_cache_write")
-        tok_cache_raw = r.get("tokens_cache")
-        tok_total_in = None
-        if tok_in_raw is not None or tok_cache_write_raw is not None:
-            tok_total_in = (tok_in_raw or 0) + (tok_cache_write_raw or 0)
+        # Cache accounting differs by agent: some report cache as an input subset,
+        # others as a separate read bucket. Use normalized non-overlapping buckets.
+        tok_buckets = _token_buckets(r)
+        tok_total_in = tok_buckets["input"] if tok_buckets["input"] else None
+        tok_cache_raw = tok_buckets["cached_input"]
+        tok_cache_write_raw = tok_buckets["cache_write"]
         tok_in = _fmt_tok(tok_total_in)
-        tok_out_raw = r.get("tokens_out")
+        tok_out_raw = tok_buckets["output"]
         tok_out = _fmt_tok(tok_out_raw)
-        tok_total_raw = (
-            (tok_total_in or 0) + (tok_out_raw or 0)
-            if tok_total_in is not None or tok_out_raw is not None else None
-        )
+        tok_total_raw = tok_buckets["total"] if tok_buckets["total"] else None
         tok_total = _fmt_tok(tok_total_raw)
 
-        cost_value = _positive_cost_usd(r.get("cost_usd"))
-        cost_str = _fmt_cost_usd(cost_value)
-        cost_sort_value = f"{cost_value:.6f}" if cost_value is not None else ""
-        cost_attr = f"{cost_value:.6f}" if cost_value is not None else "0"
+        cost_bounds = _cost_bounds_usd(r)
+        if cost_bounds is not None:
+            cost_minimum, cost_maximum, cost_estimated = cost_bounds
+            cost_value = (cost_minimum + cost_maximum) / 2
+            cost_str = _fmt_cost_range_usd(
+                cost_minimum, cost_maximum, cost_estimated
+            )
+            cost_sort_value = f"{cost_value:.6f}"
+            cost_attr = f"{cost_value:.6f}"
+            cost_min_attr = f"{cost_minimum:.6f}"
+            cost_max_attr = f"{cost_maximum:.6f}"
+            cost_estimated_attr = "1" if cost_estimated else "0"
+            cost_title_attr = (
+                ' title="Estimated API-equivalent cost range; the exact uncached/cache-write split is unavailable."'
+                if cost_estimated else ""
+            )
+        else:
+            cost_str = "-"
+            cost_sort_value = ""
+            cost_attr = "0"
+            cost_min_attr = "0"
+            cost_max_attr = "0"
+            cost_estimated_attr = "0"
+            cost_title_attr = ""
 
         _passed_json = json.dumps(r.get("passed_tasks", []), separators=(",", ":"))
         rows.append(
             f"<tr data-agent=\"{_html_escape(agent)}\" data-model=\"{_html_escape(model)}\" data-passed='{_passed_json}' "
             f'data-duration-sec="{duration_sec:.3f}" data-token-input="{int(tok_total_in or 0)}" '
+            f'data-token-cache="{int(tok_cache_raw or 0)}" data-token-cache-write="{int(tok_cache_write_raw) if tok_cache_write_raw is not None else -1}" '
             f'data-token-output="{int(tok_out_raw or 0)}" data-token-total="{int(tok_total_raw or 0)}" '
-            f'data-cost-usd="{cost_attr}">'
+            f'data-cost-usd="{cost_attr}" data-cost-min="{cost_min_attr}" '
+            f'data-cost-max="{cost_max_attr}" data-cost-estimated="{cost_estimated_attr}">'
             f"<td data-sort-value=\"{date_sort_value}\">{date_cell}</td>"
             f"<td>{_html_escape(agent_ver)}</td>"
             f"<td>{_html_escape(provider)}</td>"
@@ -778,7 +961,7 @@ def _build_runs_table_html(
             f"<td>{tok_in}</td>"
             f"<td>{tok_out}</td>"
             f"<td>{tok_total}</td>"
-            f"<td class='n' data-sort-value=\"{cost_sort_value}\">{cost_str}</td>"
+            f"<td class='n' data-sort-value=\"{cost_sort_value}\"{cost_title_attr}>{cost_str}</td>"
             f"</tr>"
         )
 
@@ -959,18 +1142,30 @@ def generate_html(
             _bar_scores["worst_raw"] = round(m["min_raw"], 4)
             _bar_scores_json = json.dumps(_bar_scores, separators=(",", ":"))
             _tok_in = int(round(m.get("tokens_in_total") or 0))
+            _tok_cache = int(round(m.get("tokens_cache_total") or 0))
+            _tok_cache_write_runs = int(m.get("tokens_cache_write_runs") or 0)
+            _tok_cache_write = (
+                int(round(m.get("tokens_cache_write_total") or 0))
+                if _tok_cache_write_runs == n_runs else -1
+            )
             _tok_out = int(round(m.get("tokens_out_total") or 0))
             _tok_total = int(round(m.get("tokens_total") or (_tok_in + _tok_out)))
             _tok_runs = int(m.get("tokens_runs") or n_runs)
             _cost_total = float(m.get("cost_total_usd") or 0)
+            _cost_min_total = float(m.get("cost_min_total_usd") or _cost_total)
+            _cost_max_total = float(m.get("cost_max_total_usd") or _cost_total)
             _cost_runs = int(m.get("cost_runs") or 0)
+            _cost_estimated_runs = int(m.get("cost_estimated_runs") or 0)
+            _duration_total = float(m.get("duration_total_sec") or 0)
+            _duration_runs = int(m.get("duration_runs") or 0)
             _agent_version = "" if ver == "unknown" else ver
             _agent_badge = _agent_badge_html(agent, cfg["name"])
             bars_html.append(f'''
                 <div class="bar-wrapper" data-agent="{agent}" data-runs="{n_runs}" data-bar-scores='{_bar_scores_json}'
                      data-agent-name="{_html_escape(cfg["name"])}" data-agent-version="{_html_escape(_agent_version)}"
-                     data-token-input="{_tok_in}" data-token-output="{_tok_out}" data-token-total="{_tok_total}" data-token-runs="{_tok_runs}"
-                     data-cost-total="{_cost_total:.6f}" data-cost-runs="{_cost_runs}" draggable="true">
+                     data-token-input="{_tok_in}" data-token-cache="{_tok_cache}" data-token-cache-write="{_tok_cache_write}" data-token-output="{_tok_out}" data-token-total="{_tok_total}" data-token-runs="{_tok_runs}"
+                     data-cost-total="{_cost_total:.6f}" data-cost-min="{_cost_min_total:.6f}" data-cost-max="{_cost_max_total:.6f}" data-cost-runs="{_cost_runs}" data-cost-estimated-runs="{_cost_estimated_runs}"
+                     data-duration-total="{_duration_total:.3f}" data-duration-runs="{_duration_runs}" draggable="true">
                     {top_label_html}
                     {_wopen}<div class="bar" data-agent="{agent}" style="width: {bar_w}px;">
                         {segments}
@@ -1393,6 +1588,10 @@ def generate_html(
     font-size: 0.72rem;
     opacity: 0.82;
 }
+.three-bars-depth-label[data-depth-mode="time"] {
+    color: #9ee7ff;
+    font-size: 0.74rem;
+}
 .chart-area.three-bars.token-depth-3d .bar {
     filter: none;
 }
@@ -1473,6 +1672,7 @@ def generate_html(
         if (raw === 'tokens' || raw === 'token') return 'tokens';
         if (raw === 'cost' || raw === 'costs' || raw === 'usd') return 'cost';
         if (raw === 'both' || raw === 'tokens+cost' || raw === 'tokens-cost' || raw === 'token+cost' || raw === 'token-cost' || raw === 'tokens_cost' || raw === 'combined') return 'both';
+        if (raw === 'time' || raw === 'runtime' || raw === 'duration' || raw === 'wallclock' || raw === 'wall-clock') return 'time';
         return 'flat';
     }
 
@@ -1540,6 +1740,8 @@ def generate_html(
             out.set('3D', 'cost');
         } else if (tokenDepthMode === 'both') {
             out.set('3D', 'both');
+        } else if (tokenDepthMode === 'time') {
+            out.set('3D', 'time');
         }
 
         var unitToggle = document.getElementById('unitToggle');
@@ -3922,7 +4124,20 @@ AGENT_VERSIONS_PLACEHOLDER
         return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
-    function resourceStatsText(nRuns, durationTotal, durationRuns, tokenInTotal, tokenOutTotal, tokenRuns, costTotal, costRuns) {
+    function formatCostRange(minimum, maximum, estimated) {
+        if (!minimum || minimum <= 0 || !maximum || maximum <= 0) return 'n/a';
+        if (maximum < minimum) {
+            var swap = minimum;
+            minimum = maximum;
+            maximum = swap;
+        }
+        var label = Math.abs(maximum - minimum) < 0.005
+            ? formatCost(minimum)
+            : formatCost(minimum) + '–' + formatCost(maximum);
+        return (estimated ? '~' : '') + label;
+    }
+
+    function resourceStatsText(nRuns, durationTotal, durationRuns, tokenInTotal, tokenCacheTotal, tokenOutTotal, tokenRuns, costMinTotal, costMaxTotal, costRuns, costEstimatedRuns) {
         var durationLabel = formatDurationTotal(durationTotal);
         if (durationRuns && durationRuns !== nRuns) {
             durationLabel += ' (timing data for ' + durationRuns + '/' + nRuns + ' runs)';
@@ -3930,15 +4145,22 @@ AGENT_VERSIONS_PLACEHOLDER
 
         var tokenTotal = tokenInTotal + tokenOutTotal;
         var tokenLabel = tokenTotal > 0
-            ? compactTokenValue(tokenTotal) + ' (' + compactTokenValue(tokenInTotal) + ' in, ' + compactTokenValue(tokenOutTotal) + ' out)'
+            ? compactTokenValue(tokenTotal) + ' (' + compactTokenValue(tokenInTotal) + ' in, ' + compactTokenValue(Math.min(tokenCacheTotal, tokenInTotal)) + ' cached, ' + compactTokenValue(tokenOutTotal) + ' out)'
             : 'n/a';
         if (tokenTotal > 0 && tokenRuns !== nRuns) {
             tokenLabel += ' (token data for ' + tokenRuns + '/' + nRuns + ' runs)';
         }
 
-        var costLabel = formatCost(costTotal);
+        var costLabel = formatCostRange(costMinTotal, costMaxTotal, costEstimatedRuns > 0);
+        var costNotes = [];
+        if (costEstimatedRuns) {
+            costNotes.push(costEstimatedRuns + ' run' + (costEstimatedRuns === 1 ? '' : 's') + ' use estimated ranges');
+        }
         if (costRuns && costRuns !== nRuns) {
-            costLabel += ' (cost data for ' + costRuns + '/' + nRuns + ' runs)';
+            costNotes.push('cost data for ' + costRuns + '/' + nRuns + ' runs');
+        }
+        if (costNotes.length) {
+            costLabel += ' (' + costNotes.join('; ') + ')';
         }
 
         return 'Total runtime: ' + durationLabel
@@ -3965,10 +4187,13 @@ AGENT_VERSIONS_PLACEHOLDER
         var durationTotal = 0;
         var durationRuns = 0;
         var tokenInTotal = 0;
+        var tokenCacheTotal = 0;
         var tokenOutTotal = 0;
         var tokenRuns = 0;
-        var costTotal = 0;
+        var costMinTotal = 0;
+        var costMaxTotal = 0;
         var costRuns = 0;
+        var costEstimatedRuns = 0;
         Array.prototype.slice.call(tbody.rows).forEach(function(row) {
             total++;
             var key = row.getAttribute('data-agent') + '|' + row.getAttribute('data-model');
@@ -3987,16 +4212,22 @@ AGENT_VERSIONS_PLACEHOLDER
                     durationRuns++;
                 }
                 var tokenIn = toNumber(row.getAttribute('data-token-input'));
+                var tokenCache = toNumber(row.getAttribute('data-token-cache'));
                 var tokenOut = toNumber(row.getAttribute('data-token-output'));
                 if (tokenIn + tokenOut > 0) {
                     tokenInTotal += tokenIn;
+                    tokenCacheTotal += tokenCache;
                     tokenOutTotal += tokenOut;
                     tokenRuns++;
                 }
                 var cost = toNumber(row.getAttribute('data-cost-usd'));
-                if (cost > 0) {
-                    costTotal += cost;
+                var costMin = toNumber(row.getAttribute('data-cost-min')) || cost;
+                var costMax = toNumber(row.getAttribute('data-cost-max')) || cost;
+                if (costMin > 0 && costMax > 0) {
+                    costMinTotal += costMin;
+                    costMaxTotal += costMax;
                     costRuns++;
+                    if (row.getAttribute('data-cost-estimated') === '1') costEstimatedRuns++;
                 }
             }
         });
@@ -4030,10 +4261,13 @@ AGENT_VERSIONS_PLACEHOLDER
                 durationTotal,
                 durationRuns,
                 tokenInTotal,
+                tokenCacheTotal,
                 tokenOutTotal,
                 tokenRuns,
-                costTotal,
-                costRuns
+                costMinTotal,
+                costMaxTotal,
+                costRuns,
+                costEstimatedRuns
             );
         }
     };
@@ -4071,7 +4305,7 @@ AGENT_VERSIONS_PLACEHOLDER
     var chartArea = document.querySelector('.chart-area');
     if (!chartArea) return;
     var urlState = window.WolfBenchUrlState ? window.WolfBenchUrlState.state : {};
-    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both'];
+    var tokenDepthModes = ['flat', 'tokens', 'cost', 'both', 'time'];
     var tokenDepthMode = normalizeTokenDepthMode(urlState && urlState.tokenDepth);
     window._tokenDepthMode = tokenDepthMode;
     window._tokenDepthEnabled = tokenDepthMode !== 'flat';
@@ -4085,6 +4319,7 @@ AGENT_VERSIONS_PLACEHOLDER
         if (mode === 'tokens' || mode === 'token') return 'tokens';
         if (mode === 'cost' || mode === 'costs' || mode === 'usd') return 'cost';
         if (mode === 'both' || mode === 'tokens+cost' || mode === 'tokens-cost' || mode === 'token+cost' || mode === 'token-cost' || mode === 'tokens_cost' || mode === 'combined') return 'both';
+        if (mode === 'time' || mode === 'runtime' || mode === 'duration' || mode === 'wallclock' || mode === 'wall-clock') return 'time';
         return 'flat';
     }
 
@@ -4110,10 +4345,39 @@ AGENT_VERSIONS_PLACEHOLDER
         return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
+    function formatCostRange(minimum, maximum, estimated, fallback) {
+        if (!minimum || minimum <= 0 || !maximum || maximum <= 0) return fallback || '-';
+        if (maximum < minimum) {
+            var swap = minimum;
+            minimum = maximum;
+            maximum = swap;
+        }
+        var label = Math.abs(maximum - minimum) < 0.005
+            ? formatCost(minimum, fallback)
+            : formatCost(minimum, fallback) + '–' + formatCost(maximum, fallback);
+        return (estimated ? '~' : '') + label;
+    }
+
+    function formatDurationTotal(seconds, fallback) {
+        var total = Math.round(seconds || 0);
+        if (total <= 0) return fallback || '-';
+        var days = Math.floor(total / 86400);
+        total -= days * 86400;
+        var hours = Math.floor(total / 3600);
+        total -= hours * 3600;
+        var minutes = Math.floor(total / 60);
+        var parts = [];
+        if (days) parts.push(days + 'd');
+        if (hours || days) parts.push(hours + 'h');
+        parts.push(minutes + 'm');
+        return parts.join(' ');
+    }
+
     function depthScaleLabelForMode(mode) {
-        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · 100 px = 1B tokens';
+        if (mode === 'tokens') return '3D depth scale: 1 px = 10M tokens · non-cached/cache-read/output split by depth';
         if (mode === 'cost') return '3D depth scale: 1 px = $5 run cost · 100 px = $500';
-        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M · Cost shadow 1 px = $5';
+        if (mode === 'both') return '3D depth scale: Tokens 1 px = 10M with cache translucent · Cost shadow 1 px = $5';
+        if (mode === 'time') return '3D depth scale: 1 px = 10 min runtime · 6 px = 1 h';
         return '';
     }
 
@@ -4132,6 +4396,7 @@ AGENT_VERSIONS_PLACEHOLDER
 
     var tokensPerDepthPixel = 1e7;
     var costPerDepthPixel = 5;
+    var timePerDepthPixel = 600;
     var missingDepth = 0;
     var items = [];
 
@@ -4139,13 +4404,23 @@ AGENT_VERSIONS_PLACEHOLDER
         var bar = wrapper.querySelector('.bar');
         if (!bar) return;
         var input = toNumber(wrapper.getAttribute('data-token-input'));
+        var cache = toNumber(wrapper.getAttribute('data-token-cache'));
+        var cacheWrite = toNumber(wrapper.getAttribute('data-token-cache-write'));
         var output = toNumber(wrapper.getAttribute('data-token-output'));
+        if (cache > input) input += cache;
+        cache = Math.min(cache, input);
         var total = toNumber(wrapper.getAttribute('data-token-total')) || input + output;
+        total = Math.max(total, input + output);
         var runs = toNumber(wrapper.getAttribute('data-token-runs')) || toNumber(wrapper.getAttribute('data-runs'));
         var cost = toNumber(wrapper.getAttribute('data-cost-total'));
+        var costMin = toNumber(wrapper.getAttribute('data-cost-min')) || cost;
+        var costMax = toNumber(wrapper.getAttribute('data-cost-max')) || cost;
         var costRuns = toNumber(wrapper.getAttribute('data-cost-runs'));
+        var costEstimatedRuns = toNumber(wrapper.getAttribute('data-cost-estimated-runs'));
+        var duration = toNumber(wrapper.getAttribute('data-duration-total'));
+        var durationRuns = toNumber(wrapper.getAttribute('data-duration-runs'));
         var missing = total <= 0;
-        var data = {input: input, output: output, total: total, runs: runs, cost: cost, costRuns: costRuns};
+        var data = {input: input, cache: cache, cacheWrite: cacheWrite, output: output, total: total, runs: runs, cost: cost, costMin: costMin, costMax: costMax, costRuns: costRuns, costEstimatedRuns: costEstimatedRuns, duration: duration, durationRuns: durationRuns};
         wrapper.setAttribute('data-token-index', String(index));
         wrapper.classList.toggle('token-missing', missing);
         items.push({wrapper: wrapper, bar: bar, data: data, missing: missing});
@@ -4158,9 +4433,12 @@ AGENT_VERSIONS_PLACEHOLDER
     var costs = items.map(function(item) { return item.data.cost; }).filter(function(value) { return value > 0; });
     var minCost = costs.length ? Math.min.apply(Math, costs) : 0;
     var maxCost = costs.length ? Math.max.apply(Math, costs) : 0;
+    var durations = items.map(function(item) { return item.data.duration; }).filter(function(value) { return value > 0; });
+    var minDuration = durations.length ? Math.min.apply(Math, durations) : 0;
+    var maxDuration = durations.length ? Math.max.apply(Math, durations) : 0;
 
     chartArea.classList.add('svg-iso', 'three-bars');
-    var tokenDepthToggle = addLegend(min, max, minCost, maxCost);
+    var tokenDepthToggle = addLegend(min, max, minCost, maxCost, minDuration, maxDuration);
     setTokenDepthMode(tokenDepthMode, true);
 
     items.forEach(function(item) {
@@ -4178,8 +4456,14 @@ AGENT_VERSIONS_PLACEHOLDER
         return cost / costPerDepthPixel;
     }
 
+    function depthForTime(duration) {
+        if (!duration || duration <= 0) return 0;
+        return duration / timePerDepthPixel;
+    }
+
     function depthForMode(item, mode) {
         if (mode === 'cost') return depthForCost(item.data.cost);
+        if (mode === 'time') return depthForTime(item.data.duration);
         return item.missing ? missingDepth : depthForTokens(item.data.total);
     }
 
@@ -4203,29 +4487,58 @@ AGENT_VERSIONS_PLACEHOLDER
         var agentVersion = item.wrapper.getAttribute('data-agent-version') || '';
         var agentLine = agentName ? '\\nAgent: ' + agentName + (agentVersion ? ' ' + agentVersion : '') : '';
         var unknownValueLabel = 'n/a';
-        var costLabel = formatCost(item.data.cost, unknownValueLabel);
-        var costSuffix = item.data.costRuns && item.data.costRuns !== item.data.runs
-            ? ' (' + item.data.costRuns + ' costed runs)'
+        var costLabel = formatCostRange(
+            item.data.costMin,
+            item.data.costMax,
+            item.data.costEstimatedRuns > 0,
+            unknownValueLabel
+        );
+        var costNotes = [];
+        if (item.data.costEstimatedRuns) {
+            costNotes.push(item.data.costEstimatedRuns + ' estimated');
+        }
+        if (item.data.costRuns && item.data.costRuns !== item.data.runs) {
+            costNotes.push(item.data.costRuns + ' costed runs');
+        }
+        var costSuffix = costNotes.length ? ' (' + costNotes.join('; ') + ')' : '';
+        var durationLabel = formatDurationTotal(item.data.duration, unknownValueLabel);
+        var durationSuffix = item.data.durationRuns && item.data.durationRuns !== item.data.runs
+            ? ' (' + item.data.durationRuns + ' timed runs)'
             : '';
         if (item.missing) {
             link.setAttribute('title', base
                 + agentLine
                 + '\\nTokens: ' + unknownValueLabel
                 + '\\nCost: ' + costLabel + costSuffix
+                + '\\nRuntime: ' + durationLabel + durationSuffix
                 + '\\nRuns: ' + item.data.runs);
             return;
         }
+        var cachedInput = Math.min(item.data.cache || 0, item.data.input || 0);
+        var nonCachedInput = Math.max(0, (item.data.input || 0) - cachedInput);
+        var cacheWriteKnown = item.data.cacheWrite >= 0;
+        var cacheWrite = cacheWriteKnown ? Math.min(item.data.cacheWrite, nonCachedInput) : 0;
+        var uncachedInput = cacheWriteKnown ? Math.max(0, nonCachedInput - cacheWrite) : nonCachedInput;
         var inputShare = item.data.total ? Math.round(item.data.input / item.data.total * 1000) / 10 : 0;
+        var cachedShare = item.data.input ? Math.round(cachedInput / item.data.input * 1000) / 10 : 0;
         var outputShare = item.data.total ? Math.round(item.data.output / item.data.total * 1000) / 10 : 0;
+        var inputDetail = cacheWriteKnown
+            ? '\\n    Uncached: ' + compactTokenValue(uncachedInput)
+                + '\\n    Cache write: ' + compactTokenValue(cacheWrite)
+            : '\\n    Non-cached: ' + compactTokenValue(nonCachedInput)
+                + '\\n    Uncached/cache-write split: n/a';
         link.setAttribute('title', base + agentLine + '\\nTokens:'
-            + '\\n  In: ' + compactTokenValue(item.data.input) + ' (' + inputShare + '%)'
+            + '\\n  In: ' + compactTokenValue(item.data.input) + ' (' + inputShare + '% total)'
+            + inputDetail
+            + '\\n    Cache read: ' + compactTokenValue(cachedInput) + ' (' + cachedShare + '% input)'
             + '\\n  Out: ' + compactTokenValue(item.data.output) + ' (' + outputShare + '%)'
             + '\\n  Total: ' + compactTokenValue(item.data.total)
             + '\\nCost: ' + costLabel + costSuffix
+            + '\\nRuntime: ' + durationLabel + durationSuffix
             + '\\nRuns: ' + item.data.runs);
     }
 
-    function addLegend(minValue, maxValue, minCostValue, maxCostValue) {
+    function addLegend(minValue, maxValue, minCostValue, maxCostValue, minDurationValue, maxDurationValue) {
         var legend = document.querySelector('.legend');
         var existing = document.getElementById('svgIsoLegend');
         if (!legend || existing) return existing;
@@ -4241,6 +4554,8 @@ AGENT_VERSIONS_PLACEHOLDER
         el.setAttribute('data-token-scale', 'linear;10M=1px;1B=100px;uncapped');
         el.setAttribute('data-cost-range', formatCost(minCostValue) + '-' + formatCost(maxCostValue));
         el.setAttribute('data-cost-scale', 'absolute-linear;$5=1px;$500=100px;uncapped');
+        el.setAttribute('data-time-range', formatDurationTotal(minDurationValue) + '-' + formatDurationTotal(maxDurationValue));
+        el.setAttribute('data-time-scale', 'absolute-linear;10min=1px;1h=6px;uncapped');
         el.addEventListener('click', function(event) {
             event.stopPropagation();
             setTokenDepthMode(nextTokenDepthMode(tokenDepthMode), false);
@@ -4269,6 +4584,7 @@ AGENT_VERSIONS_PLACEHOLDER
         chartArea.classList.toggle('token-depth-tokens', tokenDepthMode === 'tokens');
         chartArea.classList.toggle('token-depth-cost', tokenDepthMode === 'cost');
         chartArea.classList.toggle('token-depth-both', tokenDepthMode === 'both');
+        chartArea.classList.toggle('token-depth-time', tokenDepthMode === 'time');
         chartArea.classList.toggle('token-depth-off', !enabled);
         updateAllDepthVars();
         if (tokenDepthToggle) {
@@ -4283,13 +4599,16 @@ AGENT_VERSIONS_PLACEHOLDER
                 tokenDepthToggle.title = 'Bars are in 2D. Click for 3D: Tokens.';
             } else if (tokenDepthMode === 'tokens') {
                 if (label) label.textContent = 'Bars: 3D Tokens';
-                tokenDepthToggle.title = '3D bars use uncapped absolute linear total token volume: 1px = 10M tokens. Front depth is input, rear depth is output. Click for 3D Cost.';
+                tokenDepthToggle.title = '3D bars use uncapped absolute linear total token volume: 1px = 10M tokens. Input is split into opaque non-cached and translucent cache-read depth; a separator marks output. Click for 3D Cost.';
             } else if (tokenDepthMode === 'cost') {
                 if (label) label.textContent = 'Bars: 3D Cost';
                 tokenDepthToggle.title = '3D bars use uncapped absolute linear run cost: 1px = $5. No log scale, no per-chart normalization. Click for 3D Tokens + Cost.';
-            } else {
+            } else if (tokenDepthMode === 'both') {
                 if (label) label.textContent = 'Bars: 3D Tokens + Cost';
-                tokenDepthToggle.title = 'Main bar uses token depth; the neutral gray shadow uses run cost. Click for 2D bars.';
+                tokenDepthToggle.title = 'Main bar uses input/cache/output token depth; the neutral gray shadow uses run cost. Click for 3D Time.';
+            } else {
+                if (label) label.textContent = 'Bars: 3D Time';
+                tokenDepthToggle.title = '3D bars use uncapped absolute linear total runtime: 1px = 10 minutes. Click for 2D bars.';
             }
         }
         updateDepthScaleLine(tokenDepthMode);
@@ -5284,7 +5603,7 @@ h1 {{
         </div>
 
         <h3>Reading the Chart</h3>
-	        <p>The five metrics are shown for each model/configuration as stacked bar segments from the rock-solid base up to the ceiling. Optional 3D modes add token volume, run cost, or both as depth: token mode splits input tokens in front and output tokens behind, cost mode uses the total cost for depth, and the combined mode adds a neutral gray cost shadow behind the token-depth bar. The <em>spread</em> between the segments tells you as much as the numbers themselves:</p>
+	        <p>The five metrics are shown for each model/configuration as stacked bar segments from the rock-solid base up to the ceiling. Optional 3D modes add token volume, run cost, total runtime, or tokens plus cost as depth: token mode splits opaque non-cached input, translucent cache-read input, and output tokens behind a visible input/output separator, cost mode uses the total cost for depth, time mode uses total runtime for depth, and the combined mode adds a neutral gray cost shadow behind the token-depth bar. The <em>spread</em> between the segments tells you as much as the numbers themselves:</p>
         <ul class="spread-list">
             <li><strong>Tight spread</strong> (metrics close together) = consistent, predictable AI agent</li>
             <li><strong>Wide spread</strong> (big gap between solid and ceiling) = high variance, unreliable</li>

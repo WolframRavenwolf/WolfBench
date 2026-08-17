@@ -22,7 +22,9 @@ Requirements:
 """
 
 import argparse
+import inspect
 import json
+import shlex
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -85,6 +87,21 @@ WANDB_PRICING_ALIASES = {
 # not emit per-task costs. These keep historical WolfBench snapshots complete
 # without rerunning benchmarks.
 TOKEN_PRICING_PER_1M = {
+    # Anthropic first-party Sonnet 5 introductory API pricing through
+    # 2026-08-31. Uses the 5-minute cache-write rate because Harbor's
+    # model_info field stores one cache creation price.
+    "anthropic-claude-sonnet-5-intro": {
+        "input": 2.00,
+        "cache_read": 0.20,
+        "cache_creation": 2.50,
+        "output": 10.00,
+    },
+    "anthropic-claude-sonnet-5": {
+        "input": 3.00,
+        "cache_read": 0.30,
+        "cache_creation": 3.75,
+        "output": 15.00,
+    },
     "anthropic-claude-opus-4-6": {
         "input": 5.00,
         "cache_read": 0.50,
@@ -157,6 +174,8 @@ TOKEN_PRICING_PER_1M = {
 
 
 TOKEN_PRICING_ALIASES = {
+    "anthropic/claude-sonnet-5": "anthropic-claude-sonnet-5",
+    "claude sonnet 5": "anthropic-claude-sonnet-5",
     "anthropic/claude-opus-4-6": "anthropic-claude-opus-4-6",
     "claude opus 4.6": "anthropic-claude-opus-4-6",
     "cursor/claude-4.6-opus-high-thinking": "anthropic-claude-opus-4-6",
@@ -286,38 +305,34 @@ done
 
 def read_run_data(vm: str, run_dir: str) -> dict | None:
     """Read result.json, config.json, and aggregate per-task token counts."""
-    # Read result + config, then sum per-task token metrics in one SSH call
-    # Token aggregation script — must use ONLY double quotes inside Python code
-    # because it's wrapped in single quotes for the shell
-    token_script = (
-        'import json,glob,sys,os;tin=tout=tcache=0;cost=0.0;ver=None\n'
-        'flist=glob.glob(sys.argv[1]+"/*/result.json")\n'
-        'for f in flist:\n'
-        ' try:\n'
-        '  d=json.load(open(f))\n'
-        '  ar=d.get("agent_result") or {}\n'
-        '  tin+=ar.get("n_input_tokens",0) or 0\n'
-        '  tout+=ar.get("n_output_tokens",0) or 0\n'
-        '  tcache+=ar.get("n_cache_tokens",0) or 0\n'
-        '  cost+=ar.get("cost_usd",0) or 0\n'
-        '  if ver is None:\n'
-        '   ai=d.get("agent_info") or {}\n'
-        '   v=ai.get("version","")\n'
-        '   if v and v!="unknown": ver=v\n'
-        '   elif ver is None:\n'
-        '    cc=os.path.join(os.path.dirname(f),"agent","claude-code.txt")\n'
-        '    if os.path.exists(cc):\n'
-        '     try:\n'
-        '      l=open(cc).readline()\n'
-        '      ver=json.loads(l).get("claude_code_version") or None\n'
-        '     except:pass\n'
-        ' except:pass\n'
-        'print(json.dumps({"in":tin,"out":tout,"cache":tcache,"cost":round(cost,2),"ver":ver}))'
+    # Ship the same stdlib-only aggregation helpers used locally so remote and
+    # downloaded runs cannot drift into different token-accounting dialects.
+    helper_names = (
+        "_read_json_file",
+        "_read_session_usage",
+        "_read_openclaw_usage",
+        "_read_claude_code_usage",
+        "_read_cursor_usage",
+        "_model_info_rates_per_token",
+        "_model_supports_cache_writes",
+        "_infer_cache_write_from_cost",
+        "_generic_task_usage",
+        "_task_usage",
+        "_aggregate_local_tokens",
     )
+    token_script = (
+        "from __future__ import annotations\n"
+        "import json,sys\nfrom pathlib import Path\n"
+        "COST_PER_MILLION_SCALE = 1000000\n\n"
+        + "\n\n".join(
+        inspect.getsource(globals()[name]) for name in helper_names
+        )
+    )
+    token_script += "\nprint(json.dumps(_aggregate_local_tokens(Path(sys.argv[1]))))\n"
     command = (
         f'cat "{run_dir}/result.json" && echo "---JSON_SEPARATOR---" && '
         f'cat "{run_dir}/config.json" && echo "---JSON_SEPARATOR---" && '
-        f"python3 -c '{token_script}' \"{run_dir}\""
+        f"python3 -c {shlex.quote(token_script)} {shlex.quote(run_dir)}"
     )
     stdout, stderr, rc = ssh_run(vm, command, timeout=30)
     if rc != 0:
@@ -429,6 +444,80 @@ def _fallback_pricing_for_model(model_name: str, model_display: str) -> dict | N
     return None
 
 
+def _run_date_from_timestamp(timestamp: str | None):
+    if not timestamp:
+        return None
+    try:
+        return datetime.fromisoformat(str(timestamp)[:10]).date()
+    except (TypeError, ValueError):
+        return None
+
+
+def _config_uses_us_inference_geo(config: dict | None) -> bool:
+    if not isinstance(config, dict):
+        return False
+
+    stack = [config]
+    while stack:
+        value = stack.pop()
+        if isinstance(value, dict):
+            for key, child in value.items():
+                if key == "inference_geo" and str(child).lower() == "us":
+                    return True
+                stack.append(child)
+        elif isinstance(value, list):
+            stack.extend(value)
+    return False
+
+
+def _pricing_with_multiplier(pricing: dict, multiplier: float) -> dict:
+    return {
+        key: (value * multiplier if value is not None else None)
+        for key, value in pricing.items()
+    }
+
+
+def _authoritative_pricing_for_model(
+    model_name: str,
+    model_display: str,
+    timestamp: str | None,
+    config: dict | None = None,
+) -> dict | None:
+    candidates = [
+        str(value or "").strip().lower()
+        for value in (model_name, model_display)
+    ]
+    is_sonnet5 = any(
+        "claude-sonnet-5" in candidate or candidate == "claude sonnet 5"
+        for candidate in candidates
+    )
+    if not is_sonnet5:
+        return None
+
+    run_date = _run_date_from_timestamp(timestamp)
+    if run_date is not None and run_date < datetime(2026, 9, 1).date():
+        pricing = TOKEN_PRICING_PER_1M["anthropic-claude-sonnet-5-intro"]
+    else:
+        pricing = TOKEN_PRICING_PER_1M["anthropic-claude-sonnet-5"]
+
+    if _config_uses_us_inference_geo(config):
+        return _pricing_with_multiplier(pricing, 1.1)
+    return pricing
+
+
+def _calculate_authoritative_cost_usd(
+    tokens: dict | None,
+    model_name: str,
+    model_display: str,
+    timestamp: str | None,
+    config: dict | None = None,
+):
+    pricing = _authoritative_pricing_for_model(
+        model_name, model_display, timestamp, config
+    )
+    return _calculate_token_cost_usd(tokens, pricing)
+
+
 def _split_uncached_and_cached_input(input_tokens, cache_tokens) -> tuple[float, float]:
     input_tokens = input_tokens or 0
     cache_tokens = cache_tokens or 0
@@ -441,13 +530,8 @@ def _calculate_token_cost_usd(tokens: dict | None, pricing: dict | None):
     if not tokens or not pricing:
         return None
 
-    input_tokens = tokens.get("in") or 0
     cache_tokens = tokens.get("cache") or 0
-    cache_write_tokens = tokens.get("cache_write") or 0
     output_tokens = tokens.get("out") or 0
-    if not input_tokens and not cache_tokens and not cache_write_tokens and not output_tokens:
-        return None
-
     input_rate = pricing["input"]
     cache_rate = pricing.get("cache_read")
     if cache_rate is None:
@@ -456,21 +540,41 @@ def _calculate_token_cost_usd(tokens: dict | None, pricing: dict | None):
     if cache_creation_rate is None:
         cache_creation_rate = input_rate
 
-    if cache_write_tokens:
-        uncached_input_tokens = input_tokens
+    if "non_cached" in tokens or "uncached" in tokens:
+        uncached_input_tokens = tokens.get("uncached")
+        cache_creation_tokens = tokens.get("cache_write")
+        if uncached_input_tokens is None or cache_creation_tokens is None:
+            # Cache writes have a distinct price. Unknown historical writes must
+            # not silently become zero and produce a deceptively precise cost.
+            if pricing.get("cache_creation") is not None:
+                return None
+            uncached_input_tokens = tokens.get("non_cached") or 0
+            cache_creation_tokens = 0
         cached_input_tokens = cache_tokens
-        cache_creation_tokens = cache_write_tokens
         uncached_input_rate = input_rate
     else:
-        uncached_input_tokens, cached_input_tokens = _split_uncached_and_cached_input(
-            input_tokens, cache_tokens
-        )
-        cache_creation_tokens = 0
-        uncached_input_rate = (
-            cache_creation_rate
-            if cached_input_tokens and pricing.get("cache_creation") is not None
-            else input_rate
-        )
+        # Backward compatibility for pre-v2 snapshots whose `in` field mixed
+        # subset and separate cache dialects.
+        input_tokens = tokens.get("in") or 0
+        cache_write_tokens = tokens.get("cache_write") or 0
+        if cache_write_tokens:
+            uncached_input_tokens = input_tokens
+            cached_input_tokens = cache_tokens
+            cache_creation_tokens = cache_write_tokens
+            uncached_input_rate = input_rate
+        else:
+            uncached_input_tokens, cached_input_tokens = _split_uncached_and_cached_input(
+                input_tokens, cache_tokens
+            )
+            cache_creation_tokens = 0
+            uncached_input_rate = (
+                cache_creation_rate
+                if cached_input_tokens and pricing.get("cache_creation") is not None
+                else input_rate
+            )
+
+    if not uncached_input_tokens and not cached_input_tokens and not cache_creation_tokens and not output_tokens:
+        return None
 
     cost = (
         uncached_input_tokens * uncached_input_rate
@@ -479,6 +583,84 @@ def _calculate_token_cost_usd(tokens: dict | None, pricing: dict | None):
         + output_tokens * pricing["output"]
     ) / COST_PER_MILLION_SCALE
     return round(cost, 2)
+
+
+def _calculate_token_cost_bounds_usd(
+    tokens: dict | None,
+    pricing: dict | None,
+) -> tuple[float, float] | None:
+    """Bound token cost when the uncached/cache-write split is unknown.
+
+    Token accounting v2 reports cache reads as a subset of total input. The
+    remaining non-cached input is therefore known even when the agent does not
+    expose how much of it was ordinary uncached input versus cache creation.
+    Price both extreme allocations to preserve an honest lower/upper bound.
+    """
+    if not tokens or not pricing:
+        return None
+    if tokens.get("usage_complete") is False:
+        return None
+    if "non_cached" not in tokens and "uncached" not in tokens:
+        return None
+
+    input_tokens = tokens.get("in")
+    if input_tokens is None:
+        return None
+    input_tokens = max(float(input_tokens), 0.0)
+    cache_tokens = min(max(float(tokens.get("cache") or 0), 0.0), input_tokens)
+    output_tokens = max(float(tokens.get("out") or 0), 0.0)
+
+    non_cached_tokens = tokens.get("non_cached")
+    if non_cached_tokens is None:
+        non_cached_tokens = input_tokens - cache_tokens
+    non_cached_tokens = float(non_cached_tokens)
+    if non_cached_tokens < 0 or non_cached_tokens > input_tokens - cache_tokens + 0.5:
+        return None
+
+    input_rate = float(pricing["input"])
+    cache_read_value = pricing.get("cache_read")
+    cache_creation_value = pricing.get("cache_creation")
+    cache_read_rate = float(
+        input_rate if cache_read_value is None else cache_read_value
+    )
+    cache_creation_rate = float(
+        input_rate if cache_creation_value is None else cache_creation_value
+    )
+    output_rate = float(pricing["output"])
+
+    uncached_tokens = tokens.get("uncached")
+    cache_write_tokens = tokens.get("cache_write")
+    if uncached_tokens is not None:
+        uncached_tokens = float(uncached_tokens)
+    if cache_write_tokens is not None:
+        cache_write_tokens = float(cache_write_tokens)
+
+    if uncached_tokens is not None and cache_write_tokens is None:
+        cache_write_tokens = non_cached_tokens - uncached_tokens
+    elif cache_write_tokens is not None and uncached_tokens is None:
+        uncached_tokens = non_cached_tokens - cache_write_tokens
+
+    fixed_cost = cache_tokens * cache_read_rate + output_tokens * output_rate
+    if uncached_tokens is not None and cache_write_tokens is not None:
+        if uncached_tokens < 0 or cache_write_tokens < 0:
+            return None
+        if abs((uncached_tokens + cache_write_tokens) - non_cached_tokens) > 0.5:
+            return None
+        cost = (
+            fixed_cost
+            + uncached_tokens * input_rate
+            + cache_write_tokens * cache_creation_rate
+        ) / COST_PER_MILLION_SCALE
+        rounded = round(cost, 8)
+        return rounded, rounded
+
+    low_rate = min(input_rate, cache_creation_rate)
+    high_rate = max(input_rate, cache_creation_rate)
+    low = (fixed_cost + non_cached_tokens * low_rate) / COST_PER_MILLION_SCALE
+    high = (fixed_cost + non_cached_tokens * high_rate) / COST_PER_MILLION_SCALE
+    if high <= 0:
+        return None
+    return round(low, 8), round(high, 8)
 
 
 def _calculate_fallback_cost_usd(tokens: dict | None, config: dict,
@@ -518,6 +700,31 @@ def _calculate_wandb_cost_usd(tokens: dict | None, model_name: str,
     return _calculate_token_cost_usd(tokens, pricing)
 
 
+def _pricing_for_cost_bounds(
+    config: dict,
+    model_name: str,
+    model_display: str,
+    timestamp: str | None,
+) -> dict | None:
+    """Select the same highest-priority token rates used for exact costs."""
+    return (
+        _authoritative_pricing_for_model(
+            model_name, model_display, timestamp, config
+        )
+        or _wandb_pricing_for_model(model_name, model_display)
+        or _pricing_from_model_info(config)
+        or _fallback_pricing_for_model(model_name, model_display)
+    )
+
+
+def _first_available_count(*values):
+    """Return the first count present in a sequence, preserving zero."""
+    for value in values:
+        if value is not None:
+            return value
+    return 0
+
+
 def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
                     tokens: dict | None = None) -> dict:
     """Extract key metrics from result.json and config.json into a flat record."""
@@ -551,15 +758,27 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
     cpus = env.get("override_cpus")
     memory_mb = env.get("override_memory_mb")
 
-    # Result metrics
+    # Result metrics. Harbor 0.18 renamed the top-level stats counters from
+    # n_trials/n_errors to n_completed_trials/n_errored_trials while retaining
+    # eval-level counters and n_total_trials. Prefer completed work over the
+    # planned total so partial runs remain partial in WolfBench.
     stats = result.get("stats", {})
-    n_trials = stats.get("n_trials", 0)
-    n_errors = stats.get("n_errors", 0)
-
-    # Score from evals — take first eval's first metric mean
     evals = stats.get("evals", {})
     eval_name = next(iter(evals), "")
     eval_data = evals.get(eval_name, {})
+    n_trials = _first_available_count(
+        stats.get("n_trials"),
+        stats.get("n_completed_trials"),
+        eval_data.get("n_trials"),
+        result.get("n_total_trials"),
+    )
+    n_errors = _first_available_count(
+        stats.get("n_errors"),
+        stats.get("n_errored_trials"),
+        eval_data.get("n_errors"),
+    )
+
+    # Score from evals — take first eval's first metric mean
     metrics = eval_data.get("metrics", [{}])
     score = metrics[0].get("mean", None) if metrics else None
 
@@ -609,8 +828,13 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
     # Jobs dir from config for run identification
     jobs_dir = config.get("jobs_dir", "")
     cost_usd = _normalize_cost_usd(tokens.get("cost"), config) if tokens else None
+    authoritative_cost_usd = _calculate_authoritative_cost_usd(
+        tokens, model_name, model_display, timestamp, config
+    )
     wandb_cost_usd = _calculate_wandb_cost_usd(tokens, model_name, model_display)
-    if wandb_cost_usd is not None:
+    if authoritative_cost_usd is not None:
+        cost_usd = authoritative_cost_usd
+    elif wandb_cost_usd is not None:
         cost_usd = wandb_cost_usd
     elif not _positive_cost_usd(cost_usd):
         fallback_cost_usd = _calculate_fallback_cost_usd(
@@ -618,6 +842,22 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
         )
         if fallback_cost_usd is not None:
             cost_usd = fallback_cost_usd
+
+    cost_usd_min = None
+    cost_usd_max = None
+    cost_usd_estimated = False
+    cost_usd_basis = None
+    if not _positive_cost_usd(cost_usd):
+        cost_bounds = _calculate_token_cost_bounds_usd(
+            tokens,
+            _pricing_for_cost_bounds(
+                config, model_name, model_display, timestamp
+            ),
+        )
+        if cost_bounds is not None:
+            cost_usd_min, cost_usd_max = cost_bounds
+            cost_usd_estimated = True
+            cost_usd_basis = "token_rate_bounds_missing_cache_write_split"
 
     return {
         "vm": vm,
@@ -657,18 +897,29 @@ def extract_metrics(vm: str, run_dir: str, result: dict, config: dict,
         "started_at": started_at,
         "finished_at": finished_at,
         "duration_sec": duration_sec,
-        # Token usage (aggregated from per-task results)
+        # Token usage v2: `tokens_in` is total input, including cache writes and
+        # reads. The component fields are non-overlapping.
+        "token_accounting_version": 2,
         "tokens_in": tokens.get("in") if tokens else None,
+        "tokens_input_uncached": tokens.get("uncached") if tokens else None,
+        "tokens_input_non_cached": tokens.get("non_cached") if tokens else None,
         "tokens_out": tokens.get("out") if tokens else None,
         "tokens_cache": tokens.get("cache") if tokens else None,
+        "tokens_cache_read": tokens.get("cache") if tokens else None,
         "tokens_cache_write": tokens.get("cache_write") if tokens else None,
+        "token_usage_complete": tokens.get("usage_complete") if tokens else False,
+        "cache_write_complete": tokens.get("cache_write_complete") if tokens else False,
+        "token_tasks": tokens.get("tasks") if tokens else None,
         "tokens_total": (
             (tokens.get("in") or 0)
-            + (tokens.get("cache_write") or 0)
             + (tokens.get("out") or 0)
-            if tokens else None
+            if tokens and tokens.get("in") is not None else None
         ),
         "cost_usd": cost_usd,
+        "cost_usd_min": cost_usd_min,
+        "cost_usd_max": cost_usd_max,
+        "cost_usd_estimated": cost_usd_estimated,
+        "cost_usd_basis": cost_usd_basis,
     }
 
 
@@ -759,33 +1010,418 @@ def find_local_runs(local_dir) -> list[str]:
     return sorted(runs)
 
 
-def _read_session_usage(session_path: Path) -> dict | None:
-    if not session_path.exists():
-        return None
+def _read_json_file(path: Path) -> dict | list | None:
     try:
-        first_line = session_path.read_text().splitlines()[0]
-        session = json.loads(first_line)
-    except (IndexError, json.JSONDecodeError, OSError):
+        with path.open() as handle:
+            return json.load(handle)
+    except (json.JSONDecodeError, OSError, TypeError):
         return None
 
-    input_tokens = session.get("input_tokens") or 0
-    output_tokens = session.get("output_tokens") or 0
-    cache_read_tokens = session.get("cache_read_tokens") or 0
-    cache_write_tokens = session.get("cache_write_tokens") or 0
+
+def _read_session_usage(session_path: Path) -> dict | None:
+    """Read Hermes' first-line cumulative usage summary."""
+    try:
+        with session_path.open() as handle:
+            session = json.loads(handle.readline())
+    except (json.JSONDecodeError, OSError, TypeError):
+        return None
+
+    uncached = session.get("input_tokens") or 0
+    output = session.get("output_tokens") or 0
+    cache_read = session.get("cache_read_tokens") or 0
+    cache_write = session.get("cache_write_tokens") or 0
     actual_cost = session.get("actual_cost_usd")
     estimated_cost = session.get("estimated_cost_usd")
     cost = actual_cost if actual_cost is not None else estimated_cost
     cost = cost or 0
-    if not input_tokens and not output_tokens and not cache_read_tokens and not cache_write_tokens and not cost:
+    if not uncached and not output and not cache_read and not cache_write and not cost:
         return None
 
     return {
-        "in": input_tokens,
-        "out": output_tokens,
-        "cache": cache_read_tokens,
-        "cache_write": cache_write_tokens,
+        "uncached": uncached,
+        "out": output,
+        "cache": cache_read,
+        "cache_write": cache_write,
         "cost": cost,
     }
+
+
+def _read_openclaw_usage(agent_dir: Path, expected: dict | None = None) -> dict | None:
+    """Read the canonical or timeout-fallback OpenClaw session."""
+    canonical = agent_dir / "openclaw-session.jsonl"
+    candidates = [canonical] if canonical.exists() else []
+    candidates.extend(sorted((agent_dir / "openclaw-sessions").glob("*.jsonl")))
+    usages = []
+    for session_path in candidates:
+        uncached = output = cache_read = cache_write = 0
+        found = False
+        try:
+            with session_path.open() as handle:
+                for line in handle:
+                    try:
+                        event = json.loads(line)
+                    except (json.JSONDecodeError, TypeError):
+                        continue
+                    message = event.get("message") or {}
+                    usage = message.get("usage") or event.get("usage")
+                    if not isinstance(usage, dict):
+                        continue
+                    found = True
+                    uncached += usage.get("input", 0) or 0
+                    output += usage.get("output", 0) or 0
+                    cache_read += usage.get("cacheRead", 0) or 0
+                    cache_write += usage.get("cacheWrite", 0) or 0
+        except OSError:
+            continue
+        if found:
+            usages.append({
+                "uncached": uncached,
+                "out": output,
+                "cache": cache_read,
+                "cache_write": cache_write,
+            })
+
+    if expected:
+        for usage in usages:
+            if all(
+                not expected.get(key) or usage[value_key] == expected[key]
+                for key, value_key in (
+                    ("in", "uncached"),
+                    ("out", "out"),
+                    ("cache", "cache"),
+                )
+            ):
+                return usage
+    return max(
+        usages,
+        key=lambda usage: usage["uncached"] + usage["out"] + usage["cache"] + usage["cache_write"],
+        default=None,
+    )
+
+
+def _read_claude_code_usage(agent_dir: Path) -> dict | None:
+    """Recover Claude Code cache reads/writes from trajectories or raw output."""
+    trajectory = _read_json_file(agent_dir / "trajectory.json")
+    if isinstance(trajectory, dict):
+        cache_read = cache_write = 0
+        found = False
+        for step in trajectory.get("steps") or []:
+            metrics = step.get("metrics") or {}
+            extra = metrics.get("extra") or {}
+            if not isinstance(extra, dict):
+                continue
+            if "cache_read_input_tokens" not in extra and "cache_creation_input_tokens" not in extra:
+                continue
+            found = True
+            cache_read += extra.get("cache_read_input_tokens", 0) or 0
+            cache_write += extra.get("cache_creation_input_tokens", 0) or 0
+        if found:
+            return {"cache": cache_read, "cache_write": cache_write}
+
+    raw_path = agent_dir / "claude-code.txt"
+    latest = None
+    try:
+        with raw_path.open() as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except (json.JSONDecodeError, TypeError):
+                    continue
+                usage = event.get("usage")
+                if isinstance(usage, dict):
+                    latest = usage
+    except OSError:
+        return None
+    if not latest:
+        return None
+    return {
+        "uncached": latest.get("input_tokens", 0) or 0,
+        "out": latest.get("output_tokens", 0) or 0,
+        "cache": latest.get("cache_read_input_tokens", 0) or 0,
+        "cache_write": latest.get("cache_creation_input_tokens", 0) or 0,
+    }
+
+
+def _read_cursor_usage(raw_path: Path) -> dict | None:
+    """Read Cursor CLI's final cumulative result usage."""
+    latest = None
+    try:
+        with raw_path.open() as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except (json.JSONDecodeError, TypeError):
+                    continue
+                usage = event.get("usage")
+                if isinstance(usage, dict):
+                    latest = usage
+    except OSError:
+        return None
+    if not latest:
+        return None
+    return {
+        "uncached": latest.get("inputTokens", 0) or 0,
+        "out": latest.get("outputTokens", 0) or 0,
+        "cache": latest.get("cacheReadTokens", 0) or 0,
+        "cache_write": latest.get("cacheWriteTokens", 0) or 0,
+    }
+
+
+def _model_info_rates_per_token(config: dict) -> dict | None:
+    model_info = ((config.get("agents") or [{}])[0].get("kwargs") or {}).get("model_info") or {}
+
+    def rate(key):
+        try:
+            value = float(model_info.get(key))
+        except (TypeError, ValueError):
+            return None
+        if value <= 0:
+            return None
+        return value / COST_PER_MILLION_SCALE if value >= 0.001 else value
+
+    rates = {
+        "input": rate("input_cost_per_token"),
+        "output": rate("output_cost_per_token"),
+        "cache_read": rate("cache_read_input_token_cost"),
+        "cache_write": rate("cache_creation_input_token_cost"),
+    }
+    return rates if rates["input"] and rates["output"] else None
+
+
+def _model_supports_cache_writes(config: dict) -> bool:
+    agent_cfg = (config.get("agents") or [{}])[0]
+    kwargs = agent_cfg.get("kwargs") or {}
+    model_info = kwargs.get("model_info") or {}
+    values = (
+        agent_cfg.get("model_name"),
+        model_info.get("name"),
+        model_info.get("provider"),
+    )
+    is_anthropic = any(
+        "anthropic" in str(value or "").lower()
+        or "claude" in str(value or "").lower()
+        for value in values
+    )
+    return bool(model_info.get("cache_creation_input_token_cost")) or is_anthropic
+
+
+def _infer_cache_write_from_cost(task_in, task_cache, task_out, task_cost, config):
+    """Recover an exact cache-write count when recorded cost makes it solvable."""
+    rates = _model_info_rates_per_token(config)
+    if not rates or not task_cost or rates.get("cache_read") is None or rates.get("cache_write") is None:
+        return None
+
+    input_rate = rates["input"]
+    output_rate = rates["output"]
+    read_rate = rates["cache_read"]
+    write_rate = rates["cache_write"]
+    if write_rate == input_rate:
+        return None
+
+    if task_in >= task_cache:
+        non_cached = task_in - task_cache
+        numerator = (
+            task_cost
+            - non_cached * input_rate
+            - task_cache * read_rate
+            - task_out * output_rate
+        )
+        cache_write = numerator / (write_rate - input_rate)
+        max_write = non_cached
+        total_input = task_in
+    else:
+        numerator = (
+            task_cost
+            - task_in * input_rate
+            - task_cache * read_rate
+            - task_out * output_rate
+        )
+        cache_write = numerator / write_rate
+        max_write = None
+        total_input = task_in + task_cache + cache_write
+
+    rounded_write = round(cache_write)
+    if abs(cache_write - rounded_write) > 0.001 or rounded_write < 0:
+        return None
+    if max_write is not None and rounded_write > max_write:
+        return None
+
+    uncached = (task_in - task_cache - rounded_write) if task_in >= task_cache else task_in
+    reconstructed = (
+        uncached * input_rate
+        + rounded_write * write_rate
+        + task_cache * read_rate
+        + task_out * output_rate
+    )
+    if abs(reconstructed - task_cost) > max(1e-8, abs(task_cost) * 1e-8):
+        return None
+    return {
+        "in": round(total_input),
+        "uncached": round(uncached),
+        "non_cached": round(uncached + rounded_write),
+        "cache": round(task_cache),
+        "cache_write": rounded_write,
+        "out": round(task_out),
+        "usage_complete": True,
+        "cache_write_complete": True,
+    }
+
+
+def _generic_task_usage(task_in, task_cache, task_out, task_cost, config):
+    if not task_in and not task_cache and not task_out and not task_cost:
+        return {
+            "in": 0,
+            "input_lower_bound": 0,
+            "uncached": 0,
+            "non_cached": 0,
+            "cache": 0,
+            "cache_write": 0,
+            "out": 0,
+            "usage_complete": True,
+            "cache_write_complete": True,
+        }
+
+    inferred = _infer_cache_write_from_cost(
+        task_in, task_cache, task_out, task_cost, config
+    )
+    if inferred:
+        return inferred
+
+    has_cache_writes = _model_supports_cache_writes(config)
+    if task_in >= task_cache:
+        total_input = task_in
+        non_cached = task_in - task_cache
+        usage_complete = True
+    else:
+        total_input = task_in + task_cache
+        non_cached = task_in
+        usage_complete = not has_cache_writes
+
+    return {
+        "in": total_input if usage_complete else None,
+        "input_lower_bound": task_in + task_cache,
+        "uncached": non_cached if not has_cache_writes else None,
+        "non_cached": non_cached if usage_complete else None,
+        "cache": task_cache,
+        "cache_write": 0 if not has_cache_writes else None,
+        "out": task_out,
+        "usage_complete": usage_complete,
+        "cache_write_complete": not has_cache_writes,
+    }
+
+
+def _task_usage(task_dir: Path, task_result: dict, config: dict) -> dict:
+    agent_cfg = (config.get("agents") or [{}])[0]
+    agent_name = str(agent_cfg.get("name") or "").lower()
+    ar = task_result.get("agent_result") or {}
+    task_in = ar.get("n_input_tokens", 0) or 0
+    task_out = ar.get("n_output_tokens", 0) or 0
+    task_cache = ar.get("n_cache_tokens", 0) or 0
+    task_cost = ar.get("cost_usd", 0) or 0
+    agent_dir = task_dir / "agent"
+
+    if agent_name == "hermes":
+        native = _read_session_usage(agent_dir / "hermes-session.jsonl")
+        if native:
+            uncached = native["uncached"]
+            cache_read = native["cache"]
+            cache_write = native["cache_write"]
+            return {
+                "in": uncached + cache_read + cache_write,
+                "uncached": uncached,
+                "non_cached": uncached + cache_write,
+                "cache": cache_read,
+                "cache_write": cache_write,
+                "out": native["out"],
+                "cost": native.get("cost") or task_cost,
+                "usage_complete": True,
+                "cache_write_complete": True,
+            }
+
+    if agent_name == "openclaw":
+        native = _read_openclaw_usage(
+            agent_dir,
+            {"in": task_in, "out": task_out, "cache": task_cache},
+        )
+        if native:
+            counters_match = (
+                (not task_in or native["uncached"] == task_in)
+                and (not task_out or native["out"] == task_out)
+                and (not task_cache or native["cache"] == task_cache)
+            )
+            if counters_match:
+                uncached = native["uncached"]
+                cache_read = native["cache"]
+                cache_write = native["cache_write"]
+                return {
+                    "in": uncached + cache_read + cache_write,
+                    "uncached": uncached,
+                    "non_cached": uncached + cache_write,
+                    "cache": cache_read,
+                    "cache_write": cache_write,
+                    "out": native["out"],
+                    "cost": task_cost,
+                    "usage_complete": True,
+                    "cache_write_complete": True,
+                }
+
+    if agent_name == "claude-code":
+        native = _read_claude_code_usage(agent_dir)
+        if native and (not task_cache or native["cache"] == task_cache):
+            cache_read = native["cache"]
+            cache_write = native["cache_write"]
+            if native.get("uncached") is not None:
+                uncached = native["uncached"]
+                output = native.get("out") if native.get("out") is not None else task_out
+            elif task_in >= cache_read:
+                uncached = task_in - cache_read
+                output = task_out
+            else:
+                uncached = None
+                output = task_out
+            if uncached is not None:
+                return {
+                    "in": uncached + cache_read + cache_write,
+                    "uncached": uncached,
+                    "non_cached": uncached + cache_write,
+                    "cache": cache_read,
+                    "cache_write": cache_write,
+                    "out": output,
+                    "cost": task_cost,
+                    "usage_complete": True,
+                    "cache_write_complete": True,
+                }
+
+    if agent_name == "cursor-cli":
+        native = _read_cursor_usage(agent_dir / "cursor-cli.txt")
+        if native:
+            uncached = native["uncached"]
+            cache_read = native["cache"]
+            cache_write = native["cache_write"]
+            output = native["out"]
+            counters_match = (
+                (not task_in or uncached + cache_read + cache_write == task_in)
+                and (not task_out or output == task_out)
+                and (not task_cache or cache_read == task_cache)
+            )
+            if counters_match:
+                return {
+                    "in": uncached + cache_read + cache_write,
+                    "uncached": uncached,
+                    "non_cached": uncached + cache_write,
+                    "cache": cache_read,
+                    "cache_write": cache_write,
+                    "out": output,
+                    "cost": task_cost,
+                    "usage_complete": True,
+                    "cache_write_complete": True,
+                }
+
+    usage = _generic_task_usage(
+        task_in, task_cache, task_out, task_cost, config
+    )
+    usage["cost"] = task_cost
+    return usage
 
 
 def _aggregate_local_tokens(run_path) -> dict | None:
@@ -794,9 +1430,19 @@ def _aggregate_local_tokens(run_path) -> dict | None:
     Mirrors the inline Python script in read_run_data() but runs locally.
     """
     run_path = Path(run_path)
-    tin = tout = tcache = tcache_write = 0
+    config = _read_json_file(run_path / "config.json")
+    if not isinstance(config, dict):
+        return None
+
+    tin = tuncached = tnon_cached = tout = tcache = tcache_write = 0
+    input_lower_bound = 0
     cost = 0.0
     ver = None
+    usage_complete = True
+    uncached_complete = True
+    non_cached_complete = True
+    cache_write_complete = True
+    task_count = 0
 
     # Per-task results live under <task>/result.json (mirrors SSH glob: */result.json)
     task_results = [
@@ -808,32 +1454,37 @@ def _aggregate_local_tokens(run_path) -> dict | None:
 
     for f in task_results:
         try:
-            d = json.loads(f.read_text())
-            ar = d.get("agent_result") or {}
-            task_in = ar.get("n_input_tokens", 0) or 0
-            task_out = ar.get("n_output_tokens", 0) or 0
-            task_cache = ar.get("n_cache_tokens", 0) or 0
-            task_cost = ar.get("cost_usd", 0) or 0
-            if not task_in and not task_out and not task_cache and not task_cost:
-                session_usage = _read_session_usage(
-                    f.parent / "agent" / "hermes-session.jsonl"
-                )
-                if session_usage:
-                    tin += session_usage["in"]
-                    tout += session_usage["out"]
-                    tcache += session_usage["cache"]
-                    tcache_write += session_usage["cache_write"]
-                    cost += session_usage["cost"]
-                else:
-                    tin += task_in
-                    tout += task_out
-                    tcache += task_cache
-                    cost += task_cost
+            d = _read_json_file(f)
+            if not isinstance(d, dict):
+                usage_complete = uncached_complete = False
+                non_cached_complete = cache_write_complete = False
+                continue
+            task_count += 1
+            usage = _task_usage(f.parent, d, config)
+            task_input = usage.get("in")
+            task_uncached = usage.get("uncached")
+            task_non_cached = usage.get("non_cached")
+            task_cache_write = usage.get("cache_write")
+            input_lower_bound += usage.get("input_lower_bound") or task_input or 0
+            if task_input is None:
+                usage_complete = False
             else:
-                tin += task_in
-                tout += task_out
-                tcache += task_cache
-                cost += task_cost
+                tin += task_input
+            if task_uncached is None:
+                uncached_complete = False
+            else:
+                tuncached += task_uncached
+            if task_non_cached is None:
+                non_cached_complete = False
+            else:
+                tnon_cached += task_non_cached
+            if task_cache_write is None:
+                cache_write_complete = False
+            else:
+                tcache_write += task_cache_write
+            tout += usage.get("out") or 0
+            tcache += usage.get("cache") or 0
+            cost += usage.get("cost") or 0
             if ver is None:
                 ai = d.get("agent_info") or {}
                 v = ai.get("version", "")
@@ -847,16 +1498,23 @@ def _aggregate_local_tokens(run_path) -> dict | None:
                             ver = json.loads(l).get("claude_code_version") or None
                         except Exception:
                             pass
-        except (json.JSONDecodeError, OSError):
-            pass
+        except (OSError, TypeError, ValueError):
+            usage_complete = uncached_complete = False
+            non_cached_complete = cache_write_complete = False
 
     return {
-        "in": tin,
+        "in": tin if usage_complete else None,
+        "input_lower_bound": input_lower_bound,
+        "uncached": tuncached if uncached_complete else None,
+        "non_cached": tnon_cached if non_cached_complete else None,
         "out": tout,
         "cache": tcache,
-        "cache_write": tcache_write,
-        "cost": round(cost, 2),
+        "cache_write": tcache_write if cache_write_complete else None,
+        "cost": round(cost, 8),
         "ver": ver,
+        "usage_complete": usage_complete,
+        "cache_write_complete": cache_write_complete,
+        "tasks": task_count,
     }
 
 
